@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>New Tab</title>
+    <link rel=stylesheet href="style.css" type=text/css>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Delicious+Handrawn&family=Lexend:wght@700&family=Overpass:wght@700&family=Pixelify+Sans:wght@700&family=Playfair+Display:wght@700&family=Roboto+Mono:wght@700&family=Roboto+Slab:wght@700&family=Roboto:wght@700&family=Yellowtail&display=swap" rel="stylesheet">
+  </head>
+  <body onload="start()">
+    <img id="backgroundImage" src="/"alt="loading..."/>
+    <div title="Click to change fonts" id="clock" onclick="cycleFont()">00:00zz<span id=seconds>00</span></div>
+    <div id="wxrContainer" onclick="changeWxrFormat()">
+      <span id="wxrIcon"></span>
+      <span id="temp"></span>
+    </div>
+    <form id=searchform>
+      <input autocomplete="off" placeholder="Search Google or Enter URL" id=autoComplete type=text autofocus></input>
+      <button type="button" onclick="donothing()" class="searchbutton"><img type="button" id="searchimage" src="assets/search button.webp"/></button>
+    </form>
+    <div id="shortcut-container">
+      <a class="shortcut" href="https://google.com"><img class=shortcut-image src="assets/icons/google.ico" alt="google icon"/></a>
+      <a class="shortcut" href="https://drive.google.com"><img class=shortcut-image src="assets/icons/drive.png" alt="google drive icon"/></a>
+      <a class="shortcut" href="https://maps.google.com"><img class=shortcut-image src="assets/icons/googlemaps.png" alt="google maps icon"/></a>
+      <a class="shortcut" href="https://reddit.com"><img class=shortcut-image src="assets/icons/reddit.ico" alt="reddit icon"/></a>
+      <a class="shortcut" href="https://learn.illinois.edu"><img class=shortcut-image src="assets/icons/moodle.png" alt="moodle icon"/></a>
+      <a class="shortcut" href="https://canvas.illinois.edu"><img class=shortcut-image src="assets/icons/canvas.png" alt="canvas icon"/></a>
+      <a class="shortcut" href="https://chat.openai.com"><img class=shortcut-image src="assets/icons/openai.png" alt="openai icon"/></a>
+      <a class="shortcut" href="https://replit.com/@elgdfwtap/homepage#index.php"><img class=shortcut-image src="assets/icons/replit.webp" alt="replit icon"/></a><a class="shortcut" href="https://wikipedia.org"><img class=shortcut-image src="assets/icons/wikipedia.png" alt="wikipedia icon"/></a>
+      <a class="shortcut" href="https://youtube.com"><img class=shortcut-image src="assets/icons/youtube.png" alt="youtube icon"/></a>
+      <a class="shortcut" href="https://us.prairielearn.com"><img class=shortcut-image src="assets/icons/prairielearn.jpg" alt="Prairielearn icon"/></a>
+      <a class="shortcut" href="https://us.prairietest.com"><img class=shortcut-image src="assets/icons/prairietest.png" alt="Prairietest icon"/></a>
+      <a class="shortcut" href="https://smart.physics.illinois.edu"><img class=shortcut-image src="assets/icons/smartphysics.png" alt="Smartphysics icon"/></a>
+    </div>
+    <div id="itemList" class="custom-dropdown">
+      <span class="selected-item itemList-content" onclick="toggleDropdown()">Shibuya Crossing</span>
+      <div class="dropdown-options hidden">
+        <span class="itemList-content" data-value="1" onclick="setSelectedItem(this)">Shibuya Crossing</span>
+        <span class="itemList-content" data-value="2" onclick="setSelectedItem(this)">LAR</span>
+        <span class="itemList-content" data-value="3" onclick="setSelectedItem(this)">Icebergs</span>
+        <span class="itemList-content" data-value="4" onclick="setSelectedItem(this)">Tokyo</span>
+        <span class="itemList-content" data-value="5" onclick="setSelectedItem(this)">Rain Video</span>
+        <span class="itemList-content" data-value="6" onclick="setSelectedItem(this)">Pennsylvania Turnpike</span>
+      </div>
+    </div>
+    <div id="itemList2" class="custom-dropdown2">
+      <span class="selected-item2 itemList-content" onclick="toggleDropdown2()">EN</span>
+      <div class="dropdown-options2 hidden">
+        <span class="itemList-content" data-value="1" onclick="setSelectedItem2(this)">EN</span>
+        <span class="itemList-content" data-value="2" onclick="setSelectedItem2(this)">ZH</span>
+      </div>
+    </div>
+    
+    <div id="notes-container">
+        <input type="text" id="note-input" class="note-input" placeholder="Enter reminders, notes, or a to-do list." onkeydown="checkForEnter(event)">
+    </div>
+    
+    <script src="weather-master/dist/weather.js"></script>
+    <script>
+      
+      
+      var apiKey = "72f0d12c610944b89a7745b64749ed08"; // your api key goes here
+        Weather.setApiKey( apiKey );
+        var city= "Champaign, Illinois, US";
+        let tempFormatF
+        function getCurrentWeatherWithTimeout(city, timeoutDuration) {
+            // This is your original weather fetching function but wrapped inside a promise
+            const weatherPromise = new Promise((resolve, reject) => {
+                Weather.getCurrent(city, function(current) {
+                    resolve(current); // resolve the outer promise when the weather data is here
+                });
+            });
+
+            // This promise will reject after `timeoutDuration` milliseconds
+            const timeoutPromise = new Promise((_, reject) => {
+                setTimeout(() => {
+                    reject(new Error('Request timed out')); // this will end the race with a rejection
+                }, timeoutDuration);
+            });
+
+            // The race is on: whichever promise settles first wins and the other gets ignored
+            return Promise.race([
+                weatherPromise,
+                timeoutPromise
+            ]);
+        }
+
+        // Now, you can use async/await syntax properly
+
+        async function startWxr() {
+            try {
+                // Wait for the weather data to be fetched
+                const current = await getCurrentWeatherWithTimeout(city, 5000);
+                const today = new Date();
+                let h = today.getHours();
+                let day= false;
+                if(h>5 && h<20){day=true}
+                if(tempFormatF){
+                  console.log("user temp format read: "+tempFormatF);
+                  document.getElementById("temp").innerHTML=Math.round( Weather.kelvinToFahrenheit( current.temperature() ) ) + " &deg F";
+                  console.log("user temp format set as Fahrenheit");
+                }else if(!tempFormatF){
+                  console.log("user temp format read: "+tempFormatF);
+                  document.getElementById("temp").innerHTML=Math.round( Weather.kelvinToCelsius( current.temperature() ) ) + " &deg C";
+                  console.log("user temp format set as Celsius");
+                }
+                var icon;
+                console.log("h:"+h+" cond:"+current.conditions() + " condmain:"+current.mainConditions());
+                if(current.conditions()=="overcast clouds"){icon="a";}
+                if(current.conditions()=="broken clouds" && day){icon="3"}
+                if(current.conditions()=="broken clouds" && !day){icon="2";}
+                if(current.conditions()=="scattered clouds" && day){icon="R";}
+                if(current.conditions()=="scattered clouds" && !day){icon="A";}
+                if(current.conditions()=="few clouds" && day){icon="R";}
+                if(current.conditions()=="few clouds" && !day){icon="A";}
+                if(current.conditions()=="clear sky" && day){icon="/";}
+                if(current.conditions()=="clear sky" && !day){icon="(";}
+                if(current.mainConditions()=="Rain" && day){icon="h";} 
+                if(current.mainConditions()=="Rain" && !day){icon="g";} 
+                if(current.mainConditions()=="Drizzle" && day){icon="E";} 
+                if(current.mainConditions()=="Drizzle" && !day){icon="D";} 
+                if(current.mainConditions()=="Thunderstorm" && day){icon="e";} 
+                if(current.mainConditions()=="Thunderstorm" && !day){icon="d";} 
+                if(current.mainConditions()=="Snow" && day){icon="P";} 
+                if(current.mainConditions()=="Snow" && !day){icon="O";}  
+                if(current.mainConditions()=="Mist"){icon="$";} 
+                if(current.mainConditions()=="Smoke"){icon="1";}
+                if(current.mainConditions()=="Haze"){icon="m";}
+                if(current.mainConditions()=="Dust"){icon="$";}
+                if(current.mainConditions()=="Fog"){icon="U";}
+                if(current.mainConditions()=="Sand"){icon="$";}
+                if(current.mainConditions()=="Squall"){icon="T";}
+                if(current.mainConditions()=="Tornado"){icon="^";}
+
+                document.getElementById("wxrIcon").innerHTML=icon;
+                document.getElementById("wxrIcon").title=current.conditions()+" in "+ city;
+
+
+              } catch (error) {
+              // Always include error handling in async functions
+              console.error("Failed to get the weather data:", error);
+          }
+
+
+
+
+          setTimeout(startWxr, 60000);
+        }
+      async function startWxrNonLooping() {
+          try {
+              // Wait for the weather data to be fetched
+              const current = await getCurrentWeatherWithTimeout(city, 5000);
+              const today = new Date();
+              let h = today.getHours();
+              let day= false;
+              if(h>5 && h<20){day=true}
+              if(tempFormatF){
+                document.getElementById("temp").innerHTML=Math.round( Weather.kelvinToFahrenheit( current.temperature() ) ) + " &deg F";
+              }else{
+                document.getElementById("temp").innerHTML=Math.round( Weather.kelvinToCelsius( current.temperature() ) ) + " &deg C";
+              }
+              var icon;
+              console.log("h:"+h+" cond:"+current.conditions() + " condmain:"+current.mainConditions());
+              if(current.conditions()=="overcast clouds"){icon="a";}
+              if(current.conditions()=="broken clouds" && day){icon="3"}
+              if(current.conditions()=="broken clouds" && !day){icon="2";}
+              if(current.conditions()=="scattered clouds" && day){icon="R";}
+              if(current.conditions()=="scattered clouds" && !day){icon="A";}
+              if(current.conditions()=="few clouds" && day){icon="R";}
+              if(current.conditions()=="few clouds" && !day){icon="A";}
+              if(current.conditions()=="clear sky" && day){icon="/";}
+              if(current.conditions()=="clear sky" && !day){icon="(";}
+              if(current.mainConditions()=="Rain" && day){icon="h";} 
+              if(current.mainConditions()=="Rain" && !day){icon="g";} 
+              if(current.mainConditions()=="Drizzle" && day){icon="E";} 
+              if(current.mainConditions()=="Drizzle" && !day){icon="D";} 
+              if(current.mainConditions()=="Thunderstorm" && day){icon="e";} 
+              if(current.mainConditions()=="Thunderstorm" && !day){icon="d";} 
+              if(current.mainConditions()=="Snow" && day){icon="P";} 
+              if(current.mainConditions()=="Snow" && !day){icon="O";}  
+              if(current.mainConditions()=="Mist"){icon="$";} 
+              if(current.mainConditions()=="Smoke"){icon="1";}
+              if(current.mainConditions()=="Haze"){icon="m";}
+              if(current.mainConditions()=="Dust"){icon="$";}
+              if(current.mainConditions()=="Fog"){icon="U";}
+              if(current.mainConditions()=="Sand"){icon="$";}
+              if(current.mainConditions()=="Squall"){icon="T";}
+              if(current.mainConditions()=="Tornado"){icon="^";}
+
+              document.getElementById("wxrIcon").innerHTML=icon;
+              document.getElementById("wxrIcon").title=current.conditions()+" in "+ city;
+
+
+            } catch (error) {
+            // Always include error handling in async functions
+            console.error("Failed to get the weather data:", error);
+        }
+
+
+
+
+      }
+      
+
+let imageURLList=["assets/dynamicbackground/shibuya.txt","assets/dynamicbackground/lar.txt","assets/dynamicbackground/white-lands.txt","assets/dynamicbackground/tokyo.txt"]
+let imagelistStr=read("assets/dynamicbackground/shibuya.txt");
+let imageList=imagelistStr.split("\n");
+let videoShowing=false;
+
+console.log(imageList);
+function toggleDropdown() {
+        const options = document.querySelector('.dropdown-options');
+        options.classList.toggle('hidden');
+      }
+
+      function toggleDropdown2() {
+        const options = document.querySelector('.dropdown-options2');
+        options.classList.toggle('hidden');
+      }
+
+      function setSelectedItem(element) {
+        const selectedItem = document.querySelector('.selected-item');
+        selectedItem.textContent = element.textContent;
+        selectedItem.setAttribute('data-value', element.getAttribute('data-value'));
+        localStorage.setItem('userBGPreference', selectedItem.getAttribute('data-value'));
+        console.log("Set User BG Preference: "+localStorage.getItem('userBGPreference'));
+        handleSelectionChange(); // Assuming this is your original function
+        toggleDropdown(); // Close the dropdown after a selection
+      }
+      function setSelectedItem2(element) {
+        const selectedItem = document.querySelector('.selected-item2');
+        selectedItem.textContent = element.textContent;
+        selectedItem.setAttribute('data-value', element.getAttribute('data-value'));
+        localStorage.setItem('userLang', selectedItem.getAttribute('data-value'));
+        console.log("Set User Lang: "+localStorage.getItem('userLang'));
+        handleLangChange(); // Assuming this is your original function
+        toggleDropdown2(); // Close the dropdown after a selection
+      }
+
+      function handleSelectionChange() {
+        var selectedItemElement = document.querySelector('.selected-item');
+        var selectedValue = selectedItemElement.getAttribute('data-value');
+        var selectedItem = selectedItemElement.textContent;
+
+        // Based on the data-value attribute
+        if (selectedValue != "5" && selectedValue != "6") {
+          if (videoShowing) {
+            removeVideoAndShowImage();
+            videoShowing = false;
+          }
+          imagelistStr = read(imageURLList[selectedValue - 1]);
+          imageList = imagelistStr.split("\n");
+          console.log(imageList);
+          clearTimeout(dynamicWallpaperLoop);
+          startDynamicWallpaper();
+        } else if (selectedValue == "5") {
+          embedVideoAndHideImage('https://www.youtube.com/embed/8IDuEKAWbw4?si=PQOAwSG4LNSu0J-5');
+          videoShowing = true;
+        } else if (selectedValue == "6") {
+          embedVideoAndHideImage('https://www.youtube.com/embed/VU2eSWHSR0M?si=Z1TDsK0dH3Gzbg4x');
+          videoShowing = true;
+        }
+        
+      }
+      function handleLangChange() {
+        console.log('handle lang change');
+        var selectedItemElement = document.querySelector('.selected-item2');
+        var selectedValue = selectedItemElement.getAttribute('data-value');
+        var selectedItem = selectedItemElement.textContent;
+
+        // Based on the data-value attribute
+
+        console.log(selectedValue);
+        switch(selectedValue){
+          case '1':
+            console.log("English");
+            document.getElementById("autoComplete").placeholder="Search Google or Enter URL"; 
+            break;
+          case '2': 
+            document.getElementById("autoComplete").placeholder="搜google 或输入 URL"; 
+            dropdown=document.querySelector('.dropdown-options').children;
+            dropdown[0].innerHTML="澀谷路口";
+            dropdown[1].innerHTML="LAR";
+            dropdown[2].innerHTML="冰山帆船";
+            dropdown[3].innerHTML="东京街";
+            dropdown[4].innerHTML="雨绿街";
+            
+            break;
+        }
+
+      }
+      function loadBGPreference() {
+        var userTempFormat=localStorage.getItem('tempFormat');
+        if(typeof(userTempFormat)!='undefined'){
+          if(userTempFormat==="true"){
+            tempFormatF=true;
+          }else{
+            tempFormatF=false;
+          }
+          console.log(tempFormatF);
+          
+          console.log('user temp format set as '+tempFormatF );
+        }
+        var userBGPreference = localStorage.getItem('userBGPreference');
+        console.log("Loaded User BG Preference: "+userBGPreference);
+        // If the usercon has a preferred font, use it
+        if (userBGPreference) {
+          listObjects=document.getElementsByClassName("dropdown-options")[0].children;
+
+          setSelectedItem(listObjects[userBGPreference-1]);
+          toggleDropdown();
+        }
+      }
+async function start(){
+
+  console.log("start function called");
+  
+  startTime();
+  startDynamicWallpaper();
+  handleSelectionChange();
+  loadFontPreference();
+  loadBGPreference();
+  loadNotes();
+  startWxr();
+}
+function startDynamicWallpaper(){
+  const today = new Date();
+  let h = today.getHours();
+  let m = today.getMinutes();
+  let p = 0;
+  if((h>=4)&&(h<20)){
+    p=60*(h-4);
+    p=p+m;
+    
+  }
+  let url=imageList[p];
+  document.getElementById("backgroundImage").src=url;
+  dynamicWallpaperLoop=setTimeout(startDynamicWallpaper, 60000);
+}
+function preloadImage(url){
+    var img=new Image();
+    img.src=url;
+}
+function read(filePath) {
+    var result = null;
+    var xmlhttp = new XMLHttpRequest();
+    xmlhttp.open("GET", filePath, false);
+    xmlhttp.send();
+    if (xmlhttp.status == 200) {
+        result = xmlhttp.responseText;
+    }
+    return result;
+}
+function pad(num, size) {
+    num = num.toString();
+    while (num.length < size) num = "0" + num;
+    return num;
+}
+function startTime() {
+  const today = new Date();
+  let h = today.getHours();
+  let m = today.getMinutes();
+  let s = today.getSeconds();
+  var meridian="am";
+  m = checkTime(m);
+  s = checkTime(s);
+  if(h>12){
+    meridian="pm";
+    h=h-12;
+  }
+  if(h==0){
+    h=12;
+  }
+  document.getElementById('clock').innerHTML =  h + ":" + m + meridian+"<span id=seconds>"+s+"</span>";
+  setTimeout(startTime, 1000);
+}
+      function checkTime(i) {
+  if (i < 10) {i = "0" + i};  // add zero in front of numbers < 10
+  return i;
+}
+      document.getElementById('searchform').onkeydown = function(e){
+         if(e.keyCode == 13){
+           e.preventDefault();
+          donothing();
+         }
+      };
+      function donothing(){
+        var val=document.getElementById('autoComplete').value;
+        var isUrl=false;
+        -1!=val.search(/\.com/)&&(isUrl=!0),-1!=val.search(/\.net/)&&(isUrl=!0),-1!=val.search(/\.org/)&&(isUrl=!0),-1!=val.search(/\.jp/)&&(isUrl=!0),-1!=val.search(/\.de/)&&(isUrl=!0),-1!=val.search(/\.uk/)&&(isUrl=!0),-1!=val.search(/\.fr/)&&(isUrl=!0),-1!=val.search(/\.br/)&&(isUrl=!0),-1!=val.search(/\.it/)&&(isUrl=!0),-1!=val.search(/\.ru/)&&(isUrl=!0),-1!=val.search(/\.es/)&&(isUrl=!0),-1!=val.search(/\.me/)&&(isUrl=!0),-1!=val.search(/\.gov/)&&(isUrl=!0),-1!=val.search(/\.pl/)&&(isUrl=!0),-1!=val.search(/\.ca/)&&(isUrl=!0),-1!=val.search(/\.au/)&&(isUrl=!0),-1!=val.search(/\.cn/)&&(isUrl=!0),-1!=val.search(/\.co/)&&(isUrl=!0),-1!=val.search(/\.in/)&&(isUrl=!0),-1!=val.search(/\.nl/)&&(isUrl=!0),-1!=val.search(/\.edu/)&&(isUrl=!0),-1!=val.search(/\.info/)&&(isUrl=!0),-1!=val.search(/\.eu/)&&(isUrl=!0),-1!=val.search(/\.ch/)&&(isUrl=!0),-1!=val.search(/\.id/)&&(isUrl=!0),-1!=val.search(/\.at/)&&(isUrl=!0),-1!=val.search(/\.kr/)&&(isUrl=!0),-1!=val.search(/\.cz/)&&(isUrl=!0),-1!=val.search(/\.mx/)&&(isUrl=!0),-1!=val.search(/\.be/)&&(isUrl=!0),-1!=val.search(/\.tv/)&&(isUrl=!0),-1!=val.search(/\.se/)&&(isUrl=!0),-1!=val.search(/\.tr/)&&(isUrl=!0),-1!=val.search(/\.tw/)&&(isUrl=!0),-1!=val.search(/\.al/)&&(isUrl=!0),-1!=val.search(/\.ua/)&&(isUrl=!0),-1!=val.search(/\.ir/)&&(isUrl=!0),-1!=val.search(/\.vn/)&&(isUrl=!0),-1!=val.search(/\.cl/)&&(isUrl=!0),-1!=val.search(/\.sk/)&&(isUrl=!0),-1!=val.search(/\.ly/)&&(isUrl=!0),-1!=val.search(/\.cc/)&&(isUrl=!0),-1!=val.search(/\.to/)&&(isUrl=!0),-1!=val.search(/\.no/)&&(isUrl=!0),-1!=val.search(/\.fi/)&&(isUrl=!0),-1!=val.search(/\.us/)&&(isUrl=!0),-1!=val.search(/\.pt/)&&(isUrl=!0),-1!=val.search(/\.dk/)&&(isUrl=!0),-1!=val.search(/\.ar/)&&(isUrl=!0),-1!=val.search(/\.hu/)&&(isUrl=!0),-1!=val.search(/\.tk/)&&(isUrl=!0),-1!=val.search(/\.gr/)&&(isUrl=!0),-1!=val.search(/\.il/)&&(isUrl=!0),-1!=val.search(/\.news/)&&(isUrl=!0),-1!=val.search(/\.edu/)&&(isUrl=!0),-1!=val.search(/\.gov/)&&(isUrl=!0),-1!=val.search(/\.int/)&&(isUrl=!0),-1!=val.search(/\.mil/)&&(isUrl=!0),-1!=val.search(/\.xyz/)&&(isUrl=!0),-1!=val.search(/\.be/)&&(isUrl=!0),-1!=val.search(/\.online/)&&(isUrl=!0),-1!=val.search(/\.top/)&&(isUrl=!0),-1!=val.search(/\.shop/)&&(isUrl=!0),-1!=val.search(/\.site/)&&(isUrl=!0),-1!=val.search(/\.store/)&&(isUrl=!0),-1!=val.search(/\.icu/)&&(isUrl=!0),-1!=val.search(/\.vip/)&&(isUrl=!0),-1!=val.search(/\.live/)&&(isUrl=!0),-1!=val.search(/\.club/)&&(isUrl=!0),-1!=val.search(/\,com/)&&(isUrl=!0),-1!=val.search(/\,net/)&&(isUrl=!0),-1!=val.search(/\,org/)&&(isUrl=!0);
+        console.log(isUrl);
+        if(isUrl){
+          var hasStart=false;
+          if(val.search("http://")!=-1){
+            hasStart=true;
+          }
+          if(val.search("https://")!=-1){
+            hasStart=true;
+          }
+          console.log(hasStart);
+          if(!hasStart){
+            val="http://"+val;
+          }
+          console.log(val);
+          window.location.href = val;
+        }else{
+           console.log('https://google.com/search?q='+val);
+          window.location.href = 'https://google.com/search?q='+val;
+        }
+      }
+
+      function embedVideoAndHideImage(url) {
+        // Create an iframe element
+        var iframe = document.createElement('iframe');
+
+        // Set the necessary attributes
+        iframe.setAttribute('width', screen.width.toString()); // window width
+        iframe.setAttribute('height', screen.height.toString()); // window height
+        iframe.setAttribute('src', url+'&autoplay=1&controls=0&vq=hd1080&loop=1&mute=1');
+        iframe.setAttribute('title', 'YouTube video player');
+        iframe.setAttribute('frameborder', '0');
+        iframe.setAttribute('allow', 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share');
+        iframe.setAttribute('allowfullscreen', '');
+
+        // Get a reference to the image element
+        var image = document.getElementById('backgroundImage');
+
+        // Hide the image
+        image.style.display = 'none';
+
+        // Insert the iframe into the DOM before the image
+        image.parentNode.insertBefore(iframe, image);
+      }
+
+      function removeVideoAndShowImage() {
+        // Get a reference to the image element
+        var image = document.getElementById('backgroundImage');
+
+        // Find the iframe (assuming it's the previous sibling of the image)
+        var iframe = image.previousSibling;
+
+        // Remove the iframe from the DOM
+        if (iframe instanceof HTMLIFrameElement) {
+          iframe.parentNode.removeChild(iframe);
+        }
+
+        // Show the image again
+        image.style.display = '';
+      }
+      function changeWxrOpacity(){
+        var element = document.getElementById('wxrContainer');
+        var currentOpacity = window.getComputedStyle(element).opacity;
+        if (currentOpacity < "1") {
+          element.style.opacity = "1"; // if it's not fully opaque, change the opacity to 100%
+        } else {
+          element.style.opacity = "0.05"; // if it's fully opaque, change the opacity to 50%
+        }
+      }
+      function changeWxrFormat(){
+        tempFormatF=!tempFormatF;
+        startWxrNonLooping();
+        localStorage.setItem('tempFormat', tempFormatF);
+      }
+
+      // List of fonts you want to cycle through
+      var fonts = ['hnv', 'hnvi','hnv','hnvi','Roboto','Lexend','Overpass','Roboto Mono','Roboto Slab',"'7seg'",'Delicious Handrawn','Yellowtail','Playfair Display','Pixelify Sans','Times New Roman','Arial']; // Replace with your actual font names
+      var currentFontIndex = 0; // Start with the first font in the list
+
+      // Function to change font and set the preference in local storage
+      function cycleFont() {
+        currentFontIndex = (currentFontIndex + 1) % fonts.length;
+        console.log(currentFontIndex)
+        var nextFont = fonts[currentFontIndex];
+        console.log(nextFont)
+        document.body.style.fontFamily = nextFont;
+        if(currentFontIndex==2||currentFontIndex==3){
+          document.body.style.fontVariationSettings = "'wght' 582, 'wdth' 70, 'opsz' 30";
+          document.getElementById("autoComplete").style.fontVariationSettings="'wght' 582, 'wdth' 70, 'opsz' 30";
+          
+        }else{
+          document.body.style.fontVariationSettings = "'wght' 633.7, 'wdth' 100, 'opsz' 30";
+          document.getElementById("autoComplete").style.fontVariationSettings="'wght' 700, 'wdth' 100, 'opsz' 30";
+        }
+
+        // Save the user's preference in local storage
+        localStorage.setItem('userFontPreference', nextFont);
+      }
+
+      // Function to initialize font preference
+      function loadFontPreference() {
+        var userFontPreference = localStorage.getItem('userFontPreference');
+
+        // If the user has a preferred font, use it
+        if (userFontPreference) {
+          document.body.style.fontFamily = userFontPreference;
+          currentFontIndex = fonts.indexOf(userFontPreference);
+        }
+      }
+
+      // Call loadFontPreference when the page 
+
+      // The HTML element should still have 'onclick="cycleFont()"'
+
+      function checkForEnter(event) {
+          if (event.key === 'Enter') {
+              let note = event.target.value;
+              if (note.trim()) { // if note is not empty or just whitespace
+                  addNoteButton(note);
+                  event.target.value = ''; // clear the input
+              }
+          }
+      }
+      function addNoteButton(note) {
+          console.trace();
+          let container = document.getElementById('notes-container');
+
+          // Create the new note button
+          let btn = document.createElement('button');
+          btn.textContent = note;
+          btn.className = 'note-button';
+          btn.onclick = function() { removeNoteButton(btn); };
+
+          // Insert the new button before the input element
+          let inputBox = document.querySelector('.note-input');
+          container.insertBefore(btn, inputBox);
+
+          // Save notes to localStorage
+          saveNoteToLocalStorage(note);
+      }
+        function initialAddNoteButton(note) {
+            console.trace();
+            let container = document.getElementById('notes-container');
+
+            // Create the new note button
+            let btn = document.createElement('button');
+            btn.textContent = note;
+            btn.className = 'note-button';
+            btn.onclick = function() { removeNoteButton(btn); };
+
+            // Insert the new button before the input element
+            let inputBox = document.querySelector('.note-input');
+            container.insertBefore(btn, inputBox);
+
+        }
+
+      function removeNoteButton(button) {
+          button.parentNode.removeChild(button);
+          removeNoteFromLocalStorage(button.textContent);
+      }
+
+      // Save notes to localStorage
+      function saveNoteToLocalStorage(note) {
+          console.trace();
+          let notes = getNotesFromLocalStorage();
+          notes.push(note);
+          localStorage.setItem('notes', JSON.stringify(notes));
+      }
+
+      // Remove notes from localStorage
+      function removeNoteFromLocalStorage(textContent) {
+          let notes = getNotesFromLocalStorage();
+          let updatedNotes = notes.filter(note => note !== textContent);
+          localStorage.setItem('notes', JSON.stringify(updatedNotes));
+      }
+
+      // Get notes from localStorage
+      function getNotesFromLocalStorage() {
+          console.trace();
+          let notes = localStorage.getItem('notes');
+          
+          if (notes) {
+              return JSON.parse(notes);
+          } else {
+              return [];
+          }
+      }
+
+      // Load notes and create buttons when page loads
+      function loadNotes() {
+          console.log("loadNotes called");
+          console.trace();
+          let notes = getNotesFromLocalStorage();
+          console.log("notes retrieved from localStorage: ");
+          console.log(notes);
+          notes.forEach(note => {
+              console.log(note);
+              console.log(notes);
+              console.log("adding note");
+              console.trace();
+              initialAddNoteButton(note);
+          });
+      }
+
+
+    </script>
+    
+    
+  </body>
+</html>
