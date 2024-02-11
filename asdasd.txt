@@ -1,0 +1,76 @@
+
+function getCurrentWeatherWithTimeout(city, timeoutDuration) {
+    // This is your original weather fetching function but wrapped inside a promise
+    const weatherPromise = new Promise((resolve, reject) => {
+        Weather.getCurrent(city, function(current) {
+            resolve(current); // resolve the outer promise when the weather data is here
+        });
+    });
+
+    // This promise will reject after `timeoutDuration` milliseconds
+    const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => {
+            reject(new Error('Request timed out')); // this will end the race with a rejection
+        }, timeoutDuration);
+    });
+
+    // The race is on: whichever promise settles first wins and the other gets ignored
+    return Promise.race([
+        weatherPromise,
+        timeoutPromise
+    ]);
+}
+
+// Now, you can use async/await syntax properly
+
+async function startWxr() {
+    try {
+        // Wait for the weather data to be fetched
+        const current = await getCurrentWeatherWithTimeout(city, 5000);
+        const today = new Date();
+        let h = today.getHours();
+        let day= false;
+        if(h>5 && h<20){day=true}
+        document.getElementById("temp").innerHTML=Math.round( Weather.kelvinToFahrenheit( current.temperature() ) ) + " &deg";
+        var icon;
+        console.log("h:"+h+" cond:"+current.conditions() + " condmain:"+current.mainConditions());
+        if(current.conditions()=="overcast clouds"){icon="a";}
+        if(current.conditions()=="broken clouds" && day){icon="3"}
+        if(current.conditions()=="broken clouds" && !day){icon="2";}
+        if(current.conditions()=="scattered clouds" && day){icon="R";}
+        if(current.conditions()=="scattered clouds" && !day){icon="A";}
+        if(current.conditions()=="few clouds" && day){icon="R";}
+        if(current.conditions()=="few clouds" && !day){icon="A";}
+        if(current.conditions()=="clear sky" && day){icon="/";}
+        if(current.conditions()=="clear sky" && !day){icon="(";}
+        if(current.mainConditions()=="Rain" && day){icon="h";} 
+        if(current.mainConditions()=="Rain" && !day){icon="g";} 
+        if(current.mainConditions()=="Drizzle" && day){icon="E";} 
+        if(current.mainConditions()=="Drizzle" && !day){icon="D";} 
+        if(current.mainConditions()=="Thunderstorm" && day){icon="e";} 
+        if(current.mainConditions()=="Thunderstorm" && !day){icon="d";} 
+        if(current.mainConditions()=="Snow" && day){icon="P";} 
+        if(current.mainConditions()=="Snow" && !day){icon="O";}  
+        if(current.mainConditions()=="Mist"){icon="$";} 
+        if(current.mainConditions()=="Smoke"){icon="1";}
+        if(current.mainConditions()=="Haze"){icon="m";}
+        if(current.mainConditions()=="Dust"){icon="$";}
+        if(current.mainConditions()=="Fog"){icon="U";}
+        if(current.mainConditions()=="Sand"){icon="$";}
+        if(current.mainConditions()=="Squall"){icon="T";}
+        if(current.mainConditions()=="Tornado"){icon="^";}
+
+        document.getElementById("wxrIcon").innerHTML=icon;
+        document.getElementById("wxrIcon").title=current.conditions()+" in "+ city;
+
+
+      } catch (error) {
+      // Always include error handling in async functions
+      console.error("Failed to get the weather data:", error);
+  }
+
+
+
+
+  setTimeout(startWxr, 60000);
+}
