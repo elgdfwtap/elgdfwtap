@@ -17,9 +17,13 @@ let playerStats = {
   startingCash: 5000,
   cashAvailable: 5000, // This will change based on trading activity
   portfolioValue: 0, // This will be calculated based on current positions
+  margin:0,
   getTotalCapital: function() {
     return this.cashAvailable + this.portfolioValue;
-  }
+  },
+  getPurchasingPower: function() {
+    return this.getTotalCapital() * 2; // Double the capital
+},
 };
 
 // Transaction example: {ticker: 'AAPL', amount: 3, price: 150, type: 'buy'}
@@ -33,13 +37,21 @@ let marketIndexChart; // Assuming this is globally accessible and stores the Cha
 let chartzoom = 50;
 // Initialize game data
 let stocks = []; // Holds all stock data
-let updateInterval = 500; // Update every 2000 milliseconds (2 seconds)
+let updateInterval = 333; // Update every 2000 milliseconds (2 seconds)
 document.addEventListener('DOMContentLoaded', () => {
   initializeGame();
   updateUI();
-  setInterval(mainGameLoop, updateInterval);
+  gameInterval=setInterval(mainGameLoop, updateInterval);
 
 });
+
+// Initialize shareFactor with a default value
+let shareFactor = 1;
+let isResetNext = true; // Flag to check if shareFactor needs to be reset on the next number input
+
+// Function to update shareFactor based on input
+
+
 
 let currentZoomIndex = 0; // Default zoom level index
 const zoomLevels = [22, 50, 100, 220, 500, 1000, 2200]; // Defined zoom levels
@@ -78,8 +90,8 @@ function mainGameLoop() {
   updateMarketIndex();
   updateTickersUI();
   updatePositionsUI();
-  updatePortfolioValue();
   updateCapitalBreakdownChart();
+  updatePortfolioValue();
 }
 
 // Start the game loop
@@ -168,7 +180,7 @@ function initializeTickerUI() { //initick
     stockDiv.setAttribute('data-ticker', stock.name);
     stockDiv.className = 'stock-item'; // Adding a class for styling and easier referencing
     stockDiv.id = `ticker-${stock.name}`;
-    stockDiv.innerHTML = `<span class=symbol>${stock.name}</span> <span class=value>${stock.pastData[stock.pastData.length - 1]} </span> <span class=holdings></span>`;
+    stockDiv.innerHTML = `<span class=symbol>${stock.name}</span> <span class=value>${stock.pastData[stock.pastData.length - 1]} </span> <span class=shares></span> <span class=holdings></span> <span class=ticker-profit-loss></span> `;
     const canvas = document.createElement('canvas');
     canvas.id = `graph-${stock.name}`;
     canvas.className = `mini-graph`;
@@ -228,32 +240,38 @@ function bindHotkeys() {
 }
 
 function buyStock(amount, tickerIndex) {
-  const stock = market.stocks[tickerIndex];
+const stock = market.stocks[tickerIndex];
   const price = stock.pastData[stock.pastData.length - 1];
   const totalCost = price * amount;
 
-  if (playerStats.cashAvailable >= totalCost) {
+  //if (playerStats.cashAvailable >= totalCost) {
     playerStats.cashAvailable -= totalCost; // Deduct the cost from cash available
     transactions.push({ ticker: stock.name, amount: amount, price: price, type: 'buy' });
-    updatePositions(stock.name, amount);
+    updatePositions(stock.name, amount, totalCost);
+	
     updateTickersUI();
     updatePortfolioValue();
-  } else {
-    console.log('Not enough cash to complete this transaction.');
-  }
+  //} else {
+   // console.log('Not enough cash to complete this transaction.');
+  //}
 }
 
 function sellStock(amount, tickerIndex) {
   const stock = market.stocks[tickerIndex];
+
   const price = stock.pastData[stock.pastData.length - 1];
   const totalValue = price * amount;
 
   transactions.push({ ticker: stock.name, amount: -amount, price: price, type: 'sell' });
-  updatePositions(stock.name, -amount);
+  updatePositions(stock.name, -amount, -totalValue);
   updateTickersUI();
   playerStats.cashAvailable += totalValue; // Add the value to cash available
   updatePortfolioValue();
+
+
 }
+
+
 function exitPositions() {
   const selectedStock = market.stocks[selectedTicker];
   if (!selectedStock) {
@@ -272,6 +290,7 @@ function exitPositions() {
   updatePositionsUI(); // Update the UI to reflect the position exit
   updateTickersUI();
 }
+
 
   function buyAllIn() {
       const selectedStock = market.stocks[selectedTicker];
@@ -322,29 +341,94 @@ function updateStockPrices() {
   }
 }
 
-function updatePositions(ticker, amount) {
+function updatePositions(ticker, amount, totalCost) {
   const position = positions.find(p => p.ticker === ticker);
   if (position) {
     position.amount += amount;
+	position.totalCost = (position.totalCost || 0) + totalCost;
     if (position.amount === 0) {
       // Remove the position if it's neutralized
       positions = positions.filter(p => p.ticker !== ticker);
     }
   } else {
-    positions.push({ ticker: ticker, amount: amount });
+    positions.push({ ticker: ticker, amount: amount, totalCost: totalCost });
+	
   }
+  updateMessagePos();
   updatePositionsUI();
 }
-function updatePortfolioValue() {
-  playerStats.portfolioValue = positions.reduce((acc, position) => {
-    const stock = market.stocks.find(s => s.name === position.ticker);
-    const latestPrice = stock.pastData[stock.pastData.length - 1];
-    return acc + (latestPrice * position.amount);
-  }, 0);
-
-  // Optionally, update the UI to reflect the new portfolio value and cash available
-  updatePlayerStatsUI();
+function updateMessagePos(){
+	const selectedStock = market.stocks[selectedTicker];
+	const position = positions.find(f => f.ticker === selectedStock.name);
+	if(position){
+		if(position.amount>0){
+			document.getElementById('message-buy').innerText='Buy';
+			document.getElementById('message-sell').innerText='Sell';
+			document.getElementById('controls-buy').innerText='Buy';
+			document.getElementById('controls-sell').innerText='Sell';
+		}else if(position.amount<0){
+			document.getElementById('message-buy').innerText='Cover';
+			document.getElementById('message-sell').innerText='Short';
+			document.getElementById('controls-buy').innerText='Cover';
+			document.getElementById('controls-sell').innerText='Short';
+		}else{
+			document.getElementById('message-buy').innerText='Buy';
+			document.getElementById('message-sell').innerText='Short';
+		}
+	}else{
+		document.getElementById('message-buy').innerText='Buy';
+			document.getElementById('message-sell').innerText='Short';
+			document.getElementById('controls-buy').innerText='Buy';
+			document.getElementById('controls-sell').innerText='Short';
+	}
+	updateMessageTicker();
+	
 }
+function updateMessageTicker(){
+	const selectedStock = market.stocks[selectedTicker];
+	const position = positions.find(f => f.ticker === selectedStock.name);
+	document.getElementById('message-price').innerText=(Math.round(selectedStock.pastData[selectedStock.pastData.length-1]*100*shareFactor)/100);
+}
+function updateMessageSelectionChange(){
+	const selectedStock = market.stocks[selectedTicker];
+	const position = positions.find(f => f.ticker === selectedStock.name);
+	document.getElementById('message-symbol').innerText=selectedStock.name;
+	updateMessagePos();
+	updateMessageTicker();
+}
+
+function gameOver(){
+	  updatePlayerStatsUI();
+		document.getElementById('cashAvailable').textContent = `Margin Call!`;
+	  document.getElementById('portfolioValue').textContent = `Margin Call!`;
+	  document.getElementById('totalCapital').textContent = `Total Capital: $${playerStats.getTotalCapital().toFixed(2)}`;
+			// Game ends, clear the game interval
+			clearInterval(gameInterval);
+
+			// Optionally, update the UI or notify the player that the game has ended
+			console.error("Game Over: Total capital has dropped below zero.");
+}
+function updatePortfolioValue() {
+    playerStats.portfolioValue = positions.reduce((acc, position) => {
+        const stock = market.stocks.find(s => s.name === position.ticker);
+        const latestPrice = stock.pastData[stock.pastData.length - 1];
+        return acc + (latestPrice * position.amount);
+    }, 0);
+
+    // Calculate total capital (portfolio value + cash available)
+    const totalCapital = playerStats.portfolioValue + playerStats.cashAvailable;
+
+    // Check if total capital drops below zero
+    if (totalCapital < 0) {
+		gameOver();
+		
+        // Here you can also invoke any function to handle game over state, like showing a message to the user.
+    } else {
+        // Optionally, update the UI to reflect the new portfolio value and cash available
+        updatePlayerStatsUI();
+    }
+}
+
 function updateCapitalBreakdownChart() {
     if (!capitalBreakdownChart) {
         console.error('Capital Breakdown Chart is not initialized.');
@@ -397,11 +481,22 @@ function updateTickersUI() { //uptick
           const investmentValue = latestPrice * position.amount;
 	  console.log(investmentValue);
           div.querySelector('.holdings').textContent = Math.round(investmentValue * 100) / 100;
+		  div.querySelector('.shares').textContent = position.amount;
+		  const totalCost = position.totalCost;
+			const profitLoss = investmentValue - totalCost;
+			const profitLossIndicator = profitLoss >= 0 ? `<span class=profit>▲$${Math.abs(profitLoss).toFixed(2)}</span>` :` <span class=loss>▼$${Math.abs(profitLoss).toFixed(2)}</span> `;
+		    div.querySelector('.ticker-profit-loss').innerHTML = profitLossIndicator;
+
        }else{
        div.querySelector('.holdings').textContent = '';
+	   div.querySelector('.shares').textContent = '';
+	   div.querySelector('.ticker-profit-loss').textContent = '';
+	   
        }
     }else{
        div.querySelector('.holdings').textContent = '';
+	   div.querySelector('.shares').textContent = '';
+	   div.querySelector('.ticker-profit-loss').textContent = '';
     }
     const canvas = document.getElementById(`graph-${stock.name}`);
     if (canvas) {
@@ -426,6 +521,7 @@ function updateTickersUI() { //uptick
       div.style.border = 'none'; // Remove border from non-selected tickers
     }
   });
+  updateMessageTicker();
 }
 
 
@@ -538,7 +634,8 @@ function updateUI() {
         data: dataPoints, // The last 50 data points of the selected stock
         fill: false,
         borderColor: 'rgb(20, 255, 20)', // Line color
-        tension: 0.1 // Slightly smooth line
+        tension: 0, // Slightly smooth line
+		pointStyle: false,
       }]
     },
     options: {
@@ -617,7 +714,8 @@ function updateMarketIndex() {
         data: dataPoints,
         fill: false,
         borderColor: 'rgb(255, 99, 132)', // Choose a different color for distinction
-        tension: 0.1
+        tension: 0.5,
+		pointStyle: false,
       }]
     },
     options: {
@@ -659,6 +757,32 @@ function updateMarketIndex() {
   }
 }
 
+document.addEventListener('keydown', function(event) {
+    // Check if the key pressed is a number from the numeric keypad
+    if (event.key >= 0 && event.key <= 9 && event.location === KeyboardEvent.DOM_KEY_LOCATION_NUMPAD) {
+        if (isResetNext) {
+            shareFactor = 0;
+            isResetNext = false;
+        }
+        // Update shareFactor by appending the new digit
+        shareFactor = shareFactor * 10 + parseInt(event.key);
+        console.log(`shareFactor is now: ${shareFactor}`);
+		var sharem=" shares";
+		if(shareFactor==1){
+			sharem=" share";
+		}
+		document.getElementById('message-sharefactor').innerText=shareFactor + sharem;
+    }
+
+    // Check if the pressed key is Num Enter
+    if (event.key === 'Enter' && event.location === KeyboardEvent.DOM_KEY_LOCATION_NUMPAD) {
+        isResetNext = true; // Next number input will reset shareFactor
+        console.log('Next input will reset shareFactor.');
+    }
+});
+
+// Bind numpad number keys (0-9)
+
 
 function calculateMarketPerformance() {
   // Simplified calculation of market performance
@@ -674,6 +798,7 @@ key('down', () => {
   // Move to the next ticker, looping back to the first if at the end
   selectedTicker = (selectedTicker) % market.stocks.length;
   updateUI();
+  updateMessageSelectionChange();
   return false; // Prevent default action
 });
 
@@ -681,26 +806,29 @@ key('up', () => {
   // Move to the previous ticker, looping to the last if at the beginning
   selectedTicker = (selectedTicker + market.stocks.length) % market.stocks.length;
   updateUI();
+  updateMessageSelectionChange();
   return false; // Prevent default action
 });
-key('enter', () => {
-  // Assuming `selectedTicker` is the index of the currently selected stock
-  // and a fixed amount for demonstration purposes
-  buyStock(1, selectedTicker); // Buy or cover 1 share of the selected stock
-  console.log('Bought/Covered stock:', market.stocks[selectedTicker].name);
-  console.log('Transactions:', transactions);
-  console.log('Positions:', positions);
+document.addEventListener('keydown', function(event) {
+    // Check if Enter key is pressed and ensure it's not the numpad Enter
+    if (event.key === 'Enter' && event.location !== KeyboardEvent.DOM_KEY_LOCATION_NUMPAD) {
+        // Your buyStock function logic here. Assuming buyStock takes the amount and tickerIndex.
+        // Example call, adjust parameters according to your function definition
+        buyStock(shareFactor, selectedTicker); // Buys 1 share of the selected stock
+    }
 });
 
-key('backspace', (event) => {
-  // Prevent the default backspace action (going back in browser history)
-  event.preventDefault();
-  // Sell or short 1 share of the selected stock
-  sellStock(1, selectedTicker);
-  console.log('Sold/Shorted stock:', market.stocks[selectedTicker].name);
-  console.log('Transactions:', transactions);
-  console.log('Positions:', positions);
+
+document.addEventListener('keydown', function(event) {
+    // Check if Enter key is pressed and ensure it's not the numpad Enter
+    if (event.key === 'Backspace' && event.location !== KeyboardEvent.DOM_KEY_LOCATION_NUMPAD) {
+        // Your buyStock function logic here. Assuming buyStock takes the amount and tickerIndex.
+        // Example call, adjust parameters according to your function definition
+        sellStock(shareFactor, selectedTicker); // Buys 1 share of the selected stock
+    }
 });
+
+
 key('9', () => {
   zoomOut();
   return false; // Prevent the default action
@@ -715,6 +843,12 @@ key('0', () => {
 key('\\', exitPositions);
 key('l', function(){ buyAllIn() });
 
+
+// Bind numpad enter to reset shareFactor on next input
+key('num_enter', () => {
+    isResetNext = true;
+    console.log(`Next input will reset shareFactor.`);
+});
 function displayMarketSummary() {
   console.log('Market Summary');
   console.log('---------------');
