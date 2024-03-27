@@ -671,7 +671,7 @@ function zoomOut() {
 function triggerRandomEvent() {
     economicEvents.forEach(event => {
         // Generate a random number and compare with event's probability
-        if (rng.random() <= (event.probability)/2) {
+        if (rng.random() <= (event.probability)) {
             // Check if the event is not already active
             const isAlreadyActive = market.activeEvents.some(activeEvent => activeEvent.name === event.name);
             
