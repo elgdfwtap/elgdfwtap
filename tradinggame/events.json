@@ -1,314 +1,304 @@
 [
-    {
-        "name": "FSC Announces More Relaxed Reporting Regulations for Tech Companies",
-        "sentimentFactor": 1.02, 
-        "expiryTime": 10, 
-        "affectedIndustries": ["tech"],
-        "affectedStocks": [],	
-        "probability": 0.005
-    },
-    {
-        "name": "USDOE Requiring New Energy-saving Measures for Manufacturing",
-        "sentimentFactor": 0.993, 
-        "expiryTime": 20,
-        "affectedIndustries": ["energy"],
-        "affectedStocks": [], 	
-        "probability": 0.005
-    },
-    {
-        "name": "3 Killed in Accident at PRT Factory",
-        "sentimentFactor": 0.8,
-        "expiryTime": 1,
-        "affectedIndustries": ["manufacturing"],
-        "affectedStocks": ["PRT"],  
-	"probability": 0.005
-    },
-    {
-        "name": "CEO of Alameda Research Charged with Fraud",
-        "sentimentFactor": 0.75,
-        "expiryTime": 1,
-        "affectedIndustries": ["crypto"],
-        "affectedStocks": ["AMDA"], 
-	"probability": 0.005
-    },
-    {
-        "name": "FixTech Launches New 'Groundbreaking' Smartphone",
-        "sentimentFactor": 1.01,
-        "expiryTime": 2,
-        "affectedIndustries": [], 
-        "affectedStocks": ["FXT"],
-	"probability": 0.005
-    },
-    {
-        "name": "Government Announces Tax Breaks for Renewable Energy Companies",
-        "sentimentFactor": 1.1,
-        "expiryTime": 4,
-        "affectedIndustries": ["energy"],
-        "affectedStocks": [],
-        "probability": 0.005
-    },
-    {
-        "name": "Major Tech Merger Expected to Drive Market Growth",
-        "sentimentFactor": 1.08,
-        "expiryTime": 2,
-        "affectedIndustries": ["tech"],
-        "affectedStocks": [],
-        "probability": 0.005
-    },
-    {
-        "name": "Economic Stimulus Package Passed, Boosting Investor Confidence",
-        "sentimentFactor": 1.15,
-        "expiryTime": 2,
-        "affectedIndustries": [],
-        "affectedStocks": [],
-        "probability": 0.005
-    },
-    {
-        "name": "Fossil Fuels Inc. Faces Lawsuit Over Environmental Violations",
-        "sentimentFactor": 0.85,
-        "expiryTime": 1,
-        "affectedIndustries": ["energy"],
-        "affectedStocks": ["DINO"],
-        "probability": 0.005
-    },
-    {
-        "name": "Robux Technologies Announces Breakthrough in AI Research",
-        "sentimentFactor": 1.03,
-        "expiryTime": 3,
-        "affectedIndustries": ["tech"],
-        "affectedStocks": ["RBUX"],
-        "probability": 0.005
-    },
-    {
-        "name": "Planned Obsolescence Faces Criticism Over Product Safety Concerns",
-        "sentimentFactor": 0.92,
-        "expiryTime": 1,
-        "affectedIndustries": [],
-        "affectedStocks": ["PO"],
-        "probability": 0.005
-    },
-    {
-        "name": "Data Breach Exposes Millions of Customer Records at DATA",
-        "sentimentFactor": 0.75,
-        "expiryTime": 1,
-        "affectedIndustries": [],
-        "affectedStocks": ["DATA"],
-        "probability": 0.0005
-    },
-    {
-        "name": "Monopolistic Oil Faces Antitrust Investigation",
-        "sentimentFactor": 0.88,
-        "expiryTime": 1,
-        "affectedIndustries": ["energy"],
-        "affectedStocks": ["MP"],
-        "probability": 0.005
-    },
-    {
-        "name": "HTB Bank Announces Plans to Expand into Emerging Markets",
-        "sentimentFactor": 1.02,
-        "expiryTime": 4,
-        "affectedIndustries": ["finance"],
-        "affectedStocks": ["HTB"],
-        "probability": 0.005
-    },
-    {
-        "name": "Alameda Research Launches FTX, New Cryptocurrency Exchange Platform",
-        "sentimentFactor": 1.1,
-        "expiryTime": 1,
-        "affectedIndustries": ["crypto"],
-        "affectedStocks": ["AMDA"],
-        "probability": 0.005
-    },
-    {
-        "name": "Ponzi Exchange CEO Indicted for Financial Fraud",
-        "sentimentFactor": 0.78,
-        "expiryTime": 1,
-        "affectedIndustries": ["crypto"],
-        "affectedStocks": ["PNZI"],
-        "probability": 0.005
-    },
-    {
-        "name": "Retard Coin Launches Innovative Blockchain Solution for Supply Chain Management",
-        "sentimentFactor": 1.05,
-        "expiryTime": 1,
-        "affectedIndustries": ["crypto"],
-        "affectedStocks": ["RTC"],
-        "probability": 0.005
-    },
-    {
-        "name": "CryptoScam Co. Investigated for Potential Securities Fraud",
-        "sentimentFactor": 0.85,
-        "expiryTime": 1,
-        "affectedIndustries": ["crypto"],
-        "affectedStocks": ["CS"],
-        "probability": 0.005
-    },
-    {
-        "name": "FixTech Announces Partnership with Leading Telecom Company",
-        "sentimentFactor": 1.01,
-        "expiryTime": 20,
-        "affectedIndustries": ["tech"],
-        "affectedStocks": ["FXT"],
-        "probability": 0.005
-    },
-    {
-        "name": "HTB Bank Faces Class Action Lawsuit Over Alleged Discriminatory Lending Practices",
-        "sentimentFactor": 0.85,
-        "expiryTime": 1,
-        "affectedIndustries": ["finance"],
-        "affectedStocks": ["HTB"],
-        "probability": 0.005
-    },
-    {
-        "name": "Monoil Under Investigation for Insider Trading",
-        "sentimentFactor": 0.8,
-        "expiryTime": 1,
-        "affectedIndustries": ["energy"],
-        "affectedStocks": ["MP"],
-        "probability": 0.005
-    },
-    {
-        "name": "Illiquid Holdings Facing Liquidity Crisis, Unable to Meet Withdrawals",
-        "sentimentFactor": 0.85,
-        "expiryTime": 4,
-        "affectedIndustries": ["finance"],
-        "affectedStocks": ["LQ"],
-        "probability": 0.005
-    },
-    {
-        "name": "RBUX Receives Patent for Revolutionary Virtual Reality Technology",
-        "sentimentFactor": 1.1,
-        "expiryTime": 4,
-        "affectedIndustries": ["tech"],
-        "affectedStocks": ["RBUX"],
-        "probability": 0.005
-    },
-    {
-        "name": "We Have Your Data Co. Ranked No. 1 for Tech Partnerships",
-        "sentimentFactor": 1.05,
-        "expiryTime": 2,
-        "affectedIndustries": ["tech"],
-        "affectedStocks": ["DATA"],
-        "probability": 0.005
-    },
-    {
-        "name": "PRT Manufacturing Accused of Labor Rights Violations",
-        "sentimentFactor": 0.82,
-        "expiryTime": 3,
-        "affectedIndustries": ["manufacturing"],
-        "affectedStocks": ["PRT"],
-        "probability": 0.005
-    },
-    {
-        "name": "Dr. Dynamite Co. Inc. Faces Environmental Lawsuit Over Toxic Waste Disposal",
-        "sentimentFactor": 0.85,
-        "expiryTime": 1,
-        "affectedIndustries": [],
-        "affectedStocks": ["DYNA"],
-        "probability": 0.005
-    },
 {
-        "name": "AMDA CEO Resigns Amidst Insider Trading Scandal",
-        "sentimentFactor": 0.75,
-        "expiryTime": 1,
-"affectedIndustries": ["crypto"],
-"affectedStocks": ["AMDA"],
-"probability": 0.005
+	"name":"NFT Craze Sends Ethereum Prices Soaring: Investors Eye Digital Collectibles",
+	"sentimentFactor":1.04,
+	"expiryTime":10,
+	"affectedIndustries":["crypto"],
+"affectedStocks": [],
+	"probability":0.002
 },
 {
-"name": "Ponzi Exchange Faces Regulatory Crackdown, Investors in Panic",
-"sentimentFactor": 0.7,
-"expiryTime": 1,
-"affectedIndustries": ["crypto"],
-"affectedStocks": ["PNZI"],
-"probability": 0.005
+	"name":"Top Trade Anaylist Says Why He is Investing in Crypto",
+	"sentimentFactor":1.04,
+	"expiryTime":10,
+	"affectedIndustries":["crypto"],
+"affectedStocks": [],
+	"probability":0.002
 },
 {
-"name": "RTC Announces Strategic Partnership with Global Logistics Giant",
-"sentimentFactor": 1.04,
-"expiryTime": 20,
-"affectedIndustries": ["crypto", "logistics"],
-"affectedStocks": ["RTC"],
-"probability": 0.005
+	"name":"Regulatory Clarity Boosts Investor Confidence: Crypto Prices Rally",
+	"sentimentFactor":1.04,
+	"expiryTime":10,
+	"affectedIndustries":["crypto"],
+"affectedStocks": [],
+	"probability":0.002
 },
 {
-"name": "CryptoScam Faces Patent Infringement Lawsuit",
-"sentimentFactor": 0.9,
-"expiryTime": 4,
-"affectedIndustries": ["crypto"],
-"affectedStocks": ["CS"],
-"probability": 0.005
+	"name":"Altcoins Surge as Bitcoin Dominance Declines: Cryptocurrency Market Booms",
+	"sentimentFactor":1.04,
+	"expiryTime":10,
+	"affectedIndustries":["crypto"],
+"affectedStocks": [],
+	"probability":0.002
 },
 {
-"name": "CryptoScam Co. Accused of Operating Pyramid Scheme",
-"sentimentFactor": 0.8,
-"expiryTime": 2,
-"affectedIndustries": ["crypto"],
-"affectedStocks": ["CS"],
-"probability": 0.005
+	"name":"Institutional Investors Pour Billions into Cryptocurrency: Market Cap Hits Trillion-Dollar Milestone",
+	"sentimentFactor":1.04,
+	"expiryTime":10,
+	"affectedIndustries":["crypto"],
+"affectedStocks": [],
+	"probability":0.002
 },
 {
-"name": "FixTech Faces Patent Lawsuit from Competitor",
-"sentimentFactor": 0.8,
-"expiryTime": 1,
-"affectedIndustries": ["tech"],
-"affectedStocks": ["FXT"],
-"probability": 0.005
+	"name":"FTX Exchange Gain Traction: Cryptocurrency Prices Reach New Peaks",
+	"sentimentFactor":1.04,
+	"expiryTime":10,
+	"affectedIndustries":["crypto"],
+"affectedStocks": [],
+	"probability":0.002
 },
 {
-"name": "HTB Bank Announces Record Profits Amidst Economic Downturn",
-"sentimentFactor": 1.05,
-"expiryTime": 5,
-"affectedIndustries": ["finance"],
-"affectedStocks": ["HTB"],
-"probability": 0.005
+	"name":"Bitcoin Halving Sparks Bull Run: Cryptocurrency Market Experiences Parabolic Growth",
+	"sentimentFactor":1.04,
+	"expiryTime":10,
+	"affectedIndustries":["crypto"],
+"affectedStocks": [],
+	"probability":0.002
 },
 {
-"name": "Monoil Faces SEC Investigation Over Accounting Irregularities",
-"sentimentFactor": 0.8,
-"expiryTime": 3,
-"affectedIndustries": ["finance"],
-"affectedStocks": ["MP"],
-"probability": 0.005
+	"name":"Stablecoins Surge in Popularity: Cryptocurrency Market Capitalization Hits Record High",
+	"sentimentFactor":1.04,
+	"expiryTime":10,
+	"affectedIndustries":["crypto"],
+"affectedStocks": [],
+	"probability":0.002
+},
+
+
+
+
+{
+	"name":"Crypto is a Zero Sum Game and Here's Why You Shouldn't Invest",
+	"sentimentFactor":0.96,
+	"expiryTime":10,
+	"affectedIndustries":["crypto"],
+"affectedStocks": [],
+	"probability":0.002
 },
 {
-"name": "LQ Pharmaceuticals Receives FDA Warning Letter for Manufacturing Violations",
-"sentimentFactor": 0.7,
-"expiryTime": 1,
-"affectedIndustries": ["healthcare"],
-"affectedStocks": ["LQ"],
-"probability": 0.005
+	"name":"Tether Controversy Sparks Market Uncertainty: Crypto Prices Set to Dip",
+	"sentimentFactor":0.96,
+	"expiryTime":10,
+	"affectedIndustries":["crypto"],
+"affectedStocks": [],
+	"probability":0.002
 },
 {
-"name": "RBUX Announces Expansion Plans into Asian Markets",
-"sentimentFactor": 1.02,
-"expiryTime": 4,
-"affectedIndustries": ["tech"],
-"affectedStocks": ["RBUX"],
-"probability": 0.005
+	"name":"Sam Bankman-Fried Goes to Prison",
+	"sentimentFactor":0.96,
+	"expiryTime":10,
+	"affectedIndustries":["crypto"],
+"affectedStocks": [],
+	"probability":0.002
 },
 {
-"name": "We Have Your Data Co. called Most Innovative Company by FixTech CEO",
-"sentimentFactor": 1.04,
-"expiryTime": 4,
-"affectedIndustries": [],
-"affectedStocks": ["DATA"],
-"probability": 0.005
+	"name":"Altcoins See Double-Digit Declines: Crypto Market Braces for Downturn",
+	"sentimentFactor":0.96,
+	"expiryTime":10,
+	"affectedIndustries":["crypto"],
+"affectedStocks": [],
+	"probability":0.002
 },
 {
-"name": "PRT Manufacturing Unveils New Environmentally Friendly Production Process",
-"sentimentFactor": 1.05,
-"expiryTime": 3,
-"affectedIndustries": ["manufacturing"],
-"affectedStocks": ["PRT"],
-"probability": 0.005
+	"name":"China Intensifies Crackdown on Crypto Mining: Market Fears Impact on Prices",
+	"sentimentFactor":0.96,
+	"expiryTime":10,
+	"affectedIndustries":["crypto"],
+"affectedStocks": [],
+	"probability":0.002
 },
 {
-"name": "Dr. Dynamite Co. Inc. Awarded Government Contract for Clean Energy Research",
-"sentimentFactor": 1.1,
-"expiryTime": 3,
-"affectedIndustries": [],
-"affectedStocks": ["DYNA"],
-"probability": 0.005
+	"name":"Technical Indicators Flash Bearish Signals: Crypto Traders Prepare for Pullback",
+	"sentimentFactor":0.96,
+	"expiryTime":10,
+	"affectedIndustries":["crypto"],
+"affectedStocks": [],
+	"probability":0.002
+},
+{
+	"name":"Lack of Institutional Adoption Stifles Market Growth: Cryptocurrency Prices to Dip in Coming Weeks",
+	"sentimentFactor":0.96,
+	"expiryTime":10,
+	"affectedIndustries":["crypto"],
+"affectedStocks": [],
+	"probability":0.002
+},
+{
+	"name":"Energy Stocks Expected to Rise with New Law that Restricts Solar Panels",
+	"sentimentFactor":1.01,
+	"expiryTime":20,
+	"affectedIndustries":["energy"],
+"affectedStocks": [],
+	"probability":0.002
+},
+{
+	"name":"Infrastructure Investment Boosts Energy Sector: Stocks Reach Record Levels",
+	"sentimentFactor":1.01,
+	"expiryTime":20,
+	"affectedIndustries":["energy"],
+"affectedStocks": [],
+	"probability":0.002
+},
+{
+	"name":"Technological Breakthroughs Drive Energy Stocks to New Heights",
+	"sentimentFactor":1.01,
+	"expiryTime":20,
+	"affectedIndustries":["energy"],
+"affectedStocks": [],
+	"probability":0.002
+},
+{
+	"name":"Global Economic Recovery Fuels Energy Stock Surge",
+	"sentimentFactor":1.01,
+	"expiryTime":20,
+	"affectedIndustries":["energy"],
+"affectedStocks": [],
+	"probability":0.002
+},
+{
+	"name":"Geopolitical Tensions Escalate: Energy Stocks Benefit from Safe-Haven Demand",
+	"sentimentFactor":1.01,
+	"expiryTime":20,
+	"affectedIndustries":["energy"],
+"affectedStocks": [],
+	"probability":0.002
+},
+{
+	"name":"Energy Companies Report Strong Earnings: Stocks Rally on Positive Outlook",
+	"sentimentFactor":1.01,
+	"expiryTime":20,
+	"affectedIndustries":["energy"],
+"affectedStocks": [],
+	"probability":0.002
+},
+{
+	"name":"Renewable Energy Boom: Stocks Soar as Solar and Wind Investments Surge",
+	"sentimentFactor":1.01,
+	"expiryTime":20,
+	"affectedIndustries":["energy"],
+"affectedStocks": [],
+	"probability":0.002
+},
+{
+	"name":"Oil Prices Spike Amidst Supply Disruptions: Energy Stocks Rally",
+	"sentimentFactor":0.99,
+	"expiryTime":20,
+	"affectedIndustries":["energy"],
+"affectedStocks": [],
+	"probability":0.002
+},
+{
+	"name":"Investor Fears Mount as Natural Gas Prices Hit Record Lows",
+	"sentimentFactor":0.99,
+	"expiryTime":20,
+	"affectedIndustries":["energy"],
+"affectedStocks": [],
+	"probability":0.002
+},
+{
+	"name":"Supply Glut Hits Energy Sector: Stocks Dive Amidst Oversupply Concerns",
+	"sentimentFactor":0.99,
+	"expiryTime":20,
+	"affectedIndustries":["energy"],
+"affectedStocks": [],
+	"probability":0.002
+},
+{
+	"name":"Energy Giants Struggle as Solar and Wind Power Gain Momentum",
+	"sentimentFactor":0.99,
+	"expiryTime":20,
+	"affectedIndustries":["energy"],
+"affectedStocks": [],
+	"probability":0.002
+},
+{
+	"name":"Investor Confidence Wanes: Energy Stocks Hit by Economic Slowdown",
+	"sentimentFactor":0.99,
+	"expiryTime":20,
+	"affectedIndustries":["energy"],
+"affectedStocks": [],
+	"probability":0.002
+},
+{
+	"name":"Geopolitical Stability Eases: Energy Sector Slumps on Decreased Risk Premium",
+	"sentimentFactor":0.99,
+	"expiryTime":20,
+	"affectedIndustries":["energy"],
+"affectedStocks": [],
+	"probability":0.002
+},
+
+
+{
+	"name":"Federal Reserve Signals Interest Rate Cut: Financial Stocks Poised to Surge",
+	"sentimentFactor":1.01,
+	"expiryTime":15,
+	"affectedIndustries":["finance"],
+"affectedStocks": [],
+	"probability":0.002
+},
+{
+	"name":"Strong Earnings Season Expected: Financial Sector Anticipates Bullish Run",
+	"sentimentFactor":1.01,
+	"expiryTime":15,
+	"affectedIndustries":["finance"],
+"affectedStocks": [],
+	"probability":0.002
+},
+{
+	"name":"Investor Confidence Rises as Economic Recovery Accelerates: Financial Stocks Set to Rally",
+	"sentimentFactor":1.01,
+	"expiryTime":15,
+	"affectedIndustries":["finance"],
+"affectedStocks": [],
+	"probability":0.002
+},
+{
+	"name":"Mergers and Acquisitions Activity Heats Up: Financial Stocks Primed for Growth",
+	"sentimentFactor":1.01,
+	"expiryTime":15,
+	"affectedIndustries":["finance"],
+"affectedStocks": [],
+	"probability":0.002
+},
+{
+	"name":"Positive Economic Data Boosts Financial Sector Outlook: Stocks Expected to Soar",
+	"sentimentFactor":1.01,
+	"expiryTime":15,
+	"affectedIndustries":["finance"],
+"affectedStocks": [],
+	"probability":0.002
+},
+{
+	"name":"Banks Pass Stress Tests with Flying Colors: Financial Stocks Expected to Outperform",
+	"sentimentFactor":1.01,
+	"expiryTime":15,
+	"affectedIndustries":["finance"],
+"affectedStocks": [],
+	"probability":0.002
+},
+{
+	"name":"Inflation Concerns Ease: Financial Stocks Gain Momentum",
+	"sentimentFactor":1.01,
+	"expiryTime":15,
+	"affectedIndustries":["finance"],
+"affectedStocks": [],
+	"probability":0.002
+},
+
+
+
+
+
+
+
+
+{
+	"name":"",
+	"sentimentFactor":1,
+	"expiryTime":0,
+	"affectedIndustries":[],
+"affectedStocks": [],
+	"probability":0
 }
 ]

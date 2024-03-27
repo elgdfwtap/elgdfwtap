@@ -678,7 +678,7 @@ function triggerRandomEvent() {
             if (!isAlreadyActive) {
                 // Clone the event to avoid mutating the original event template
                 const newEvent = {...event, expiryTime: event.expiryTime}; // Reset expiryTime for each activation
-		newEvent.sentimentFactor=Math.sqrt(newEvent.sentimentFactor);
+		//newEvent.sentimentFactor=Math.sqrt(newEvent.sentimentFactor);
                 market.activeEvents.push(newEvent);
                 console.log(`Event triggered: ${event.name}`);
 		updateNewsTable(newEvent);
