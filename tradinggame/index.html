@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Trading Game</title>
+    <link rel="stylesheet" href="style.css"> <!-- Link to your CSS file -->
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/keymaster/1.6.1/keymaster.min.js"></script>
+<script type="module" src="https://cdn.jsdelivr.net/npm/chart.js@4.3.0/dist/chart.umd.min.js"></script>
+  <script src="script.js" defer></script>
+  </head>
+<body>
+    <div id="gameContainer">
+
+        <!-- Player Stats and Timer -->
+        <div id="playerStats">
+            <span id="portfolioValue"></span>
+            <span id="totalCapital"></span>
+            <span id="playingTime"></span>
+            <span id="cashAvailable"></span>
+        </div>
+
+        <!-- Main Stock Chart -->
+        <div id="section1">
+          <div id="section1a">
+            <div id="section1aa">
+              <div id="stockChartContainer">
+                  <canvas id="stockChart"></canvas>
+              </div>
+              <div id="zoomControls">
+                  <button id="zoomOut" onclick="zoomOut();">+</button>
+                  <button id="zoomIn" onclick="zoomIn();">-</button>
+              </div>
+              <div id="zoomLevels">
+                  <!-- Zoom levels will be dynamically injected here -->
+              </div>
+            </div>
+          
+    
+            <!-- Stock List and Performance -->
+            <div id="stockList">
+                <!-- Stock items will be dynamically added here -->
+          </div>
+          </div>
+        </div>
+        <div id="section2">
+          <!-- Player Positions and Performance -->
+          <div id="playerPositions">
+              <!-- Player positions will be dynamically added here -->
+          </div>
+  
+          <!-- Market Index Graph -->
+          <div id="marketIndexContainer">
+              <canvas id="marketIndexGraph"></canvas>
+          </div>
+          <div id="pie">
+            <canvas id="capitalBreakdownChart"></canvas>
+          </div>
+        </div>
+
+    </div>
+</body>
+</html>
