@@ -3,14 +3,17 @@ const NUM_STOCKS = 20;
 const NUM_INITIAL_DATA_POINTS = 10;
 const market = {
   overallVolatility: 0.1, // Overall market volatility
+  performance: 1 ,
   industries: {
-    tech: { volatility: 0.02, performance: 1 },
-    healthcare: { volatility: 0.015, performance: 1 },
-    finance: { volatility: 0.01, performance: 1 },
-    crypto: { volatility: 0.6, performance: 1 },
+    tech: { volatility: 0.02, performance: 1, indicator:'TECH' },
+    energy: { volatility: 0.015, performance: 1, indicator:'NRGY' },
+    finance: { volatility: 0.01, performance: 1 , indicator:'FINC' },
+    crypto: { volatility: 0.6, performance: 1, indicator:'CPTO'},
+    manufacturing: {volatility: 0.01, performance: 1,indicator:'MANU' },
   },
   stocks: [],
-  marketIndexData: []
+  marketIndexData: [],
+  activeEvents:[],
 };
 
 let playerStats = {
@@ -25,6 +28,18 @@ let playerStats = {
     return this.getTotalCapital() * 2; // Double the capital
 },
 };
+
+let economicEvents = [];
+
+fetch('./events.json')
+  .then(response => response.json())
+  .then(data => {
+    economicEvents = data;
+    console.log(economicEvents);
+  })
+  .catch(error => console.error("Failed to load economic events:", error));
+
+
 
 // Transaction example: {ticker: 'AAPL', amount: 3, price: 150, type: 'buy'}
 let transactions = [];
@@ -56,24 +71,28 @@ let isResetNext = true; // Flag to check if shareFactor needs to be reset on the
 let currentZoomIndex = 0; // Default zoom level index
 const zoomLevels = [22, 50, 100, 220, 500, 1000, 2200]; // Defined zoom levels
 function initializeGame() {
-  const stockNames = ['IXN','KHZ','YEPW','GOLA','FIXN','PRT','GQ','NEXT','TNT','QLOT','VBUY','FTL','REPL'];
+  const stockNames = ['FXT','RBUX','PO','DATA','DINO','DYNA','PRT','MP','HTB','LQ','AMDA','PNZI','CS','RTC'];
+  const longNames=['FixTech','Robux Technologies Inc.','Planned Obsolescence Co. Ltd.','We Have Your Data Co.','Fossil Fuels Inc.','Dr. Dynamite Co. Inc.','PRT Manufacturing Inc.','Monopolistic Oil Company Inc.','Hostile Takeover Bank Co.','Illiquid Assets Holding','Alameda Research','Ponzi Exchange LLC','CryptoScam Co.','Retard Coin'];
   const industries = Object.keys(market.industries);
-
+  const industryIndicies = [0,0,0,0,1,4,4,1,2,2,3,3,3,3];
   // Create stocks and assign to industries
   stockNames.forEach((name, index) => {
-    const industry = industries[index % industries.length];
+    //const industry = industries[index % industries.length];
+    const longName = longNames[index];
+    const industry = industries[industryIndicies[index]];
     const stock = {
       name,
       industry,
       volatility: Math.random() * 0.05 + 0.005, // Random volatility between 0.005 and 0.055
-      pastData: [100] // Start price of 100 for simplicity
+      longName,
+      pastData: [200] // Start price of 100 for simplicity
     };
     market.stocks.push(stock);
-  }); updateStockPrices
+  }); //iterateStockPrices
 
   // Generate past data
-  for (let i = 0; i < 50; i++) {
-    updateStockPrices();
+  for (let i = 0; i < 100; i++) {
+    iterateStockPrices();
   }
 
   // Call these functions initially to set up the UI
@@ -85,7 +104,8 @@ function initializeGame() {
 }
 
 function mainGameLoop() {
-  updateStockPrices(); // Update stock prices for the simulation
+  triggerRandomEvent();
+  iterateStockPrices(); // Update stock prices for the simulation
   updateUI(); // Refresh the UI with the new stock data
   updateMarketIndex();
   updateTickersUI();
@@ -321,25 +341,88 @@ function exitPositions() {
   
  
 
-function updateStockPrices() {
-  let totalMarketValue = 0;
-  let stocksCounted = 0;
-  market.stocks.forEach(stock => {
-    const industryPerformance = market.industries[stock.industry].performance;
-    // Introduce additional randomness
-    const randomFactor = (Math.random() - 0.5) * 2;
-    const change = randomFactor * stock.volatility;
+function iterateStockPrices() {
+    let totalMarketValue = 0;
+    let stocksCounted = 0;
 
-    const newPrice = stock.pastData[stock.pastData.length - 1] * (1 + change + (industryPerformance - 1));
-    stock.pastData.push(Math.max(newPrice, 1)); // Prevent negative prices
-    totalMarketValue += Math.max(newPrice, 1);
-    stocksCounted++;
-  });
-  if (stocksCounted > 0) {
-    const averageMarketPrice = totalMarketValue / stocksCounted;
-    market.marketIndexData.push(averageMarketPrice);
-  }
+    // Apply overall market sentiment effects
+    let marketSentimentEffect = 1;
+    market.activeEvents.forEach(event => {
+        // Assuming events can also be market-wide, adjust the market sentiment
+        if (!event.affectedIndustries.length && !event.affectedStocks.length) { // Market-wide event
+            marketSentimentEffect *= event.sentimentFactor;
+        }
+    });
+
+    // Adjust the overall market performance based on sentiment and random fluctuation
+    const marketRandomFactor = (Math.random() - 0.5) * 2;
+    market.performance *= (1 + marketRandomFactor * market.overallVolatility * marketSentimentEffect);
+// Iterate over stocks to update prices
+    market.stocks.forEach(stock => {
+        let sentimentEffect = 1; // Default no effect
+
+        // Apply sentiment effects from active events specific to industries or stocks
+        market.activeEvents.forEach(event => {
+            if (event.expiryTime > 0 &&
+                (event.affectedIndustries.includes(stock.industry) ||
+                 event.affectedStocks.includes(stock.name))) {
+                sentimentEffect *= 1 + (event.sentimentFactor - 1) * 0.1; // Adjust the effect strength
+            }
+
+        });
+
+        // Combine industry and overall market performance for this stock's update
+        const industryPerformance = market.industries[stock.industry].performance * sentimentEffect;
+        const randomFactor = (Math.random() - 0.5) * market.overallVolatility;
+        const change = randomFactor * 0.1; // Apply a dampening to the random change
+        
+        // Apply combined effects to calculate the new price
+        const newPrice = stock.pastData[stock.pastData.length - 1] * (1 + change + (industryPerformance - 1));
+        stock.pastData.push(Math.max(newPrice, 1)); // Ensure price doesn't go negative
+    });
+
+    // Update market index data
+    if (stocksCounted > 0) {
+        const averageMarketPrice = totalMarketValue / stocksCounted;
+        market.marketIndexData.push(averageMarketPrice);
+    }
+
+    // Update or clear active events based on expiry
+    market.activeEvents.forEach(event => event.expiryTime -= 1);
+    market.activeEvents = market.activeEvents.filter(event => event.expiryTime > 0);
+
 }
+
+function updateNewsTable(event) {
+    const newsTable = document.getElementById('news-table');
+    
+    // Check if the table already has 5 rows (1 header + 4 news events)
+    // If so, remove the last row to make space for the new event
+    if (newsTable.rows.length > 5) {
+        newsTable.deleteRow(-1); // Delete the last row
+    }
+
+    // Create a new row at the top of the table, right below the header
+    const newRow = newsTable.insertRow(1); // The header is the first row (0), so we insert at position 1
+
+    // Set up the cells in the new row
+    const directionCell = newRow.insertCell(0);
+    const symbolCell = newRow.insertCell(1);
+    const headlineCell = newRow.insertCell(2);
+
+    // Set cell contents
+    directionCell.innerHTML = event.sentimentFactor > 1 ? '▲' : '▼'; // Use appropriate arrow
+    directionCell.style.color = event.sentimentFactor > 1 ? '#0f0' : '#f00';
+    symbolCell.textContent = event.affectedStocks.length > 0 ? event.affectedStocks.join(", ") : market.industries[event.affectedIndustries[0]].indicator;
+    headlineCell.textContent = event.name;
+
+    // Ensure the table does not exceed 5 rows
+    while (newsTable.rows.length > 6) { // Includes header row
+        newsTable.deleteRow(1); // Delete the oldest row (after the header)
+    }
+}
+
+
 
 function updatePositions(ticker, amount, totalCost) {
   const position = positions.find(p => p.ticker === ticker);
@@ -479,7 +562,7 @@ function updateTickersUI() { //uptick
        const position = positions.find(p => p.ticker === stock.name);
        if(position){
           const investmentValue = latestPrice * position.amount;
-	  console.log(investmentValue);
+
           div.querySelector('.holdings').textContent = Math.round(investmentValue * 100) / 100;
 		  div.querySelector('.shares').textContent = position.amount;
 		  const totalCost = position.totalCost;
@@ -546,6 +629,25 @@ function zoomOut() {
     currentZoomIndex--;
     updateChartZoom();
   }
+}
+
+function triggerRandomEvent() {
+    economicEvents.forEach(event => {
+        // Generate a random number and compare with event's probability
+        if (Math.random() <= (event.probability)/8) {
+            // Check if the event is not already active
+            const isAlreadyActive = market.activeEvents.some(activeEvent => activeEvent.name === event.name);
+            
+            if (!isAlreadyActive) {
+                // Clone the event to avoid mutating the original event template
+                const newEvent = {...event, expiryTime: event.expiryTime}; // Reset expiryTime for each activation
+		newEvent.sentimentFactor=Math.sqrt(newEvent.sentimentFactor);
+                market.activeEvents.push(newEvent);
+                console.log(`Event triggered: ${event.name}`);
+		updateNewsTable(newEvent);
+            }
+        }
+    });
 }
 
 
@@ -629,7 +731,7 @@ function updateUI() {
     data: {
       labels: labels, // Assigning the generated labels to the chart
       datasets: [{
-        label: `${selectedStock.name} Price`, // Displaying the ticker name and "Price
+        label: `${selectedStock.longName} Price`, // Displaying the ticker name and "Price
 
         data: dataPoints, // The last 50 data points of the selected stock
         fill: false,
