@@ -3,7 +3,7 @@ const NUM_STOCKS = 20;
 const NUM_INITIAL_DATA_POINTS = 10;
 const market = {
   overallVolatility: 0.1, // Overall market volatility
-  performance: 1 ,
+  performance: 1.2 ,
   industries: {
     tech: { volatility: 0.02, performance: 1, indicator:'TECH' },
     energy: { volatility: 0.015, performance: 1, indicator:'NRGY' },
@@ -363,9 +363,20 @@ function exitPositions() {
           console.error('Not enough cash to buy any shares.');
       }
   }
-
+function resetTotalCost(){
+	const position = positions.find(p => p.ticker === market.stocks[selectedTicker].name);
+	if (position) {
+		position.totalCost=market.stocks[position.ticker].pastData[market.stocks[position.ticker].pastData.length-1]*position.amount;
+	}
+	updateTickersUI();
+}
   
- 
+ function resetAllTotalCost(){
+	positions.forEach(position=>{
+		const stock = market.stocks.find(s => s.name === position.ticker);
+		position.totalCost=stock.pastData[market.stocks[selectedTicker].pastData.length-1]*position.amount;
+	});
+ }
 
 function iterateStockPrices() {
     let totalMarketValue = 0;
@@ -382,10 +393,10 @@ function iterateStockPrices() {
 
     // Adjust the overall market performance based on sentiment and random fluctuation
     const marketRandomFactor = (rng.random() - 0.5) * 2;
-    market.performance *= (1 + marketRandomFactor * market.overallVolatility * marketSentimentEffect);
+    market.performance *= ((1 + marketRandomFactor * market.overallVolatility * marketSentimentEffect));
 // Iterate over stocks to update prices
     market.stocks.forEach(stock => {
-        let sentimentEffect = 1; // Default no effect
+        let sentimentEffect = 1.0001; // Default no effect
 
         // Apply sentiment effects from active events specific to industries or stocks
         market.activeEvents.forEach(event => {
@@ -539,7 +550,7 @@ function updatePortfolioValue() {
 }
 
 function updateCapitalBreakdownChart() {
-    if (!capitalBreakdownChart) {
+	/*if (!capitalBreakdownChart) {
         console.error('Capital Breakdown Chart is not initialized.');
         return;
     }
@@ -572,7 +583,7 @@ function updateCapitalBreakdownChart() {
         dataset.backgroundColor = backgroundColors;
     });
 
-    capitalBreakdownChart.update();
+    capitalBreakdownChart.update();*/
 }
 
 
@@ -937,6 +948,17 @@ key('up', () => {
   updateMessageSelectionChange();
   return false; // Prevent default action
 });
+key('p', () => {
+  // Move to the previous ticker, looping to the last if at the beginning
+  resetTotalCost();
+  return false; // Prevent default action
+});
+key('o', () => {
+  // Move to the previous ticker, looping to the last if at the beginning
+  resetAllTotalCost();
+  return false; // Prevent default action
+});
+
 document.addEventListener('keydown', function(event) {
     // Check if Enter key is pressed and ensure it's not the numpad Enter
     if (event.key === 'Enter' && event.location !== KeyboardEvent.DOM_KEY_LOCATION_NUMPAD) {
