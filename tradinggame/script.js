@@ -88,7 +88,7 @@ function getSeedFromURL() {
     return seed ? parseInt(seed, 10) : undefined; // Return the seed as a number, or undefined if not set
 }
 
-const seed = getSeedFromURL() || Math.floor(rng.random() * 10000); // Fallback to a random seed if none in URL
+const seed = getSeedFromURL() || Math.floor(Math.random() * 10000); // Fallback to a random seed if none in URL
 let rng = new SeededRNG(seed);
 
 
