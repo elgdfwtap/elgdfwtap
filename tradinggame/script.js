@@ -66,6 +66,32 @@ let isResetNext = true; // Flag to check if shareFactor needs to be reset on the
 
 // Function to update shareFactor based on input
 
+//Initialize seeding
+
+class SeededRNG {
+    constructor(seed) {
+        this.seed = seed;
+        this.a = 1664525;
+        this.c = 1013904223;
+        this.m = 2 ** 32; // Use 2^32 as the modulus
+    }
+
+    // Generate a pseudo-random number between 0 and 1
+    random() {
+        this.seed = (this.a * this.seed + this.c) % this.m;
+        return this.seed / this.m;
+    }
+}
+function getSeedFromURL() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const seed = urlParams.get('seed');
+    return seed ? parseInt(seed, 10) : undefined; // Return the seed as a number, or undefined if not set
+}
+
+const seed = getSeedFromURL() || Math.floor(rng.random() * 10000); // Fallback to a random seed if none in URL
+let rng = new SeededRNG(seed);
+
+
 
 
 let currentZoomIndex = 0; // Default zoom level index
@@ -83,7 +109,7 @@ function initializeGame() {
     const stock = {
       name,
       industry,
-      volatility: Math.random() * 0.05 + 0.005, // Random volatility between 0.005 and 0.055
+      volatility: rng.random() * 0.05 + 0.005, // Random volatility between 0.005 and 0.055
       longName,
       pastData: [200] // Start price of 100 for simplicity
     };
@@ -144,7 +170,7 @@ function generateStockSymbols(numStocks, numDataPoints) {
     let symbol = `STOCK${i}`;
 
     // Randomly assign volatility (for simplicity, let's use a number between 1 and 10)
-    let volatility = Math.floor(Math.random() * 10) + 1;
+    let volatility = Math.floor(rng.random() * 10) + 1;
 
     // Generate past data points for the stock
     let pastData = generatePastData(numDataPoints);
@@ -355,7 +381,7 @@ function iterateStockPrices() {
     });
 
     // Adjust the overall market performance based on sentiment and random fluctuation
-    const marketRandomFactor = (Math.random() - 0.5) * 2;
+    const marketRandomFactor = (rng.random() - 0.5) * 2;
     market.performance *= (1 + marketRandomFactor * market.overallVolatility * marketSentimentEffect);
 // Iterate over stocks to update prices
     market.stocks.forEach(stock => {
@@ -373,7 +399,7 @@ function iterateStockPrices() {
 
         // Combine industry and overall market performance for this stock's update
         const industryPerformance = market.industries[stock.industry].performance * sentimentEffect;
-        const randomFactor = (Math.random() - 0.5) * market.overallVolatility;
+        const randomFactor = (rng.random() - 0.5) * market.overallVolatility;
         const change = randomFactor * 0.1; // Apply a dampening to the random change
         
         // Apply combined effects to calculate the new price
@@ -634,7 +660,7 @@ function zoomOut() {
 function triggerRandomEvent() {
     economicEvents.forEach(event => {
         // Generate a random number and compare with event's probability
-        if (Math.random() <= (event.probability)/8) {
+        if (rng.random() <= (event.probability)/8) {
             // Check if the event is not already active
             const isAlreadyActive = market.activeEvents.some(activeEvent => activeEvent.name === event.name);
             

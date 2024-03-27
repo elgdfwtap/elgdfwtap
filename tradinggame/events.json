@@ -146,7 +146,7 @@
     {
         "name": "FixTech Announces Partnership with Leading Telecom Company",
         "sentimentFactor": 1.01,
-        "expiryTime": 10,
+        "expiryTime": 20,
         "affectedIndustries": ["tech"],
         "affectedStocks": ["FXT"],
         "probability": 0.005
@@ -163,22 +163,22 @@
         "name": "Monoil Under Investigation for Insider Trading",
         "sentimentFactor": 0.8,
         "expiryTime": 1,
-        "affectedIndustries": ["finance"],
+        "affectedIndustries": ["energy"],
         "affectedStocks": ["MP"],
         "probability": 0.005
     },
     {
-        "name": "LQ Pharmaceuticals Recalls Contaminated Medication Batch",
+        "name": "Illiquid Holdings Facing Liquidity Crisis, Unable to Meet Withdrawals",
         "sentimentFactor": 0.85,
-        "expiryTime": 1,
-        "affectedIndustries": ["healthcare"],
+        "expiryTime": 4,
+        "affectedIndustries": ["finance"],
         "affectedStocks": ["LQ"],
         "probability": 0.005
     },
     {
         "name": "RBUX Receives Patent for Revolutionary Virtual Reality Technology",
         "sentimentFactor": 1.1,
-        "expiryTime": 1,
+        "expiryTime": 4,
         "affectedIndustries": ["tech"],
         "affectedStocks": ["RBUX"],
         "probability": 0.005
@@ -194,7 +194,7 @@
     {
         "name": "PRT Manufacturing Accused of Labor Rights Violations",
         "sentimentFactor": 0.82,
-        "expiryTime": 1,
+        "expiryTime": 3,
         "affectedIndustries": ["manufacturing"],
         "affectedStocks": ["PRT"],
         "probability": 0.005
@@ -225,31 +225,31 @@
 },
 {
 "name": "RTC Announces Strategic Partnership with Global Logistics Giant",
-"sentimentFactor": 1.01,
+"sentimentFactor": 1.04,
 "expiryTime": 20,
 "affectedIndustries": ["crypto", "logistics"],
 "affectedStocks": ["RTC"],
 "probability": 0.005
 },
 {
-"name": "CS Pharmaceuticals Faces Patent Infringement Lawsuit",
-"sentimentFactor": 0.85,
-"expiryTime": 1,
-"affectedIndustries": ["healthcare"],
+"name": "CryptoScam Faces Patent Infringement Lawsuit",
+"sentimentFactor": 0.9,
+"expiryTime": 4,
+"affectedIndustries": ["crypto"],
 "affectedStocks": ["CS"],
 "probability": 0.005
 },
 {
 "name": "CryptoScam Co. Accused of Operating Pyramid Scheme",
-"sentimentFactor": 0.9,
-"expiryTime": 1,
+"sentimentFactor": 0.8,
+"expiryTime": 2,
 "affectedIndustries": ["crypto"],
 "affectedStocks": ["CS"],
 "probability": 0.005
 },
 {
 "name": "FixTech Faces Patent Lawsuit from Competitor",
-"sentimentFactor": 0.9,
+"sentimentFactor": 0.8,
 "expiryTime": 1,
 "affectedIndustries": ["tech"],
 "affectedStocks": ["FXT"],
@@ -257,8 +257,8 @@
 },
 {
 "name": "HTB Bank Announces Record Profits Amidst Economic Downturn",
-"sentimentFactor": 1.02,
-"expiryTime": 4,
+"sentimentFactor": 1.05,
+"expiryTime": 5,
 "affectedIndustries": ["finance"],
 "affectedStocks": ["HTB"],
 "probability": 0.005
@@ -266,14 +266,14 @@
 {
 "name": "Monoil Faces SEC Investigation Over Accounting Irregularities",
 "sentimentFactor": 0.8,
-"expiryTime": 1,
+"expiryTime": 3,
 "affectedIndustries": ["finance"],
 "affectedStocks": ["MP"],
 "probability": 0.005
 },
 {
 "name": "LQ Pharmaceuticals Receives FDA Warning Letter for Manufacturing Violations",
-"sentimentFactor": 0.85,
+"sentimentFactor": 0.7,
 "expiryTime": 1,
 "affectedIndustries": ["healthcare"],
 "affectedStocks": ["LQ"],
@@ -290,7 +290,7 @@
 {
 "name": "We Have Your Data Co. called Most Innovative Company by FixTech CEO",
 "sentimentFactor": 1.04,
-"expiryTime": 1,
+"expiryTime": 4,
 "affectedIndustries": [],
 "affectedStocks": ["DATA"],
 "probability": 0.005
@@ -298,7 +298,7 @@
 {
 "name": "PRT Manufacturing Unveils New Environmentally Friendly Production Process",
 "sentimentFactor": 1.05,
-"expiryTime": 1,
+"expiryTime": 3,
 "affectedIndustries": ["manufacturing"],
 "affectedStocks": ["PRT"],
 "probability": 0.005
@@ -306,7 +306,7 @@
 {
 "name": "Dr. Dynamite Co. Inc. Awarded Government Contract for Clean Energy Research",
 "sentimentFactor": 1.1,
-"expiryTime": 1,
+"expiryTime": 3,
 "affectedIndustries": [],
 "affectedStocks": ["DYNA"],
 "probability": 0.005
