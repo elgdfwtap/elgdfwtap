@@ -97,10 +97,10 @@ let rng = new SeededRNG(seed);
 let currentZoomIndex = 0; // Default zoom level index
 const zoomLevels = [22, 50, 100, 220, 500, 1000, 2200]; // Defined zoom levels
 function initializeGame() {
-  const stockNames = ['FXT','RBUX','PO','DATA','DINO','DYNA','PRT','MP','HTB','LQ','AMDA','PNZI','CS','RTC'];
-  const longNames=['FixTech','Robux Technologies Inc.','Planned Obsolescence Co. Ltd.','We Have Your Data Co.','Fossil Fuels Inc.','Dr. Dynamite Co. Inc.','PRT Manufacturing Inc.','Monopolistic Oil Company Inc.','Hostile Takeover Bank Co.','Illiquid Assets Holding','Alameda Research','Ponzi Exchange LLC','CryptoScam Co.','Retard Coin'];
+  const stockNames = ['FXT','ROBUX','PO','DATA','DINO','MP','DYNA','PRT','HTB','ILQ','ALMDA','PONZI','CS','RTC'];
+  const longNames=['FixTech','Robux Technologies Inc.','Planned Obsolescence Co. Ltd.','We Have Your Data Co.','Fossil Fuels Inc.','Monopolistic Oil Company Inc.','Dr. Dynamite Co. Inc.','PRT Systems Inc.','Hostile Takeover Bank Co.','Illiquid Assets Holding','Alameda Research','PonziCoin','CryptoScam Exchange Holdings','RetardCoin'];
   const industries = Object.keys(market.industries);
-  const industryIndicies = [0,0,0,0,1,4,4,1,2,2,3,3,3,3];
+  const industryIndicies = [0,0,0,0,1,1,4,4,2,2,3,3,3,3];
   // Create stocks and assign to industries
   stockNames.forEach((name, index) => {
     //const industry = industries[index % industries.length];
@@ -671,7 +671,7 @@ function zoomOut() {
 function triggerRandomEvent() {
     economicEvents.forEach(event => {
         // Generate a random number and compare with event's probability
-        if (rng.random() <= (event.probability)/8) {
+        if (rng.random() <= (event.probability)/5) {
             // Check if the event is not already active
             const isAlreadyActive = market.activeEvents.some(activeEvent => activeEvent.name === event.name);
             

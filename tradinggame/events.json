@@ -286,8 +286,62 @@
 	"probability":0.002
 },
 
-
-
+{
+	"name":"Interest Rate Hike Looms: Financial Stocks Face Bearish Outlook",
+	"sentimentFactor":0.99,
+	"expiryTime":15,
+	"affectedIndustries":["finance"],
+"affectedStocks": [],
+	"probability":0.002
+},
+{
+	"name":"Economic Slowdown Fears Grip Market: Financial Sector Braces for Downturn",
+	"sentimentFactor":0.99,
+	"expiryTime":15,
+	"affectedIndustries":["finance"],
+"affectedStocks": [],
+	"probability":0.002
+},
+{
+	"name":"Trade Tensions Escalate: Financial Stocks Slide Amidst Uncertainty",
+	"sentimentFactor":0.99,
+	"expiryTime":15,
+	"affectedIndustries":["finance"],
+"affectedStocks": [],
+	"probability":0.002
+},
+{
+	"name":"Credit Default Concerns Mount: Financial Sector Set to Decline",
+	"sentimentFactor":0.99,
+	"expiryTime":15,
+	"affectedIndustries":["finance"],
+"affectedStocks": [],
+	"probability":0.002
+},
+{
+	"name":"Yield Curve Inversion Sparks Recession Fears: Financial Stocks to Plummet",
+	"sentimentFactor":0.99,
+	"expiryTime":15,
+	"affectedIndustries":["finance"],
+"affectedStocks": [],
+	"probability":0.002
+},
+{
+	"name":"Regulatory Crackdown Looms: Financial Sector Faces Sell-Off",
+	"sentimentFactor":0.99,
+	"expiryTime":15,
+	"affectedIndustries":["finance"],
+"affectedStocks": [],
+	"probability":0.002
+},
+{
+	"name":"Profit Margin Pressures Weigh on Banks: Financial Stocks Expected to Dip",
+	"sentimentFactor":0.99,
+	"expiryTime":15,
+	"affectedIndustries":["finance"],
+"affectedStocks": [],
+	"probability":0.002
+},
 
 
 
