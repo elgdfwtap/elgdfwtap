@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Photo Upload Example</title>
+</head>
+<body>
+
+<div id="target" style="width: 300px; height: 300px; border: 1px solid #000;">
+    <!-- Image or error message will be displayed here -->
+</div>
+<br>
+<input type="file" id="photoInput" accept="image/*">
+<button onclick="submitPhoto()">Submit</button>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Check if there's an image in localStorage when the page loads
+        const savedImage = localStorage.getItem('uploadedPhoto');
+        if (savedImage) {
+            displayImage(savedImage);
+        }
+    });
+
+    function submitPhoto() {
+        const input = document.getElementById('photoInput');
+        if (!input.files[0]) {
+            alert('Please select a file.');
+            return;
+        }
+
+        const file = input.files[0];
+        if (file.size > 3145728) { // 3 MB in bytes
+            displayError('File must be under 3MB.');
+        } else {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                localStorage.setItem('uploadedPhoto', e.target.result);
+                displayImage(e.target.result);
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+
+    function displayImage(imageSrc) {
+        const target = document.getElementById('target');
+        target.innerHTML = `<img src="${imageSrc}" alt="Uploaded Image" style="width: 100%; height: auto;">`;
+    }
+
+    function displayError(errorMessage) {
+        const target = document.getElementById('target');
+        target.innerHTML = `<p>${errorMessage}</p>`;
+    }
+</script>
+
+</body>
+</html>

@@ -160,7 +160,7 @@
                 document.getElementById("temp").innerHTML=Math.round( Weather.kelvinToCelsius( current.temperature() ) ) + " &deg C";
               }
               var icon;
-              console.log("h:"+h+" cond:"+current.conditions() + " condmain:"+current.mainConditions());
+             
               if(current.conditions()=="overcast clouds"){icon="a";}
               if(current.conditions()=="broken clouds" && day){icon="3"}
               if(current.conditions()=="broken clouds" && !day){icon="2";}
@@ -207,7 +207,7 @@ let imagelistStr=read("assets/dynamicbackground/shibuya.txt");
 let imageList=imagelistStr.split("\n");
 let videoShowing=false;
 
-console.log(imageList);
+
 function toggleDropdown() {
         const options = document.querySelector('.dropdown-options');
         options.classList.toggle('hidden');
@@ -250,7 +250,7 @@ function toggleDropdown() {
           }
           imagelistStr = read(imageURLList[selectedValue - 1]);
           imageList = imagelistStr.split("\n");
-          console.log(imageList);
+          
           clearTimeout(dynamicWallpaperLoop);
           startDynamicWallpaper();
         } else if (selectedValue == "5") {
@@ -270,10 +270,10 @@ function toggleDropdown() {
 
         // Based on the data-value attribute
 
-        console.log(selectedValue);
+        
         switch(selectedValue){
           case '1':
-            console.log("English");
+            
             document.getElementById("autoComplete").placeholder="Search Google or Enter URL"; 
             break;
           case '2': 
@@ -316,12 +316,18 @@ async function start(){
   console.log("start function called");
   
   startTime();
+  console.log(1);
   startDynamicWallpaper();
-  handleSelectionChange();
+  console.log(2);
+  console.log(3);
   loadFontPreference();
+  console.log(4);
   loadBGPreference();
+  console.log(5);
   loadNotes();
+  console.log(6);
   startWxr();
+  console.log(7);
 }
 function startDynamicWallpaper(){
   const today = new Date();
