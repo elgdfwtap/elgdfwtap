@@ -1,43 +1,43 @@
 [
     {
-        name: "FSC Announces More Relaxed Reporting Regulations for Tech Companies",
-        sentimentFactor: 1.02, // +5% sentiment
-        expiryTime: 10, // Lasts for 5 iterations
-        affectedIndustries: ["tech"],
-        affectedStocks: [], // Empty means it affects the whole industry
-	probability: .005,
+        "name": "FSC Announces More Relaxed Reporting Regulations for Tech Companies",
+        "sentimentFactor": 1.02, // +5% sentiment
+        "expiryTime": 10, // Lasts for 5 iterations
+        "affectedIndustries": ["tech"],
+        "affectedStocks": [], // Empty means it affects the whole industry
+	"probability": .005,
     },
     {
-        name: "USDOE Requiring New Energy-saving Measures for Manufacturing",
-        sentimentFactor: 0.993, // -5% sentiment
-        expiryTime: 20,
-        affectedIndustries: ["energy"],
-        affectedStocks: [], // Affects the whole healthcare industry
-	probability: .005,
+        "name": "USDOE Requiring New Energy-saving Measures for Manufacturing",
+        "sentimentFactor": 0.993, // -5% sentiment
+        "expiryTime": 20,
+        "affectedIndustries": ["energy"],
+        "affectedStocks": [], // Affects the whole healthcare industry
+	"probability": .005,
     },
     {
-        name: "3 Killed in Accident at PRT Factory",
-        sentimentFactor: 0.8,
-        expiryTime: 1,
-        affectedIndustries: ["manufacturing"],
-        affectedStocks: ["PRT"],  //Effects manufacturing as a whole and PRT stock particularly
-	probability: .005,
+        "name": "3 Killed in Accident at PRT Factory",
+        "sentimentFactor": 0.8,
+        "expiryTime": 1,
+        "affectedIndustries": ["manufacturing"],
+        "affectedStocks": ["PRT"],  //Effects manufacturing as a whole and PRT stock particularly
+	"probability": .005,
     },
     {
-        name: "CEO of Alameda Research Charged with Fraud",
-        sentimentFactor: 0.75,
-        expiryTime: 1,
-        affectedIndustries: ["crypto"],
-        affectedStocks: ["AMDA"], // 
-	probability: .005,
+        "name": "CEO of Alameda Research Charged with Fraud",
+        "sentimentFactor": 0.75,
+        "expiryTime": 1,
+        "affectedIndustries": ["crypto"],
+        "affectedStocks": ["AMDA"], // 
+	"probability": .005,
     },
     {
-        name: "FixTech Launches New 'Groundbreaking' Smartphone",
-        sentimentFactor: 1.01,
-        expiryTime: 2,
-        affectedIndustries: [], 
-        affectedStocks: ["FXT"],//News Affects FXT ONLY
-	probability: .005,
+        "name": "FixTech Launches New 'Groundbreaking' Smartphone",
+        "sentimentFactor": 1.01,
+        "expiryTime": 2,
+        "affectedIndustries": [], 
+        "affectedStocks": ["FXT"],//News Affects FXT ONLY
+	"probability": .005,
     },
     {
         "name": "Government Announces Tax Breaks for Renewable Energy Companies",
