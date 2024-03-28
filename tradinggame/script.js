@@ -1,9 +1,10 @@
 // Number of stocks and initial data points
 const NUM_STOCKS = 20;
 const NUM_INITIAL_DATA_POINTS = 10;
+const marginRequirement=0.5;
 const market = {
   overallVolatility: 0.1, // Overall market volatility
-  performance: 1.2 ,
+  performance: 1 ,
   industries: {
     tech: { volatility: 0.02, performance: 1, indicator:'TECH' },
     energy: { volatility: 0.015, performance: 1, indicator:'NRGY' },
@@ -21,12 +22,46 @@ let playerStats = {
   cashAvailable: 5000, // This will change based on trading activity
   portfolioValue: 0, // This will be calculated based on current positions
   margin:0,
+  equities:[],
+  cash:[],
+  buyingPower:[],
+  netWorth:[],
+  currentBuyingPower:5000,
   getTotalCapital: function() {
     return this.cashAvailable + this.portfolioValue;
   },
-  getPurchasingPower: function() {
-    return this.getTotalCapital() * 2; // Double the capital
-},
+  getBuyingPower: function() {
+    return this.cashAvailable-this.portfolioValue*marginRequirement; // Double the capital
+  },
+  getMargin: function(){
+    if(positions.length!=0){
+    let longMargin=0;
+
+    for (var i=0; i < positions.length; i++){
+       if(positions[i].amount > 0){
+		console.log(positions[i]);
+           const stock = market.stocks.find(s => s.name === positions[i].ticker);
+           const latestPrice = stock.pastData[stock.pastData.length - 1];
+           longMargin += (latestPrice * positions[i].amount);
+	   console.log(latestPrice * positions[i].amount);
+
+        }
+
+    }
+    let shortMargin=0;
+    for (var i = 0; i < positions.length; i++){
+       if(positions[i].amount < 0){
+           const stock = market.stocks.find(s => s.name === positions[i].ticker);
+           const latestPrice = stock.pastData[stock.pastData.length - 1];
+           shortMargin += (latestPrice * -positions[i].amount);
+        }
+    }
+console.log(shortMargin+", "+longMargin);
+    return (longMargin+shortMargin)*(1-marginRequirement);
+    }
+    return 0;
+  },
+
 };
 
 let economicEvents = [];
@@ -97,10 +132,10 @@ let rng = new SeededRNG(seed);
 let currentZoomIndex = 0; // Default zoom level index
 const zoomLevels = [22, 50, 100, 220, 500, 1000, 2200]; // Defined zoom levels
 function initializeGame() {
-  const stockNames = ['FXT','ROBUX','PO','DATA','DINO','MP','DYNA','PRT','HTB','ILQ','ALMDA','PONZI','CS','RTC'];
-  const longNames=['FixTech','Robux Technologies Inc.','Planned Obsolescence Co. Ltd.','We Have Your Data Co.','Fossil Fuels Inc.','Monopolistic Oil Company Inc.','Dr. Dynamite Co. Inc.','PRT Systems Inc.','Hostile Takeover Bank Co.','Illiquid Assets Holding','Alameda Research','PonziCoin','CryptoScam Exchange Holdings','RetardCoin'];
+  const stockNames = ['FXT','RBUX','PO','DATA','DINO','DYNA','PRT','MP','HTB','LQ','AMDA','PNZI','CS','RTC'];
+  const longNames=['FixTech','Robux Technologies Inc.','Planned Obsolescence Co. Ltd.','We Have Your Data Co.','Fossil Fuels Inc.','Dr. Dynamite Co. Inc.','PRT Manufacturing Inc.','Monopolistic Oil Company Inc.','Hostile Takeover Bank Co.','Illiquid Assets Holding','Alameda Research','Ponzi Exchange LLC','CryptoScam Co.','Retard Coin'];
   const industries = Object.keys(market.industries);
-  const industryIndicies = [0,0,0,0,1,1,4,4,2,2,3,3,3,3];
+  const industryIndicies = [0,0,0,0,1,4,4,1,2,2,3,3,3,3];
   // Create stocks and assign to industries
   stockNames.forEach((name, index) => {
     //const industry = industries[index % industries.length];
@@ -363,20 +398,9 @@ function exitPositions() {
           console.error('Not enough cash to buy any shares.');
       }
   }
-function resetTotalCost(){
-	const position = positions.find(p => p.ticker === market.stocks[selectedTicker].name);
-	if (position) {
-		position.totalCost=market.stocks[position.ticker].pastData[market.stocks[position.ticker].pastData.length-1]*position.amount;
-	}
-	updateTickersUI();
-}
+
   
- function resetAllTotalCost(){
-	positions.forEach(position=>{
-		const stock = market.stocks.find(s => s.name === position.ticker);
-		position.totalCost=stock.pastData[market.stocks[selectedTicker].pastData.length-1]*position.amount;
-	});
- }
+ 
 
 function iterateStockPrices() {
     let totalMarketValue = 0;
@@ -393,10 +417,10 @@ function iterateStockPrices() {
 
     // Adjust the overall market performance based on sentiment and random fluctuation
     const marketRandomFactor = (rng.random() - 0.5) * 2;
-    market.performance *= ((1 + marketRandomFactor * market.overallVolatility * marketSentimentEffect));
+    market.performance *= (1 + marketRandomFactor * market.overallVolatility * marketSentimentEffect);
 // Iterate over stocks to update prices
     market.stocks.forEach(stock => {
-        let sentimentEffect = 1.0001; // Default no effect
+        let sentimentEffect = 1; // Default no effect
 
         // Apply sentiment effects from active events specific to industries or stocks
         market.activeEvents.forEach(event => {
@@ -518,7 +542,6 @@ function updateMessageSelectionChange(){
 }
 
 function gameOver(){
-	  updatePlayerStatsUI();
 		document.getElementById('cashAvailable').textContent = `Margin Call!`;
 	  document.getElementById('portfolioValue').textContent = `Margin Call!`;
 	  document.getElementById('totalCapital').textContent = `Total Capital: $${playerStats.getTotalCapital().toFixed(2)}`;
@@ -529,28 +552,25 @@ function gameOver(){
 			console.error("Game Over: Total capital has dropped below zero.");
 }
 function updatePortfolioValue() {
-    playerStats.portfolioValue = positions.reduce((acc, position) => {
+    const pV = positions.reduce((acc, position) => {
         const stock = market.stocks.find(s => s.name === position.ticker);
         const latestPrice = stock.pastData[stock.pastData.length - 1];
         return acc + (latestPrice * position.amount);
     }, 0);
-
+    playerStats.portfolioValue=pV
+    //calculate buying power
+    bP=playerStats.getBuyingPower();
+    playerStats.currentBuyingPower=bP;
     // Calculate total capital (portfolio value + cash available)
     const totalCapital = playerStats.portfolioValue + playerStats.cashAvailable;
+    // Check if buying power drops below zero
+    // Optionally, update the UI to reflect the new portfolio value and cash available
+    updatePlayerStatsUI();
 
-    // Check if total capital drops below zero
-    if (totalCapital < 0) {
-		gameOver();
-		
-        // Here you can also invoke any function to handle game over state, like showing a message to the user.
-    } else {
-        // Optionally, update the UI to reflect the new portfolio value and cash available
-        updatePlayerStatsUI();
-    }
 }
 
 function updateCapitalBreakdownChart() {
-	/*if (!capitalBreakdownChart) {
+    if (!capitalBreakdownChart) {
         console.error('Capital Breakdown Chart is not initialized.');
         return;
     }
@@ -583,7 +603,7 @@ function updateCapitalBreakdownChart() {
         dataset.backgroundColor = backgroundColors;
     });
 
-    capitalBreakdownChart.update();*/
+    capitalBreakdownChart.update();
 }
 
 
@@ -671,14 +691,14 @@ function zoomOut() {
 function triggerRandomEvent() {
     economicEvents.forEach(event => {
         // Generate a random number and compare with event's probability
-        if (rng.random() <= (event.probability)) {
+        if (rng.random() <= (event.probability)/8) {
             // Check if the event is not already active
             const isAlreadyActive = market.activeEvents.some(activeEvent => activeEvent.name === event.name);
             
             if (!isAlreadyActive) {
                 // Clone the event to avoid mutating the original event template
                 const newEvent = {...event, expiryTime: event.expiryTime}; // Reset expiryTime for each activation
-		//newEvent.sentimentFactor=Math.sqrt(newEvent.sentimentFactor);
+		newEvent.sentimentFactor=Math.sqrt(newEvent.sentimentFactor);
                 market.activeEvents.push(newEvent);
                 console.log(`Event triggered: ${event.name}`);
 		updateNewsTable(newEvent);
@@ -741,10 +761,38 @@ function updatePositionsUI() {
 
 
 function updatePlayerStatsUI() {
+  playerStats.equities.push(playerStats.portfolioValue);
+  playerStats.netWorth.push(playerStats.getTotalCapital());
+  playerStats.buyingPower.push(playerStats.getBuyingPower());
+  playerStats.cash.push(playerStats.cashAvailable);
+  let marginRatio=(playerStats.getTotalCapital())/Math.abs(playerStats.getMargin());
   document.getElementById('cashAvailable').textContent = `Cash Available: $${playerStats.cashAvailable.toFixed(2)}`;
   document.getElementById('portfolioValue').textContent = `Portfolio Value: $${playerStats.portfolioValue.toFixed(2)}`;
   document.getElementById('totalCapital').textContent = `Total Capital: $${playerStats.getTotalCapital().toFixed(2)}`;
+  document.getElementById('buyingPower').textContent = `Buying Power: $${playerStats.getBuyingPower().toFixed(2)}`;
+  document.getElementById('marginRatio').textContent = `Margin Ratio: $${(marginRatio*100).toFixed(0)}%`;
+
+
+  if (playerStats.getBuyingPower < 0 || (marginRatio && (marginRatio < 1))) {
+		gameOver();
+		
+        // Here you can also invoke any function to handle game over state, like showing a message to the user.
+    }
 }
+function updatePlayerStatsUI2() {
+  playerStats.equities.push(playerStats.portfolioValue);
+  playerStats.netWorth.push(playerStats.getTotalCapital());
+  playerStats.buyingPower.push(playerStats.getBuyingPower());
+  playerStats.cash.push(playerStats.cashAvailable);
+  const marginRatio=playerStats.portfolioValue/playerStats.getMargin();
+  document.getElementById('cashAvailable').textContent = `Cash Available: $${playerStats.cashAvailable.toFixed(2)}`;
+  document.getElementById('portfolioValue').textContent = `Portfolio Value: $${playerStats.portfolioValue.toFixed(2)}`;
+  document.getElementById('totalCapital').textContent = `Total Capital: $${playerStats.getTotalCapital().toFixed(2)}`;
+  document.getElementById('buyingPower').textContent = `Buying Power: $${playerStats.getBuyingPower().toFixed(2)}`;
+  document.getElementById('marginRatio').textContent = `Margin Ratio: $${(marginRatio*100).toFixed(2)}%`;
+}
+
+
 
 function updateChartDisplay(selectedZoomLevel) {
   chartzoom = selectedZoomLevel;
@@ -948,17 +996,6 @@ key('up', () => {
   updateMessageSelectionChange();
   return false; // Prevent default action
 });
-key('p', () => {
-  // Move to the previous ticker, looping to the last if at the beginning
-  resetTotalCost();
-  return false; // Prevent default action
-});
-key('o', () => {
-  // Move to the previous ticker, looping to the last if at the beginning
-  resetAllTotalCost();
-  return false; // Prevent default action
-});
-
 document.addEventListener('keydown', function(event) {
     // Check if Enter key is pressed and ensure it's not the numpad Enter
     if (event.key === 'Enter' && event.location !== KeyboardEvent.DOM_KEY_LOCATION_NUMPAD) {
