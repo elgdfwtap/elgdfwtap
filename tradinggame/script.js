@@ -417,10 +417,10 @@ function iterateStockPrices() {
 
     // Adjust the overall market performance based on sentiment and random fluctuation
     const marketRandomFactor = (rng.random() - 0.5) * 2;
-    market.performance *= (1 + marketRandomFactor * market.overallVolatility * marketSentimentEffect);
+    market.performance *= ((1 + marketRandomFactor * market.overallVolatility * marketSentimentEffect));
 // Iterate over stocks to update prices
     market.stocks.forEach(stock => {
-        let sentimentEffect = 1; // Default no effect
+        let sentimentEffect = 1.0001; // Default no effect
 
         // Apply sentiment effects from active events specific to industries or stocks
         market.activeEvents.forEach(event => {
@@ -435,23 +435,12 @@ function iterateStockPrices() {
         // Combine industry and overall market performance for this stock's update
         const industryPerformance = market.industries[stock.industry].performance * sentimentEffect;
         const randomFactor = (rng.random() - 0.5) * market.overallVolatility;
-        const change = randomFactor * 0.1; // Apply a dampening to the random change
+        const change = randomFactor * 15*stock.volatility; // Apply a dampening to the random change
         
         // Apply combined effects to calculate the new price
         const newPrice = stock.pastData[stock.pastData.length - 1] * (1 + change + (industryPerformance - 1));
         stock.pastData.push(Math.max(newPrice, 1)); // Ensure price doesn't go negative
     });
-
-    // Update market index data
-    if (stocksCounted > 0) {
-        const averageMarketPrice = totalMarketValue / stocksCounted;
-        market.marketIndexData.push(averageMarketPrice);
-    }
-
-    // Update or clear active events based on expiry
-    market.activeEvents.forEach(event => event.expiryTime -= 1);
-    market.activeEvents = market.activeEvents.filter(event => event.expiryTime > 0);
-
 }
 
 function updateNewsTable(event) {
@@ -570,6 +559,7 @@ function updatePortfolioValue() {
 }
 
 function updateCapitalBreakdownChart() {
+	/*
     if (!capitalBreakdownChart) {
         console.error('Capital Breakdown Chart is not initialized.');
         return;
@@ -603,7 +593,7 @@ function updateCapitalBreakdownChart() {
         dataset.backgroundColor = backgroundColors;
     });
 
-    capitalBreakdownChart.update();
+    capitalBreakdownChart.update();*/
 }
 
 
