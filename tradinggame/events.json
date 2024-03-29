@@ -522,8 +522,8 @@
 	"sentimentFactor":1.02,
 	"expiryTime":10,
 	"affectedIndustries":["tech"],
-"affectedStocks": [],
-	"
+    "affectedStocks": []
+},
 {
 	"name":"Innovative Breakthroughs in AI Technology Revolutionize Industry",
 	"sentimentFactor":1.02,
@@ -575,7 +575,7 @@
 
 {
 	"name":"Global Tech Sector Panic: Major Cybersecurity Breach Affects Thousands of Companies",
-	"sentimentFactor":.75,
+	"sentimentFactor":0.75,
 	"expiryTime":1,
 	"affectedIndustries":["tech"],
 "affectedStocks": [],
@@ -583,7 +583,7 @@
 },
 {
 	"name":"Tech Industry in Turmoil: New Regulations Cripple Profit Models",
-	"sentimentFactor":.85,
+	"sentimentFactor":0.85,
 	"expiryTime":1,
 	"affectedIndustries":["tech"],
 "affectedStocks": [],
@@ -591,7 +591,7 @@
 },
 {
 	"name":"Massive Tech Stock Sell-Off as Investors Fear Bubble Burst",
-	"sentimentFactor":.83,
+	"sentimentFactor":0.83,
 	"expiryTime":1,
 	"affectedIndustries":["tech"],
 "affectedStocks": [],
@@ -599,7 +599,7 @@
 },
 {
 	"name":"Tech Industry Crisis: Supply Chain Collapse Halts Production Worldwide",
-	"sentimentFactor":.72,
+	"sentimentFactor":0.72,
 	"expiryTime":1,
 	"affectedIndustries":["tech"],
 "affectedStocks": [],
@@ -607,7 +607,7 @@
 },
 {
 	"name":"Tech Market Plummets as Key Technologies Become Obsolete Overnight",
-	"sentimentFactor":.8,
+	"sentimentFactor":0.8,
 	"expiryTime":1,
 	"affectedIndustries":["tech"],
 "affectedStocks": [],
@@ -615,7 +615,7 @@
 },
 {
 	"name":"Widespread Tech Company Bankruptcies Following Credit Crunch",
-	"sentimentFactor":.77,
+	"sentimentFactor":0.77,
 	"expiryTime":1,
 	"affectedIndustries":["tech"],
 "affectedStocks": [],
@@ -623,7 +623,7 @@
 },
 {
 	"name":"Tech Stocks Crash as International Trade Wars Escalate",
-	"sentimentFactor":.8,
+	"sentimentFactor":0.8,
 	"expiryTime":1,
 	"affectedIndustries":["tech"],
 "affectedStocks": [],
