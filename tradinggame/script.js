@@ -792,14 +792,14 @@ function zoomOut() {
 function triggerRandomEvent() {
     economicEvents.forEach(event => {
         // Generate a random number and compare with event's probability
-        if (rng.random() <= (event.probability)/8) {
+        if (rng.random() <= (event.probability)/2) {
             // Check if the event is not already active
             const isAlreadyActive = market.activeEvents.some(activeEvent => activeEvent.name === event.name);
             
             if (!isAlreadyActive) {
                 // Clone the event to avoid mutating the original event template
                 const newEvent = {...event, expiryTime: event.expiryTime}; // Reset expiryTime for each activation
-		newEvent.sentimentFactor=Math.sqrt(newEvent.sentimentFactor);
+		newEvent.sentimentFactor=(newEvent.sentimentFactor);
                 market.activeEvents.push(newEvent);
                 console.log(`Event triggered: ${event.name}`);
 		updateNewsTable(newEvent);

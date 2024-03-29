@@ -344,6 +344,349 @@
 },
 
 
+{
+	"name":"Manufacturing Sector Revival: Stocks Set to Surge on Strong Orders",
+	"sentimentFactor":1.01,
+	"expiryTime":15,
+	"affectedIndustries":["manufacturing"],
+"affectedStocks": [],
+	"probability":0.002
+},
+{
+	"name":"Infrastructure Investment Spurs Growth: Manufacturing Stocks Poised for Rebound",
+	"sentimentFactor":1.01,
+	"expiryTime":15,
+	"affectedIndustries":["manufacturing"],
+"affectedStocks": [],
+	"probability":0.002
+},
+{
+	"name":"Supply Chain Resilience Boosts Investor Confidence: Manufacturing Stocks to Rally",
+	"sentimentFactor":1.01,
+	"expiryTime":15,
+	"affectedIndustries":["manufacturing"],
+"affectedStocks": [],
+	"probability":0.002
+},
+{
+	"name":"Robust Export Demand Fuels Optimism: Manufacturing Sector Expected to Soar",
+	"sentimentFactor":1.01,
+	"expiryTime":15,
+	"affectedIndustries":["manufacturing"],
+"affectedStocks": [],
+	"probability":0.002
+},
+{
+	"name":"Technological Advancements Drive Efficiency Gains: Manufacturing Stocks Primed for Growth",
+	"sentimentFactor":1.01,
+	"expiryTime":15,
+	"affectedIndustries":["manufacturing"],
+"affectedStocks": [],
+	"probability":0.002
+},
+{
+	"name":"Reshoring Trend Accelerates: Manufacturing Stocks to Benefit from Domestic Production",
+	"sentimentFactor":1.01,
+	"expiryTime":15,
+	"affectedIndustries":["manufacturing"],
+"affectedStocks": [],
+	"probability":0.002
+},
+{
+	"name":"Government Initiatives Promote Domestic Manufacturing: Stocks Expected to Surge",
+	"sentimentFactor":1.01,
+	"expiryTime":15,
+	"affectedIndustries":["manufacturing"],
+"affectedStocks": [],
+	"probability":0.002
+},
+
+{
+	"name":"Global Supply Chain Disruptions Intensify Amid New Trade Restrictions",
+	"sentimentFactor":0.99,
+	"expiryTime":15,
+	"affectedIndustries":["manufacturing"],
+"affectedStocks": [],
+	"probability":0.002
+},
+{
+	"name":"Major Manufacturing Companies Report Significant Drop in Quarterly Earnings",
+	"sentimentFactor":0.99,
+	"expiryTime":15,
+	"affectedIndustries":["manufacturing"],
+"affectedStocks": [],
+	"probability":0.002
+},
+{
+	"name":"Government Announces Heavy Regulatory Changes Affecting Manufacturing Sector",
+	"sentimentFactor":0.99,
+	"expiryTime":15,
+	"affectedIndustries":["manufacturing"],
+"affectedStocks": [],
+	"probability":0.002
+},
+{
+	"name":"Rapid Technological Changes Outpace Traditional Manufacturing Processes",
+	"sentimentFactor":0.99,
+	"expiryTime":15,
+	"affectedIndustries":["manufacturing"],
+"affectedStocks": [],
+	"probability":0.002
+},
+{
+	"name":"Surge in Raw Material Costs Puts Pressure on Manufacturing Profit Margins",
+	"sentimentFactor":0.99,
+	"expiryTime":15,
+	"affectedIndustries":["manufacturing"],
+"affectedStocks": [],
+	"probability":0.002
+},
+{
+	"name":"Leading Economists Predict Downturn in Manufacturing Sector Growth",
+	"sentimentFactor":0.99,
+	"expiryTime":15,
+	"affectedIndustries":["manufacturing"],
+"affectedStocks": [],
+	"probability":0.002
+},
+{
+	"name":"Investor Confidence Wanes as Manufacturing Stocks Hit Yearly Low",
+	"sentimentFactor":0.99,
+	"expiryTime":15,
+	"affectedIndustries":["manufacturing"],
+"affectedStocks": [],
+	"probability":0.002
+},
+
+
+{
+	"name":"Major Tech Firms Face Antitrust Scrutiny in Global Markets",
+	"sentimentFactor":0.98,
+	"expiryTime":10,
+	"affectedIndustries":["tech"],
+"affectedStocks": [],
+	"probability":0.002
+},
+{
+	"name":"Investors Concerned Over Overvaluation of Tech Sector Stocks",
+	"sentimentFactor":0.98,
+	"expiryTime":10,
+	"affectedIndustries":["tech"],
+"affectedStocks": [],
+	"probability":0.002
+},
+{
+	"name":"Multiple Tech Giants Report Lower Than Expected Earnings and Revenue",
+	"sentimentFactor":0.985,
+	"expiryTime":10,
+	"affectedIndustries":["tech"],
+"affectedStocks": [],
+	"probability":0.002
+},
+{
+	"name":"New Legislation Threatens Profit Margins of Major Tech Companies",
+	"sentimentFactor":0.98,
+	"expiryTime":10,
+	"affectedIndustries":["tech"],
+"affectedStocks": [],
+	"probability":0.002
+},
+{
+	"name":"Interest Rate Hikes Put Pressure on High-Growth Tech Stocks",
+	"sentimentFactor":0.98,
+	"expiryTime":10,
+	"affectedIndustries":["tech"],
+"affectedStocks": [],
+	"probability":0.002
+},
+{
+	"name":"Technology Sector Hit Hard by Sudden Market Selloff",
+	"sentimentFactor":0.97,
+	"expiryTime":10,
+	"affectedIndustries":["tech"],
+"affectedStocks": [],
+	"probability":0.002
+},
+{
+	"name":"Cybersecurity Threats Increase Costs and Risks for Tech Companies",
+	"sentimentFactor":0.97,
+	"expiryTime":10,
+	"affectedIndustries":["tech"],
+"affectedStocks": [],
+	"probability":0.002
+},
+
+
+{
+	"name":"Tech Companies Lead Market with Strong Quarterly Earnings Growth",
+	"sentimentFactor":1.02,
+	"expiryTime":10,
+	"affectedIndustries":["tech"],
+"affectedStocks": [],
+	"
+{
+	"name":"Innovative Breakthroughs in AI Technology Revolutionize Industry",
+	"sentimentFactor":1.02,
+	"expiryTime":10,
+	"affectedIndustries":["tech"],
+"affectedStocks": [],
+	"probability":0.002
+},
+{
+	"name":"Tech Sector Sees Surge in Investment Amid Positive Market Trends",
+	"sentimentFactor":1.02,
+	"expiryTime":10,
+	"affectedIndustries":["tech"],
+"affectedStocks": [],
+	"probability":0.002
+},
+{
+	"name":"New Government Policies to Boost Growth in Technology Industry",
+	"sentimentFactor":1.02,
+	"expiryTime":10,
+	"affectedIndustries":["tech"],
+"affectedStocks": [],
+	"probability":0.002
+},
+{
+	"name":"Technology Sector Benefits from Increased Remote Work Demand",
+	"sentimentFactor":1.02,
+	"expiryTime":10,
+	"affectedIndustries":["tech"],
+"affectedStocks": [],
+	"probability":0.002
+},
+{
+	"name":"Tech Stocks Rally on News of Successful 5G Network Deployments",
+	"sentimentFactor":1.02,
+	"expiryTime":10,
+	"affectedIndustries":["tech"],
+"affectedStocks": [],
+	"probability":0.002
+},
+{
+	"name":"Renewed Investor Confidence as Tech Companies Exceed Expectations",
+	"sentimentFactor":1.02,
+	"expiryTime":10,
+	"affectedIndustries":["tech"],
+"affectedStocks": [],
+	"probability":0.002
+},
+
+{
+	"name":"Global Tech Sector Panic: Major Cybersecurity Breach Affects Thousands of Companies",
+	"sentimentFactor":.75,
+	"expiryTime":1,
+	"affectedIndustries":["tech"],
+"affectedStocks": [],
+	"probability":0.0007
+},
+{
+	"name":"Tech Industry in Turmoil: New Regulations Cripple Profit Models",
+	"sentimentFactor":.85,
+	"expiryTime":1,
+	"affectedIndustries":["tech"],
+"affectedStocks": [],
+	"probability":0.0007
+},
+{
+	"name":"Massive Tech Stock Sell-Off as Investors Fear Bubble Burst",
+	"sentimentFactor":.83,
+	"expiryTime":1,
+	"affectedIndustries":["tech"],
+"affectedStocks": [],
+	"probability":0.0007
+},
+{
+	"name":"Tech Industry Crisis: Supply Chain Collapse Halts Production Worldwide",
+	"sentimentFactor":.72,
+	"expiryTime":1,
+	"affectedIndustries":["tech"],
+"affectedStocks": [],
+	"probability":0.0007
+},
+{
+	"name":"Tech Market Plummets as Key Technologies Become Obsolete Overnight",
+	"sentimentFactor":.8,
+	"expiryTime":1,
+	"affectedIndustries":["tech"],
+"affectedStocks": [],
+	"probability":0.0007
+},
+{
+	"name":"Widespread Tech Company Bankruptcies Following Credit Crunch",
+	"sentimentFactor":.77,
+	"expiryTime":1,
+	"affectedIndustries":["tech"],
+"affectedStocks": [],
+	"probability":0.0007
+},
+{
+	"name":"Tech Stocks Crash as International Trade Wars Escalate",
+	"sentimentFactor":.8,
+	"expiryTime":1,
+	"affectedIndustries":["tech"],
+"affectedStocks": [],
+	"probability":0.0007
+},
+
+
+{
+	"name":"Tech Sector Surges on Breakthrough in Renewable Energy Technology",
+	"sentimentFactor":1.25,
+	"expiryTime":1,
+	"affectedIndustries":["tech"],
+"affectedStocks": [],
+	"probability":0.0007
+},
+{
+	"name":"Sudden Market Optimism as Tech Leads Economic Recovery",
+	"sentimentFactor":1.25,
+	"expiryTime":1,
+	"affectedIndustries":["tech"],
+"affectedStocks": [],
+	"probability":0.0007
+},
+{
+	"name":"Global Tech Investment Boom Following Major Trade Agreement",
+	"sentimentFactor":1.25,
+	"expiryTime":1,
+	"affectedIndustries":["tech"],
+"affectedStocks": [],
+	"probability":0.0007
+},
+{
+	"name":"Tech Stocks Skyrocket Amid Revolutionary Advances in AI",
+	"sentimentFactor":1.25,
+	"expiryTime":1,
+	"affectedIndustries":["tech"],
+"affectedStocks": [],
+	"probability":0.0007
+},
+{
+	"name":"Tech Sector Triumphs with Major Advances in Quantum Computing",
+	"sentimentFactor":1.25,
+	"expiryTime":1,
+	"affectedIndustries":["tech"],
+"affectedStocks": [],
+	"probability":0.0007
+},
+{
+	"name":"Global Shift to Digital Services Triggers Rapid Growth in Tech",
+	"sentimentFactor":1.25,
+	"expiryTime":1,
+	"affectedIndustries":["tech"],
+"affectedStocks": [],
+	"probability":0.0007
+},
+{
+	"name":"Market Frenzy as New Tech Ecosystems Drive Unprecedented Growth",
+	"sentimentFactor":1.25,
+	"expiryTime":1,
+	"affectedIndustries":["tech"],
+"affectedStocks": [],
+	"probability":0.0007
+},
 
 
 
