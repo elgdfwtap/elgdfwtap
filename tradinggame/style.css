@@ -119,3 +119,7 @@ overflow:visible;
 #message{
 	font-size:20pt;
 }
+#alert{
+	opacity:0%;
+	transition: opacity 2s;
+}

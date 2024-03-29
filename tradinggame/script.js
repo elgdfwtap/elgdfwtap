@@ -8,9 +8,10 @@ const market = {
   industries: {
     tech: { volatility: 0.02, performance: 1, indicator:'TECH' },
     energy: { volatility: 0.015, performance: 1, indicator:'NRGY' },
-    finance: { volatility: 0.01, performance: 1 , indicator:'FINC' },
-    crypto: { volatility: 0.6, performance: 1, indicator:'CPTO'},
-    manufacturing: {volatility: 0.01, performance: 1,indicator:'MANU' },
+    finance: { volatility: 0.01, performance: 1 , indicator:'FNNCE' },
+    crypto: { volatility: 0.6, performance: 1, indicator:'CRPTO'},
+    manufacturing: {volatility: 0.01, performance: 1,indicator:'MNFCT' },
+
   },
   stocks: [],
   marketIndexData: [],
@@ -39,11 +40,9 @@ let playerStats = {
 
     for (var i=0; i < positions.length; i++){
        if(positions[i].amount > 0){
-		console.log(positions[i]);
            const stock = market.stocks.find(s => s.name === positions[i].ticker);
            const latestPrice = stock.pastData[stock.pastData.length - 1];
            longMargin += (latestPrice * positions[i].amount);
-	   console.log(latestPrice * positions[i].amount);
 
         }
 
@@ -56,12 +55,13 @@ let playerStats = {
            shortMargin += (latestPrice * -positions[i].amount);
         }
     }
-console.log(shortMargin+", "+longMargin);
     return (longMargin+shortMargin)*(1-marginRequirement);
     }
     return 0;
   },
-
+  getMarginUsed:function(){
+	return (playerStats.getMargin())/(playerStats.getTotalCapital());
+  }
 };
 
 let economicEvents = [];
@@ -132,8 +132,9 @@ let rng = new SeededRNG(seed);
 let currentZoomIndex = 0; // Default zoom level index
 const zoomLevels = [22, 50, 100, 220, 500, 1000, 2200]; // Defined zoom levels
 function initializeGame() {
-  const stockNames = ['FXT','RBUX','PO','DATA','DINO','DYNA','PRT','MP','HTB','LQ','AMDA','PNZI','CS','RTC'];
-  const longNames=['FixTech','Robux Technologies Inc.','Planned Obsolescence Co. Ltd.','We Have Your Data Co.','Fossil Fuels Inc.','Dr. Dynamite Co. Inc.','PRT Manufacturing Inc.','Monopolistic Oil Company Inc.','Hostile Takeover Bank Co.','Illiquid Assets Holding','Alameda Research','Ponzi Exchange LLC','CryptoScam Co.','Retard Coin'];
+  const stockNames = ['FXT','ROBUX','PO','DATA','DINO','MP','DYNA','PRT','HTB','ILQ','ALMDA','PONZI','CS','R$'];
+  const longNames=['FixTech','Robux Technologies Inc.','Planned Obsolescence Co. Ltd.','We Have Your Data Co.','Fossil Fuels Inc.','Monopolistic Oil Company Inc.','Dr. Dynamite Co. Inc.','PRT Systems Inc.','Hostile Takeover Bank Co.','Illiquid Assets Holding','Alameda Research','PonziCoin','CryptoScam Exchange Holdings','Robux (Roblox Coin)'];
+  	
   const industries = Object.keys(market.industries);
   const industryIndicies = [0,0,0,0,1,4,4,1,2,2,3,3,3,3];
   // Create stocks and assign to industries
@@ -150,7 +151,7 @@ function initializeGame() {
     };
     market.stocks.push(stock);
   }); //iterateStockPrices
-
+market.stocks[13].volatility=.25;
   // Generate past data
   for (let i = 0; i < 100; i++) {
     iterateStockPrices();
@@ -321,37 +322,128 @@ function bindHotkeys() {
 }
 
 function buyStock(amount, tickerIndex) {
-const stock = market.stocks[tickerIndex];
-  const price = stock.pastData[stock.pastData.length - 1];
-  const totalCost = price * amount;
+    const stock = market.stocks[tickerIndex];
+    const price = stock.pastData[stock.pastData.length - 1];
+    const totalCost = price * amount;
+	const position = positions.find(p => p.ticker === stock.name);
+	isResetNext=true;
+    // Check if buying will not exceed margin used
+	let myAmount=0;
+	if(position){
+			myAmount=position.amount;
+	}
+	console.log(myAmount);
+	if(myAmount >= 0){
+		if ((playerStats.getMargin() + totalCost) / (playerStats.getTotalCapital()) <= .98) {
+			playerStats.cashAvailable -= totalCost; // Deduct the cost from cash available
+			transactions.push({ ticker: stock.name, amount: amount, price: price, type: 'buy' });
+			updatePositions(stock.name, amount, totalCost);
 
-  //if (playerStats.cashAvailable >= totalCost) {
-    playerStats.cashAvailable -= totalCost; // Deduct the cost from cash available
-    transactions.push({ ticker: stock.name, amount: amount, price: price, type: 'buy' });
-    updatePositions(stock.name, amount, totalCost);
-	
-    updateTickersUI();
-    updatePortfolioValue();
-  //} else {
-   // console.log('Not enough cash to complete this transaction.');
-  //}
+			updateTickersUI();
+			updatePortfolioValue();
+			console.log('allowed, buying calculation');
+		} else {
+			// Display an alert message
+			displayAlert('Transaction blocked: Not enough margin in your account to leverage this much! (You would borrow too much)');
+			console.log('blocked, buying calculation');
+			
+		}
+	}else if(myAmount < 0){
+		if (amount <= Math.abs(myAmount)) {
+			playerStats.cashAvailable -= totalCost; // Deduct the cost from cash available
+			transactions.push({ ticker: stock.name, amount: amount, price: price, type: 'buy' });
+			updatePositions(stock.name, amount, totalCost);
+
+			updateTickersUI();
+			updatePortfolioValue();
+			console.log('allowed, covering calculation');
+			
+		}else {
+			longAmount=amount+myAmount;
+			const totalLongCost = price * longAmount;
+			if  ((playerStats.getMargin() + position.totalCost + totalLongCost) / (playerStats.getTotalCapital()) <= .98) {
+				playerStats.cashAvailable -= totalCost; // Deduct the cost from cash available
+				transactions.push({ ticker: stock.name, amount: amount, price: price, type: 'buy' });
+				updatePositions(stock.name, amount, totalCost);
+
+				updateTickersUI();
+				updatePortfolioValue();
+				
+			console.log('allowed, covered and buying permitted');
+				console.log((playerStats.getMargin() + (price * (amount - myAmount))) / (playerStats.getTotalCapital() +totalCost) <= 1);
+			} else {
+				// Display an alert message
+				displayAlert('Transaction blocked: Not enough margin in your account to leverage this much! (You would borrow too much)');
+				console.log('blocked, covered but buy is over margin');
+			console.log((playerStats.getMargin() + (price * (amount - myAmount))) / playerStats.getTotalCapital());
+			}
+		}
+	}else{
+		displayAlert('Your transaction could not be processed due to an internal code error.');
+	}
+    
 }
 
 function sellStock(amount, tickerIndex) {
-  const stock = market.stocks[tickerIndex];
+    const stock = market.stocks[tickerIndex];
+    const price = stock.pastData[stock.pastData.length - 1];
+    const totalValue = price * amount;
+    const position = positions.find(p => p.ticker === stock.name);
+	isResetNext=true;
+    let myAmount = position ? position.amount : 0;
 
-  const price = stock.pastData[stock.pastData.length - 1];
-  const totalValue = price * amount;
+    if (myAmount > 0) { // Selling part of a long position
+        if (amount <= myAmount) {
+            playerStats.cashAvailable += totalValue; // Add the value to cash available
+            transactions.push({ ticker: stock.name, amount: -amount, price: price, type: 'sell' });
+            updatePositions(stock.name, -amount, -totalValue);
 
-  transactions.push({ ticker: stock.name, amount: -amount, price: price, type: 'sell' });
-  updatePositions(stock.name, -amount, -totalValue);
-  updateTickersUI();
-  playerStats.cashAvailable += totalValue; // Add the value to cash available
-  updatePortfolioValue();
+            updateTickersUI();
+            updatePortfolioValue();
+            console.log('allowed, selling from long positions');
+        } else {
+            let shortAmount = amount - myAmount;
+            const totalShortCost = price * shortAmount;
 
+            // Selling more than owned, part goes to short selling
+            if ((playerStats.getMargin() + totalShortCost) / playerStats.getTotalCapital() <= .98) {
+                playerStats.cashAvailable += price * myAmount; // Add value from long position selling
+                transactions.push({ ticker: stock.name, amount: -amount, price: price, type: 'sell' });
+                updatePositions(stock.name, -amount, -totalValue);
 
+                updateTickersUI();
+                updatePortfolioValue();
+                console.log('allowed, sold long and shorting permitted');
+            } else {
+				displayAlert('Transaction blocked: Not enough margin in your account to short this much! (You would borrow too much)');
+                console.log('blocked, long sold but shorting is over margin');
+            }
+        }
+    } else if (myAmount <= 0) { // Increasing a short position or creating a new short position
+        if ((playerStats.getMargin() + totalValue) / playerStats.getTotalCapital() <= .98) {
+            playerStats.cashAvailable += totalValue; // Money gained from short selling
+            transactions.push({ ticker: stock.name, amount: -amount, price: price, type: 'sell' });
+            updatePositions(stock.name, -amount, totalValue);
+
+            updateTickersUI();
+            updatePortfolioValue();
+            console.log('allowed, short selling calculation');
+        } else {
+			displayAlert('Transaction blocked: Not enough margin in your account to short this much! (You would borrow too much)');
+            console.log('blocked, short selling is over margin');
+        }
+    } else {
+		displayAlert('Your transaction could not be processed due to an internal code error.');
+    }
 }
 
+function displayAlert(message){
+	document.getElementById('alerts').style.opacity=1;
+	document.getElementById('alerts').innerText = message;
+	setTimeout(() => {
+		document.getElementById('alerts').style.opacity = '0';
+	}, 2000); // 2000 milliseconds or 2 seconds delay before starting to fade out
+}
 
 function exitPositions() {
   const selectedStock = market.stocks[selectedTicker];
@@ -372,6 +464,25 @@ function exitPositions() {
   updateTickersUI();
 }
 
+function marginCall() {
+    // Iterate through a copy of the positions array to avoid modification issues during iteration
+    const positionsCopy = [...positions];
+    positionsCopy.forEach(position => {
+        const stockIndex = market.stocks.findIndex(s => s.name === position.ticker);
+        if (stockIndex < 0) {
+            console.error(`Stock ${position.ticker} not found.`);
+            return;
+        }
+
+        if (position.amount > 0) {
+            sellStock(position.amount, stockIndex); // Sell all if holding positive shares
+        } else if (position.amount < 0) {
+            buyStock(Math.abs(position.amount), stockIndex); // Cover all if shorting
+        }
+
+    });
+	
+}
 
   function buyAllIn() {
       const selectedStock = market.stocks[selectedTicker];
@@ -760,14 +871,16 @@ function updatePlayerStatsUI() {
   document.getElementById('portfolioValue').textContent = `Portfolio Value: $${playerStats.portfolioValue.toFixed(2)}`;
   document.getElementById('totalCapital').textContent = `Total Capital: $${playerStats.getTotalCapital().toFixed(2)}`;
   document.getElementById('buyingPower').textContent = `Buying Power: $${playerStats.getBuyingPower().toFixed(2)}`;
-  document.getElementById('marginRatio').textContent = `Margin Ratio: $${(marginRatio*100).toFixed(0)}%`;
+  document.getElementById('marginRatio').textContent = `% Margin Used: ${(((1/marginRatio)*100).toFixed(0))}%`;
 
 
-  if (playerStats.getBuyingPower < 0 || (marginRatio && (marginRatio < 1))) {
-		gameOver();
-		
-        // Here you can also invoke any function to handle game over state, like showing a message to the user.
+	if (playerStats.getBuyingPower < 0 || (marginRatio && (marginRatio < 1))) {
+		marginCall();
+		displayAlert("Margin Call! You have borrowed too much and the brokerage has sold your assets.");
     }
+    if(playerStats.totalCapital < 0){
+		gameOver();
+	}
 }
 function updatePlayerStatsUI2() {
   playerStats.equities.push(playerStats.portfolioValue);
@@ -970,6 +1083,31 @@ function calculateMarketPerformance() {
   return performance;
 }
 
+function resetTotalCost(){
+	const position = positions.find(p => p.ticker === market.stocks[selectedTicker].name);
+	if (position) {
+		position.totalCost=market.stocks[position.ticker].pastData[market.stocks[position.ticker].pastData.length-1]*position.amount;
+	}
+	updateTickersUI();
+}
+
+
+  
+ 
+ function resetAllTotalCost(){
+	positions.forEach(position=>{
+		const stock = market.stocks.find(s => s.name === position.ticker);
+		position.totalCost=stock.pastData[market.stocks[selectedTicker].pastData.length-1]*position.amount;
+	});
+ }
+ 
+ function reversePosition(){ 
+	const position = positions.find(p => p.ticker === market.stocks[selectedTicker].name);
+	if (position) {
+		position.amount > 0 ? sellStock(position.amount*2,selectedTicker) : buyStock(-position.amount*2,selectedTicker);
+	}
+	updateTickersUI();
+}
 
 key('down', () => {
   // Move to the next ticker, looping back to the first if at the end
@@ -986,17 +1124,43 @@ key('up', () => {
   updateMessageSelectionChange();
   return false; // Prevent default action
 });
-document.addEventListener('keydown', function(event) {
+document.addEventListener('keydown', function(event) {//buy enter
     // Check if Enter key is pressed and ensure it's not the numpad Enter
     if (event.key === 'Enter' && event.location !== KeyboardEvent.DOM_KEY_LOCATION_NUMPAD) {
+
         // Your buyStock function logic here. Assuming buyStock takes the amount and tickerIndex.
         // Example call, adjust parameters according to your function definition
         buyStock(shareFactor, selectedTicker); // Buys 1 share of the selected stock
     }
 });
+document.addEventListener('keydown', function(event) {// clear pl
+    // Check if Enter key is pressed and ensure it's not the numpad Enter
+    if (event.key === 'o' && event.location !== KeyboardEvent.DOM_KEY_LOCATION_NUMPAD) {
+		resetAllTotalCost();
+    }
+});
+document.addEventListener('keydown', function(event) {// clear pl individual
+    // Check if Enter key is pressed and ensure it's not the numpad Enter
+    if (event.key === 'p' && event.location !== KeyboardEvent.DOM_KEY_LOCATION_NUMPAD) {
+		resetTotalCost();
+    }
+});
+document.addEventListener('keydown', function(event) {// buy all in
+    // Check if Enter key is pressed and ensure it's not the numpad Enter
+    if (event.key === 'l' && event.location !== KeyboardEvent.DOM_KEY_LOCATION_NUMPAD) {
+		buyAllIn();
+    }
+});
+document.addEventListener('keydown', function(event) {// reverse position
+    // Check if Enter key is pressed and ensure it's not the numpad Enter
+    if (event.key === ';' && event.location !== KeyboardEvent.DOM_KEY_LOCATION_NUMPAD) {
+		reversePosition();
+    }
+});
 
 
-document.addEventListener('keydown', function(event) {
+
+document.addEventListener('keydown', function(event) {//sell 
     // Check if Enter key is pressed and ensure it's not the numpad Enter
     if (event.key === 'Backspace' && event.location !== KeyboardEvent.DOM_KEY_LOCATION_NUMPAD) {
         // Your buyStock function logic here. Assuming buyStock takes the amount and tickerIndex.
@@ -1018,7 +1182,6 @@ key('0', () => {
 });
 
 key('\\', exitPositions);
-key('l', function(){ buyAllIn() });
 
 
 // Bind numpad enter to reset shareFactor on next input
