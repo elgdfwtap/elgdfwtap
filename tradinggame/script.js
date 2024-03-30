@@ -1,9 +1,29 @@
 // Number of stocks and initial data points
+let config = {
+	player : {
+		marginRequirement: .5,
+		startingCash:5000,
+		maxMarginLimit: 0.98
+		
+	},
+	game: {
+		speed: 333,
+		alertDuration:1500
+	},
+	market: {
+		volatility: 0.1,
+		eventFactor:1,
+		doubleEventFactor:1,
+		trend:1.0001,
+		dampingFactor:15
+	}
+}
+
+
 const NUM_STOCKS = 20;
 const NUM_INITIAL_DATA_POINTS = 10;
-const marginRequirement=0.5;
 const market = {
-  overallVolatility: 0.1, // Overall market volatility
+  overallVolatility: config.market.volatility, // Overall market volatility
   performance: 1 ,
   industries: {
     tech: { volatility: 0.02, performance: 1, indicator:'TECH' },
@@ -19,7 +39,7 @@ const market = {
 };
 
 let playerStats = {
-  startingCash: 5000,
+  startingCash: config.player.startingCash,
   cashAvailable: 5000, // This will change based on trading activity
   portfolioValue: 0, // This will be calculated based on current positions
   margin:0,
@@ -32,7 +52,7 @@ let playerStats = {
     return this.cashAvailable + this.portfolioValue;
   },
   getBuyingPower: function() {
-    return this.cashAvailable-this.portfolioValue*marginRequirement; // Double the capital
+    return this.cashAvailable-this.portfolioValue*config.player.marginRequirement; // Double the capital
   },
   getMargin: function(){
     if(positions.length!=0){
@@ -55,7 +75,7 @@ let playerStats = {
            shortMargin += (latestPrice * -positions[i].amount);
         }
     }
-    return (longMargin+shortMargin)*(1-marginRequirement);
+    return (longMargin+shortMargin)*(1-config.player.marginRequirement);
     }
     return 0;
   },
@@ -87,11 +107,11 @@ let marketIndexChart; // Assuming this is globally accessible and stores the Cha
 let chartzoom = 50;
 // Initialize game data
 let stocks = []; // Holds all stock data
-let updateInterval = 333; // Update every 2000 milliseconds (2 seconds)
+
 document.addEventListener('DOMContentLoaded', () => {
   initializeGame();
   updateUI();
-  gameInterval=setInterval(mainGameLoop, updateInterval);
+  gameInterval=setInterval(mainGameLoop, config.game.speed);
 
 });
 
@@ -334,7 +354,7 @@ function buyStock(amount, tickerIndex) {
 	}
 	console.log(myAmount);
 	if(myAmount >= 0){
-		if ((playerStats.getMargin() + totalCost) / (playerStats.getTotalCapital()) <= .98) {
+		if ((playerStats.getMargin() + totalCost) / (playerStats.getTotalCapital()) <= config.player.maxMarginLimit) {
 			playerStats.cashAvailable -= totalCost; // Deduct the cost from cash available
 			transactions.push({ ticker: stock.name, amount: amount, price: price, type: 'buy' });
 			updatePositions(stock.name, amount, totalCost);
@@ -361,7 +381,7 @@ function buyStock(amount, tickerIndex) {
 		}else {
 			longAmount=amount+myAmount;
 			const totalLongCost = price * longAmount;
-			if  ((playerStats.getMargin() + position.totalCost + totalLongCost) / (playerStats.getTotalCapital()) <= .98) {
+			if  ((playerStats.getMargin() + position.totalCost + totalLongCost) / (playerStats.getTotalCapital()) <= config.player.maxMarginLimit) {
 				playerStats.cashAvailable -= totalCost; // Deduct the cost from cash available
 				transactions.push({ ticker: stock.name, amount: amount, price: price, type: 'buy' });
 				updatePositions(stock.name, amount, totalCost);
@@ -370,7 +390,7 @@ function buyStock(amount, tickerIndex) {
 				updatePortfolioValue();
 				
 			console.log('allowed, covered and buying permitted');
-				console.log((playerStats.getMargin() + (price * (amount - myAmount))) / (playerStats.getTotalCapital() +totalCost) <= 1);
+				console.log((playerStats.getMargin() + (price * (amount - myAmount))) / (playerStats.getTotalCapital() +totalCost) <= config.player.maxMarginLimit);
 			} else {
 				// Display an alert message
 				displayAlert('Transaction blocked: Not enough margin in your account to leverage this much! (You would borrow too much)');
@@ -406,7 +426,7 @@ function sellStock(amount, tickerIndex) {
             const totalShortCost = price * shortAmount;
 
             // Selling more than owned, part goes to short selling
-            if ((playerStats.getMargin() + totalShortCost) / playerStats.getTotalCapital() <= .98) {
+            if ((playerStats.getMargin() + totalShortCost) / playerStats.getTotalCapital() <= config.player.maxMarginLimit) {
                 playerStats.cashAvailable += price * myAmount; // Add value from long position selling
                 transactions.push({ ticker: stock.name, amount: -amount, price: price, type: 'sell' });
                 updatePositions(stock.name, -amount, -totalValue);
@@ -420,7 +440,7 @@ function sellStock(amount, tickerIndex) {
             }
         }
     } else if (myAmount <= 0) { // Increasing a short position or creating a new short position
-        if ((playerStats.getMargin() + totalValue) / playerStats.getTotalCapital() <= .98) {
+        if ((playerStats.getMargin() + totalValue) / playerStats.getTotalCapital() <= config.player.maxMarginLimit) {
             playerStats.cashAvailable += totalValue; // Money gained from short selling
             transactions.push({ ticker: stock.name, amount: -amount, price: price, type: 'sell' });
             updatePositions(stock.name, -amount, totalValue);
@@ -442,7 +462,7 @@ function displayAlert(message){
 	document.getElementById('alerts').innerText = message;
 	setTimeout(() => {
 		document.getElementById('alerts').style.opacity = '0';
-	}, 2000); // 2000 milliseconds or 2 seconds delay before starting to fade out
+	}, config.game.alertDuration); // 2000 milliseconds or 2 seconds delay before starting to fade out
 }
 
 function exitPositions() {
@@ -532,17 +552,17 @@ function iterateStockPrices() {
     market.performance *= ((1 + marketRandomFactor * market.overallVolatility * marketSentimentEffect));
 // Iterate over stocks to update prices
     market.stocks.forEach(stock => {
-        let sentimentEffect = 1.0001; // Default no effect
+        let sentimentEffect = config.market.trend; // Default no effect
 
         // Apply sentiment effects from active events specific to industries or stocks
         market.activeEvents.forEach(event => {
             if (event.expiryTime > 0 &&
                 (event.affectedIndustries.includes(stock.industry) ||
                  event.affectedStocks.includes(stock.name))) {
-                sentimentEffect *= 1 + (event.sentimentFactor - 1) * 0.1; // Adjust the effect strength
+                sentimentEffect *= 1 + (event.sentimentFactor - 1) * config.market.eventFactor; // Adjust the effect strength
 				event.expiryTime--;
 				if(event.affectedIndustries.includes(stock.industry) && event.affectedStocks.includes(stock.name)){
-					sentimentEffect *= 1 + (event.sentimentFactor - 1) * 0.1;// adjust again if both the stock and industry is affected, the specific stock gets double the effect
+					sentimentEffect *= 1 + (event.sentimentFactor - 1) * config.market.doubleEventFactor;// adjust again if both the stock and industry is affected, the specific stock gets double the effect
 				}
             }
 
@@ -551,7 +571,7 @@ function iterateStockPrices() {
         // Combine industry and overall market performance for this stock's update
         const industryPerformance = market.industries[stock.industry].performance * sentimentEffect;
         const randomFactor = (rng.random() - 0.5) * market.overallVolatility;
-        const change = randomFactor * 15*stock.volatility; // Apply a dampening to the random change
+        const change = randomFactor * config.market.dampingFactor*stock.volatility; // Apply a dampening to the random change
         
         // Apply combined effects to calculate the new price
         const newPrice = stock.pastData[stock.pastData.length - 1] * (1 + change + (industryPerformance - 1));
