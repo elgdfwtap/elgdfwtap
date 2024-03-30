@@ -521,8 +521,9 @@ function iterateStockPrices() {
     let marketSentimentEffect = 1;
     market.activeEvents.forEach(event => {
         // Assuming events can also be market-wide, adjust the market sentiment
-        if (!event.affectedIndustries.length && !event.affectedStocks.length) { // Market-wide event
+        if (!event.affectedIndustries.length && !event.affectedStocks.length && event.expiryTime>0) { // Market-wide event
             marketSentimentEffect *= event.sentimentFactor;
+			event.expiryTime--;
         }
     });
 
@@ -539,6 +540,10 @@ function iterateStockPrices() {
                 (event.affectedIndustries.includes(stock.industry) ||
                  event.affectedStocks.includes(stock.name))) {
                 sentimentEffect *= 1 + (event.sentimentFactor - 1) * 0.1; // Adjust the effect strength
+				event.expiryTime--;
+				if(event.affectedIndustries.includes(stock.industry) && event.affectedStocks.includes(stock.name)){
+					sentimentEffect *= 1 + (event.sentimentFactor - 1) * 0.1;// adjust again if both the stock and industry is affected, the specific stock gets double the effect
+				}
             }
 
         });
