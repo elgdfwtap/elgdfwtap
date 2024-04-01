@@ -27,7 +27,7 @@ const market = {
   performance: 1 ,
   industries: {
     drugs: {volatility: 0.015, performance: 1,indicator:'DRUG' },
-    commodities: {volatility: 0.012, performance: 1, indicator: 'COM' },
+    commodities: {volatility: 0.012, performance: 1, indicator: 'CNTRA' },
     food: {volatility: 0.01, performance:1, indicator: 'FOOD'},
     weapons: {volatility: 0.024, performance: 1, indicator: 'WPONS'},
     favors: {volatility: 0.02, performance:1, indicator:'FVR'}
