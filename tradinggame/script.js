@@ -19,21 +19,80 @@ let config = {
 	}
 }
 
-
+//Needles soap roap paint newpaper copperwire doritos handjob cigarettes hand lotion trazors (tooth razor) Slocks CleanURine PIll Rimjob Heroin shanks
 const NUM_STOCKS = 20;
 const NUM_INITIAL_DATA_POINTS = 10;
 const market = {
   overallVolatility: config.market.volatility, // Overall market volatility
   performance: 1 ,
   industries: {
-    tech: { volatility: 0.02, performance: 1, indicator:'TECH' },
-    energy: { volatility: 0.015, performance: 1, indicator:'NRGY' },
-    finance: { volatility: 0.01, performance: 1 , indicator:'FNNCE' },
-    crypto: { volatility: 0.6, performance: 1, indicator:'CRPTO'},
-    manufacturing: {volatility: 0.01, performance: 1,indicator:'MNFCT' },
-
+    drugs: {volatility: 0.03, performance: 1,indicator:'MNFCT' },
+    commodities: {volatility: 0.012, performance: 1, indicator: 'COM' },
+    food: {volatility: 0.01, performance:1, indicator: 'FOOD'},
+    weapons: {volatility: 0.024, performance: 1, indicator: 'WPONS'},
+    favors: {volatility: 0.02, performance:1, indicator:'FVR'}
   },
-  stocks: [],
+  stocks: [
+	{
+		name: "FXT",
+		industry: "tech",
+		volatility: 0.03,
+		longName: "FixiTech",
+		pastData: []
+	},
+	{
+		name: "PO",
+		industry: "tech",
+		volatility: 0.02,
+		longName: "Planned Obsolescence Co. ",
+		pastData:[]
+	},
+	{
+		name:"DATA",
+		industry:"tech",
+		volatility: 0.035,
+		longName: "We Have Your Data Inc.",
+		pastData:[]
+	},
+	{
+		name: "DINO",
+		industry:"energy",
+		volatility: 0.03,
+		longName: "Peak Oil Co."
+		pastData: []
+	},
+	{
+		name:"MP",
+		industry:"energy",
+		volatility: 0.015,
+		longName:"Monopolistic Oil Co. (Monoil),
+		pastData: []
+	},
+	{
+		name:"LPH",
+		industry:"drugs",
+		volatility: 0.02,
+		longName:"Los Pollos Hermanos",
+		pastData:[]
+	},
+	{
+		name:"BLUE",
+		industry:"drugs",
+		volatility: 0.02,
+		longName:"Heisenberg Drug Empire",
+		pastData:[]
+	},
+	{
+		name:"HTB",
+		industry:"finance",
+		volatility: 0.02,
+		longName:"Hostile Takeover Bank",
+		pastData:[]
+	},
+	
+		
+ 
+  ],
   marketIndexData: [],
   activeEvents:[],
 };
