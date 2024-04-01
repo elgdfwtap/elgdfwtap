@@ -2,7 +2,7 @@
 let config = {
 	player : {
 		marginRequirement: .5,
-		startingCash:5000,
+		startingCash:100,
 		maxMarginLimit: 0.98
 		
 	},
@@ -26,7 +26,7 @@ const market = {
   overallVolatility: config.market.volatility, // Overall market volatility
   performance: 1 ,
   industries: {
-    drugs: {volatility: 0.03, performance: 1,indicator:'MNFCT' },
+    drugs: {volatility: 0.015, performance: 1,indicator:'DRUG' },
     commodities: {volatility: 0.012, performance: 1, indicator: 'COM' },
     food: {volatility: 0.01, performance:1, indicator: 'FOOD'},
     weapons: {volatility: 0.024, performance: 1, indicator: 'WPONS'},
@@ -34,63 +34,124 @@ const market = {
   },
   stocks: [
 	{
-		name: "FXT",
-		industry: "tech",
-		volatility: 0.03,
-		longName: "FixiTech",
-		pastData: []
-	},
-	{
-		name: "PO",
-		industry: "tech",
-		volatility: 0.02,
-		longName: "Planned Obsolescence Co. ",
-		pastData:[]
-	},
-	{
-		name:"DATA",
-		industry:"tech",
-		volatility: 0.035,
-		longName: "We Have Your Data Inc.",
-		pastData:[]
-	},
-	{
-		name: "DINO",
-		industry:"energy",
-		volatility: 0.03,
-		longName: "Peak Oil Co."
-		pastData: []
-	},
-	{
-		name:"MP",
-		industry:"energy",
-		volatility: 0.015,
-		longName:"Monopolistic Oil Co. (Monoil),
-		pastData: []
-	},
-	{
-		name:"LPH",
+		name: "METH",
 		industry:"drugs",
-		volatility: 0.02,
-		longName:"Los Pollos Hermanos",
+		volatility:0.06,
+		longName:"Crystal Methamphetamine, 0.1g",
+		intPrice:13,
 		pastData:[]
 	},
 	{
-		name:"BLUE",
+		name: "SMOKE",
 		industry:"drugs",
-		volatility: 0.02,
-		longName:"Heisenberg Drug Empire",
+		volatility:0.02,
+		longName:"Cigarettes, 20 Pack",
+		intPrice: 16,
 		pastData:[]
 	},
 	{
-		name:"HTB",
-		industry:"finance",
-		volatility: 0.02,
-		longName:"Hostile Takeover Bank",
+		name: "WEED",
+		industry:"drugs",
+		volatility:0.015,
+		longName:"Marijuana, 0.1 g",
+		intPrice: 6,
+		pastData:[]
+	},
+	{
+		name: "BOOZ",
+		industry:"drugs",
+		volatility:0.03,
+		longName:"Liquor, 1 cup",
+		intPrice: 15,
+		pastData:[]
+	},
+	{
+		name: "NDLES",
+		industry:"drugs",
+		volatility:0.025,
+		longName:"Clean Needle, 1 ct",
+		intPrice: 2,
+		pastData:[]
+	},
+	{
+		name: "PHONE",
+		industry:"commodities",
+		volatility:0.03,
+		longName:"Mobile Phones, 1 ct",
+		intPrice: 6000,
+		pastData:[]
+	},
+	{
+		name: "TV",
+		industry:"commodities",
+		volatility:0.02,
+		longName:"Television Rentals, 1 night",
+		intPrice: 2,
+		pastData:[]
+	},
+	{
+		name: "PEE",
+		industry:"commodities",
+		volatility:0.015,
+		longName:"Clean Urine, 1 qt",
+		intPrice: 20,
+		pastData:[]
+	},
+	{
+		name: "RAMEN",
+		industry:"food",
+		volatility:0.007,
+		longName:"Instant Noodles, 1 box",
+		intPrice: 10,
+		pastData:[]
+	},
+	{
+		name: "SHANK",
+		industry:"weapons",
+		volatility:0.03,
+		longName:"Shank, 1 ct",
+		intPrice: 35,
+		pastData:[]
+	},
+	{
+		name: "GUN",
+		industry:"weapons",
+		volatility:0.06,
+		longName:"Firearms, 1 ct",
+		intPrice: 9500,
+		pastData:[]
+	},
+	{
+		name: "HNJB",
+		industry:"favors",
+		volatility:0.025,
+		longName:"Handjob, 1 ct",
+		intPrice: 40,
+		pastData:[]
+	},
+	{
+		name: "RMJB",
+		industry:"favors",
+		volatility:0.03,
+		longName:"Rimjob, 1 ct",
+		intPrice: 65,
+		pastData:[]
+	},
+	{
+		name: "HIT",
+		industry:"favors",
+		volatility:0.05,
+		longName:"Premeditated attack, 1 ct",
+		intPrice: 2000,
 		pastData:[]
 	},
 	
-		
+	
+	
+	
+	
+	
+	
  
   ],
   marketIndexData: [],
@@ -99,14 +160,14 @@ const market = {
 
 let playerStats = {
   startingCash: config.player.startingCash,
-  cashAvailable: 5000, // This will change based on trading activity
+  cashAvailable: config.player.startingCash, // This will change based on trading activity
   portfolioValue: 0, // This will be calculated based on current positions
   margin:0,
   equities:[],
   cash:[],
   buyingPower:[],
   netWorth:[],
-  currentBuyingPower:5000,
+  currentBuyingPower:config.player.startingCash,
   getTotalCapital: function() {
     return this.cashAvailable + this.portfolioValue;
   },
@@ -211,26 +272,10 @@ let rng = new SeededRNG(seed);
 let currentZoomIndex = 0; // Default zoom level index
 const zoomLevels = [22, 50, 100, 220, 500, 1000, 2200]; // Defined zoom levels
 function initializeGame() {
-  const stockNames = ['FXT','ROBUX','PO','DATA','DINO','MP','DYNA','PRT','HTB','ILQ','ALMDA','PONZI','CS','R$'];
-  const longNames=['FixTech','Robux Technologies Inc.','Planned Obsolescence Co. Ltd.','We Have Your Data Co.','Fossil Fuels Inc.','Monopolistic Oil Company Inc.','Dr. Dynamite Co. Inc.','PRT Systems Inc.','Hostile Takeover Bank Co.','Illiquid Assets Holding','Alameda Research','PonziCoin','CryptoScam Exchange Holdings','Robux (Roblox Coin)'];
-  	
-  const industries = Object.keys(market.industries);
-  const industryIndicies = [0,0,0,0,1,4,4,1,2,2,3,3,3,3];
   // Create stocks and assign to industries
-  stockNames.forEach((name, index) => {
-    //const industry = industries[index % industries.length];
-    const longName = longNames[index];
-    const industry = industries[industryIndicies[index]];
-    const stock = {
-      name,
-      industry,
-      volatility: rng.random() * 0.05 + 0.005, // Random volatility between 0.005 and 0.055
-      longName,
-      pastData: [200] // Start price of 100 for simplicity
-    };
-    market.stocks.push(stock);
+  market.stocks.forEach((name, index) => {
+    market.stocks[index].pastData.push(market.stocks[index].intPrice);
   }); //iterateStockPrices
-market.stocks[13].volatility=.25;
   // Generate past data
   for (let i = 0; i < 100; i++) {
     iterateStockPrices();
