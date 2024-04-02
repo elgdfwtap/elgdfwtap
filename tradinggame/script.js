@@ -647,7 +647,6 @@ function iterateStockPrices() {
         // Assuming events can also be market-wide, adjust the market sentiment
         if (!event.affectedIndustries.length && !event.affectedStocks.length && event.expiryTime>0) { // Market-wide event
             marketSentimentEffect *= event.sentimentFactor;
-			event.expiryTime--;
         }
     });
 
@@ -681,6 +680,11 @@ function iterateStockPrices() {
         const newPrice = stock.pastData[stock.pastData.length - 1] * (1 + change + (industryPerformance - 1));
         stock.pastData.push(Math.max(newPrice, 1)); // Ensure price doesn't go negative
     });
+	market.activeEvents.forEach(event => {
+		if(event .expiryTime>0){
+			expiryTime--;
+		}
+	});
 }
 
 function updateNewsTable(event) {
