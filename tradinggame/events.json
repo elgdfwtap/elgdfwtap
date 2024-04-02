@@ -232,125 +232,125 @@
 
 
 {
-	"name":"Federal Reserve Signals Interest Rate Cut: Financial Stocks Poised to Surge",
+	"name":"Federal Prison Budget Cuts mean More Expensive Commissary Items",
 	"sentimentFactor":1.01,
 	"expiryTime":15,
-	"affectedIndustries":["finance"],
+	"affectedIndustries":["food"],
 "affectedStocks": [],
 	"probability":0.002
 },
 {
-	"name":"Strong Earnings Season Expected: Financial Sector Anticipates Bullish Run",
+	"name":"Record-breaking Heat Wave Causing Increased Food Spoilage Across East Coast",
 	"sentimentFactor":1.01,
 	"expiryTime":15,
-	"affectedIndustries":["finance"],
+	"affectedIndustries":["food"],
 "affectedStocks": [],
 	"probability":0.002
 },
 {
-	"name":"Investor Confidence Rises as Economic Recovery Accelerates: Financial Stocks Set to Rally",
+	"name":"Federal Government Shutdown Leaves Prison Officials Scrambling for Supply, Prison Kitchens Empty",
 	"sentimentFactor":1.01,
 	"expiryTime":15,
-	"affectedIndustries":["finance"],
+	"affectedIndustries":["food"],
 "affectedStocks": [],
 	"probability":0.002
 },
 {
-	"name":"Mergers and Acquisitions Activity Heats Up: Financial Stocks Primed for Growth",
+	"name":"Metro West Cracks Down on Food Stockpiling, Guards Confiscating Excess Food Items",
 	"sentimentFactor":1.01,
 	"expiryTime":15,
-	"affectedIndustries":["finance"],
+	"affectedIndustries":["food"],
 "affectedStocks": [],
 	"probability":0.002
 },
 {
-	"name":"Positive Economic Data Boosts Financial Sector Outlook: Stocks Expected to Soar",
+	"name":"California Passes Prison Food Waste Bill, Consumable Prices Set to Soar",
 	"sentimentFactor":1.01,
 	"expiryTime":15,
-	"affectedIndustries":["finance"],
+	"affectedIndustries":["food"],
 "affectedStocks": [],
 	"probability":0.002
 },
 {
-	"name":"Banks Pass Stress Tests with Flying Colors: Financial Stocks Expected to Outperform",
+	"name":"Rikers Island Enacts New Cash Ban, Prisoners Scrambling for Alternative Currencies",
 	"sentimentFactor":1.01,
 	"expiryTime":15,
-	"affectedIndustries":["finance"],
+	"affectedIndustries":["food"],
 "affectedStocks": [],
 	"probability":0.002
 },
 {
-	"name":"Inflation Concerns Ease: Financial Stocks Gain Momentum",
+	"name":"Nationwide Commissary Prices Set to Increase 5% over the Next Month Due to Ukrainian War",
 	"sentimentFactor":1.01,
 	"expiryTime":15,
-	"affectedIndustries":["finance"],
+	"affectedIndustries":["food"],
 "affectedStocks": [],
 	"probability":0.002
 },
 
 {
-	"name":"Interest Rate Hike Looms: Financial Stocks Face Bearish Outlook",
+	"name":"New Federal Bill Passed to Increase Food Availability in Federal Penitentiaries",
 	"sentimentFactor":0.99,
 	"expiryTime":15,
-	"affectedIndustries":["finance"],
+	"affectedIndustries":["food"],
 "affectedStocks": [],
 	"probability":0.002
 },
 {
-	"name":"Economic Slowdown Fears Grip Market: Financial Sector Braces for Downturn",
+	"name":"California Drought Ends, Increased Food Production Expected to Come in the Following Months",
 	"sentimentFactor":0.99,
 	"expiryTime":15,
-	"affectedIndustries":["finance"],
+	"affectedIndustries":["food"],
 "affectedStocks": [],
 	"probability":0.002
 },
 {
-	"name":"Trade Tensions Escalate: Financial Stocks Slide Amidst Uncertainty",
+	"name":"Food Prices Expected to Drop as US Enters New Trade Deal with China",
 	"sentimentFactor":0.99,
 	"expiryTime":15,
-	"affectedIndustries":["finance"],
+	"affectedIndustries":["food"],
 "affectedStocks": [],
 	"probability":0.002
 },
 {
-	"name":"Credit Default Concerns Mount: Financial Sector Set to Decline",
+	"name":"Fewer Prisoners are Using Food as Trading Assets, New Report Says",
 	"sentimentFactor":0.99,
 	"expiryTime":15,
-	"affectedIndustries":["finance"],
+	"affectedIndustries":["food"],
 "affectedStocks": [],
 	"probability":0.002
 },
 {
-	"name":"Yield Curve Inversion Sparks Recession Fears: Financial Stocks to Plummet",
+	"name":"Los Angeles County Jail Enacts New Rule that Allows Prisoners to Hold Cash",
 	"sentimentFactor":0.99,
 	"expiryTime":15,
-	"affectedIndustries":["finance"],
+	"affectedIndustries":["food"],
 "affectedStocks": [],
 	"probability":0.002
 },
 {
-	"name":"Regulatory Crackdown Looms: Financial Sector Faces Sell-Off",
+	"name":"Houston County Repeals Cash Ban - Prisoners Sell Food Assets",
 	"sentimentFactor":0.99,
 	"expiryTime":15,
-	"affectedIndustries":["finance"],
+	"affectedIndustries":["food"],
 "affectedStocks": [],
 	"probability":0.002
 },
 {
-	"name":"Profit Margin Pressures Weigh on Banks: Financial Stocks Expected to Dip",
+	"name":"Multiple Prisons Add More Options to their Comissaries after New Bill Passes",
 	"sentimentFactor":0.99,
 	"expiryTime":15,
-	"affectedIndustries":["finance"],
+	"affectedIndustries":["food"],
 "affectedStocks": [],
 	"probability":0.002
 },
 
 
 {
-	"name":"Manufacturing Sector Revival: Stocks Set to Surge on Strong Orders",
+	"name":"ADX Florence Cracks Down on Inmate Weapon Posession, Hundreds of Cude Weapons ",
 	"sentimentFactor":1.01,
 	"expiryTime":15,
-	"affectedIndustries":["manufacturing"],
+	"affectedIndustries":["weapons"],
 "affectedStocks": [],
 	"probability":0.002
 },
@@ -358,7 +358,7 @@
 	"name":"Infrastructure Investment Spurs Growth: Manufacturing Stocks Poised for Rebound",
 	"sentimentFactor":1.01,
 	"expiryTime":15,
-	"affectedIndustries":["manufacturing"],
+	"affectedIndustries":["weapons"],
 "affectedStocks": [],
 	"probability":0.002
 },
@@ -366,7 +366,7 @@
 	"name":"Supply Chain Resilience Boosts Investor Confidence: Manufacturing Stocks to Rally",
 	"sentimentFactor":1.01,
 	"expiryTime":15,
-	"affectedIndustries":["manufacturing"],
+	"affectedIndustries":["weapons"],
 "affectedStocks": [],
 	"probability":0.002
 },
@@ -374,7 +374,7 @@
 	"name":"Robust Export Demand Fuels Optimism: Manufacturing Sector Expected to Soar",
 	"sentimentFactor":1.01,
 	"expiryTime":15,
-	"affectedIndustries":["manufacturing"],
+	"affectedIndustries":["weapons"],
 "affectedStocks": [],
 	"probability":0.002
 },
@@ -382,7 +382,7 @@
 	"name":"Technological Advancements Drive Efficiency Gains: Manufacturing Stocks Primed for Growth",
 	"sentimentFactor":1.01,
 	"expiryTime":15,
-	"affectedIndustries":["manufacturing"],
+	"affectedIndustries":["weapons"],
 "affectedStocks": [],
 	"probability":0.002
 },
@@ -390,7 +390,7 @@
 	"name":"Reshoring Trend Accelerates: Manufacturing Stocks to Benefit from Domestic Production",
 	"sentimentFactor":1.01,
 	"expiryTime":15,
-	"affectedIndustries":["manufacturing"],
+	"affectedIndustries":["weapons"],
 "affectedStocks": [],
 	"probability":0.002
 },
@@ -398,7 +398,7 @@
 	"name":"Government Initiatives Promote Domestic Manufacturing: Stocks Expected to Surge",
 	"sentimentFactor":1.01,
 	"expiryTime":15,
-	"affectedIndustries":["manufacturing"],
+	"affectedIndustries":["weapons"],
 "affectedStocks": [],
 	"probability":0.002
 },
@@ -407,7 +407,7 @@
 	"name":"Global Supply Chain Disruptions Intensify Amid New Trade Restrictions",
 	"sentimentFactor":0.99,
 	"expiryTime":15,
-	"affectedIndustries":["manufacturing"],
+	"affectedIndustries":["weapons"],
 "affectedStocks": [],
 	"probability":0.002
 },
@@ -415,7 +415,7 @@
 	"name":"Major Manufacturing Companies Report Significant Drop in Quarterly Earnings",
 	"sentimentFactor":0.99,
 	"expiryTime":15,
-	"affectedIndustries":["manufacturing"],
+	"affectedIndustries":["weapons"],
 "affectedStocks": [],
 	"probability":0.002
 },
@@ -423,7 +423,7 @@
 	"name":"Government Announces Heavy Regulatory Changes Affecting Manufacturing Sector",
 	"sentimentFactor":0.99,
 	"expiryTime":15,
-	"affectedIndustries":["manufacturing"],
+	"affectedIndustries":["weapons"],
 "affectedStocks": [],
 	"probability":0.002
 },
@@ -431,7 +431,7 @@
 	"name":"Rapid Technological Changes Outpace Traditional Manufacturing Processes",
 	"sentimentFactor":0.99,
 	"expiryTime":15,
-	"affectedIndustries":["manufacturing"],
+	"affectedIndustries":["weapons"],
 "affectedStocks": [],
 	"probability":0.002
 },
@@ -439,7 +439,7 @@
 	"name":"Surge in Raw Material Costs Puts Pressure on Manufacturing Profit Margins",
 	"sentimentFactor":0.99,
 	"expiryTime":15,
-	"affectedIndustries":["manufacturing"],
+	"affectedIndustries":["weapons"],
 "affectedStocks": [],
 	"probability":0.002
 },
@@ -447,7 +447,7 @@
 	"name":"Leading Economists Predict Downturn in Manufacturing Sector Growth",
 	"sentimentFactor":0.99,
 	"expiryTime":15,
-	"affectedIndustries":["manufacturing"],
+	"affectedIndustries":["weapons"],
 "affectedStocks": [],
 	"probability":0.002
 },
@@ -455,7 +455,7 @@
 	"name":"Investor Confidence Wanes as Manufacturing Stocks Hit Yearly Low",
 	"sentimentFactor":0.99,
 	"expiryTime":15,
-	"affectedIndustries":["manufacturing"],
+	"affectedIndustries":["weapons"],
 "affectedStocks": [],
 	"probability":0.002
 },
