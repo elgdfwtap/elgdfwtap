@@ -478,6 +478,46 @@
 	"probability":0.002
 },
 {
+	"name":"Inmates More Eager to Earn Money Due to Increased Opportunity in Prisons, Report Says",
+	"sentimentFactor":0.98,
+	"expiryTime":10,
+	"affectedIndustries":["favors"],
+"affectedStocks": [],
+	"probability":0.002
+},
+{
+	"name":"Favor Traders Brace for Supply Increase As More Inmates Willing to do More Things",
+	"sentimentFactor":0.98,
+	"expiryTime":10,
+	"affectedIndustries":["favors"],
+"affectedStocks": [],
+	"probability":0.002
+},
+{
+	"name":"More Correctional Officers Now Turning a Blind Eye to Activities Within Personal Cells",
+	"sentimentFactor":0.98,
+	"expiryTime":10,
+	"affectedIndustries":["favors"],
+"affectedStocks": [],
+	"probability":0.002
+},
+{
+	"name":"More than 80 Percent of New Inmates are Greeners, Official Reports Say",
+	"sentimentFactor":0.98,
+	"expiryTime":10,
+	"affectedIndustries":["favors"],
+"affectedStocks": [],
+	"probability":0.002
+},
+{
+	"name":"Longer Sentencing Minimums Mean More Prison Time For More Convicts",
+	"sentimentFactor":0.98,
+	"expiryTime":10,
+	"affectedIndustries":["favors"],
+"affectedStocks": [],
+	"probability":0.002
+},
+{
 	"name":"More Surveillance Measures in Prisons to come After New Bill",
 	"sentimentFactor":1.02,
 	"expiryTime":10,
@@ -493,6 +533,52 @@
 "affectedStocks": [],
 	"probability":0.002
 },
+{
+	"name":"Colorado Prisons Tighten Security Restrictions on Inmates",
+	"sentimentFactor":1.02,
+	"expiryTime":10,
+	"affectedIndustries":["favors"],
+"affectedStocks": [],
+	"probability":0.002
+},
+
+{
+	"name":"Increased Surveillance Measures in South Florida Jails",
+	"sentimentFactor":1.02,
+	"expiryTime":10,
+	"affectedIndustries":["favors"],
+"affectedStocks": [],
+	"probability":0.002
+},
+
+{
+	"name":"Signals Indicate Favor Trading Set to Increase",
+	"sentimentFactor":1.02,
+	"expiryTime":10,
+	"affectedIndustries":["favors"],
+"affectedStocks": [],
+	"probability":0.002
+},
+
+{
+	"name":"Multiple Prisons Facing Security Crises, Officials Scramble for Increased Funding",
+	"sentimentFactor":1.02,
+	"expiryTime":10,
+	"affectedIndustries":["favors"],
+"affectedStocks": [],
+	"probability":0.002
+},
+
+{
+	"name":"Shelby County Jail Enters Lockdown Following Attack",
+	"sentimentFactor":1.02,
+	"expiryTime":10,
+	"affectedIndustries":["favors"],
+"affectedStocks": [],
+	"probability":0.002
+},
+
+
 
 
 
