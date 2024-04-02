@@ -347,7 +347,7 @@
 
 
 {
-	"name":"ADX Florence Cracks Down on Inmate Weapon Posession, Hundreds of Cude Weapons ",
+	"name":"ADX Florence Cracks Down on Inmate Weapon Posession, Hundreds of Cude Weapons Confiscated",
 	"sentimentFactor":1.01,
 	"expiryTime":15,
 	"affectedIndustries":["weapons"],
@@ -355,7 +355,7 @@
 	"probability":0.002
 },
 {
-	"name":"Infrastructure Investment Spurs Growth: Manufacturing Stocks Poised for Rebound",
+	"name":"Prison Weapons on a Dwindling Supply after Government Crackdown",
 	"sentimentFactor":1.01,
 	"expiryTime":15,
 	"affectedIndustries":["weapons"],
@@ -363,7 +363,7 @@
 	"probability":0.002
 },
 {
-	"name":"Supply Chain Resilience Boosts Investor Confidence: Manufacturing Stocks to Rally",
+	"name":"Violent Crime on the Rise in George Prisons, Atlanta Correctional Facilities on Lockdown",
 	"sentimentFactor":1.01,
 	"expiryTime":15,
 	"affectedIndustries":["weapons"],
@@ -371,7 +371,7 @@
 	"probability":0.002
 },
 {
-	"name":"Robust Export Demand Fuels Optimism: Manufacturing Sector Expected to Soar",
+	"name":"Large Fence Hole Patched in LA County Jail, Weapons and Contraband Smuggling Expected to Decrease",
 	"sentimentFactor":1.01,
 	"expiryTime":15,
 	"affectedIndustries":["weapons"],
@@ -379,7 +379,7 @@
 	"probability":0.002
 },
 {
-	"name":"Technological Advancements Drive Efficiency Gains: Manufacturing Stocks Primed for Growth",
+	"name":"Cook County Jail Cracks Down on Weapons Dealing, 10 Illlegal Guns Siezed from Inmates",
 	"sentimentFactor":1.01,
 	"expiryTime":15,
 	"affectedIndustries":["weapons"],
@@ -387,7 +387,7 @@
 	"probability":0.002
 },
 {
-	"name":"Reshoring Trend Accelerates: Manufacturing Stocks to Benefit from Domestic Production",
+	"name":"El Paso , TX: Major Mexican Weapons Supplier Busted in DEA Confrontation",
 	"sentimentFactor":1.01,
 	"expiryTime":15,
 	"affectedIndustries":["weapons"],
@@ -395,7 +395,7 @@
 	"probability":0.002
 },
 {
-	"name":"Government Initiatives Promote Domestic Manufacturing: Stocks Expected to Surge",
+	"name":"Federal Penitentiaries are 20% More Dangerous Now, Government Sources State",
 	"sentimentFactor":1.01,
 	"expiryTime":15,
 	"affectedIndustries":["weapons"],
@@ -404,7 +404,7 @@
 },
 
 {
-	"name":"Global Supply Chain Disruptions Intensify Amid New Trade Restrictions",
+	"name":"New Fence Hole Discovered in Orange County Jail Yard, Enabling Weapons Smugglers to Continue",
 	"sentimentFactor":0.99,
 	"expiryTime":15,
 	"affectedIndustries":["weapons"],
@@ -412,7 +412,7 @@
 	"probability":0.002
 },
 {
-	"name":"Major Manufacturing Companies Report Significant Drop in Quarterly Earnings",
+	"name":"Richmond, VA: Cops Turn a Blind Eye: Hundreds of Weapons Pouring into Virginia Correctional Facilities",
 	"sentimentFactor":0.99,
 	"expiryTime":15,
 	"affectedIndustries":["weapons"],
@@ -420,7 +420,7 @@
 	"probability":0.002
 },
 {
-	"name":"Government Announces Heavy Regulatory Changes Affecting Manufacturing Sector",
+	"name":"New Technique Developed for Turning Prison Soap Bars into Shanks",
 	"sentimentFactor":0.99,
 	"expiryTime":15,
 	"affectedIndustries":["weapons"],
@@ -428,7 +428,7 @@
 	"probability":0.002
 },
 {
-	"name":"Rapid Technological Changes Outpace Traditional Manufacturing Processes",
+	"name":"3D Weapons Increasingly Used for Prison Smuggling, Regulators Fear They May Be Harder to Track",
 	"sentimentFactor":0.99,
 	"expiryTime":15,
 	"affectedIndustries":["weapons"],
@@ -436,7 +436,7 @@
 	"probability":0.002
 },
 {
-	"name":"Surge in Raw Material Costs Puts Pressure on Manufacturing Profit Margins",
+	"name":"Nevada State Prisons See Double Digit Declines in Violent Crimes, State Officials Say",
 	"sentimentFactor":0.99,
 	"expiryTime":15,
 	"affectedIndustries":["weapons"],
@@ -444,7 +444,7 @@
 	"probability":0.002
 },
 {
-	"name":"Leading Economists Predict Downturn in Manufacturing Sector Growth",
+	"name":"Oklahoma Bill Approves Correctional Officers to Carry Guns in Prisons",
 	"sentimentFactor":0.99,
 	"expiryTime":15,
 	"affectedIndustries":["weapons"],
@@ -452,7 +452,7 @@
 	"probability":0.002
 },
 {
-	"name":"Investor Confidence Wanes as Manufacturing Stocks Hit Yearly Low",
+	"name":"Clipping Area Discovered By the Bathrooms in Maricopa County Jail, Paving Way for New Smuggling Route",
 	"sentimentFactor":0.99,
 	"expiryTime":15,
 	"affectedIndustries":["weapons"],
@@ -462,233 +462,115 @@
 
 
 {
-	"name":"Major Tech Firms Face Antitrust Scrutiny in Global Markets",
+	"name":"Record-breaking Increase in New Prison Inmates",
 	"sentimentFactor":0.98,
 	"expiryTime":10,
-	"affectedIndustries":["tech"],
+	"affectedIndustries":["favors"],
 "affectedStocks": [],
 	"probability":0.002
 },
 {
-	"name":"Investors Concerned Over Overvaluation of Tech Sector Stocks",
+	"name":"Longer Sentencing Minimums Mean More Prison Time For More Convicts",
 	"sentimentFactor":0.98,
 	"expiryTime":10,
-	"affectedIndustries":["tech"],
+	"affectedIndustries":["favors"],
 "affectedStocks": [],
 	"probability":0.002
 },
 {
-	"name":"Multiple Tech Giants Report Lower Than Expected Earnings and Revenue",
-	"sentimentFactor":0.985,
+	"name":"More Surveillance Measures in Prisons to come After New Bill",
+	"sentimentFactor":1.02,
 	"expiryTime":10,
-	"affectedIndustries":["tech"],
+	"affectedIndustries":["favors"],
 "affectedStocks": [],
 	"probability":0.002
 },
 {
-	"name":"New Legislation Threatens Profit Margins of Major Tech Companies",
+	"name":"Chicago Area Prisons Enter Lockdown, No Inmate Contact Permitted",
+	"sentimentFactor":1.02,
+	"expiryTime":10,
+	"affectedIndustries":["favors"],
+"affectedStocks": [],
+	"probability":0.002
+},
+
+
+
+
+{
+	"name":"Major Southwest Meth Producer Killed in Gang Shooting, Accomplice Still Missing",
+	"sentimentFactor":1.02,
+	"expiryTime":10,
+	"affectedIndustries":["drugs"],
+"affectedStocks": ["METH"],
+	"probability":0.002
+},
+{
+	"name":"Police Seize More Than $50 In Wire From Nation's Wealthiest Crystal Meth Dealer",
+	"sentimentFactor":1.02,
+	"expiryTime":10,
+	"affectedIndustries":["drugs"],
+"affectedStocks": ["METH"],
+	"probability":0.002
+},
+{
+	"name":"Los Pollos Hermanos CEO Killed in Cartel Bombing, DEA Report Says",
+	"sentimentFactor":1.02,
+	"expiryTime":10,
+	"affectedIndustries":["drugs"],
+"affectedStocks": ["METH"],
+	"probability":0.002
+},
+{
+	"name":"New Meth Production Method Results in Blue Crystals, Consumers Don't Care About the Color",
 	"sentimentFactor":0.98,
 	"expiryTime":10,
-	"affectedIndustries":["tech"],
-"affectedStocks": [],
+	"affectedIndustries":["drugs"],
+"affectedStocks": ["METH"],
 	"probability":0.002
 },
 {
-	"name":"Interest Rate Hikes Put Pressure on High-Growth Tech Stocks",
+	"name":"2 DEA Agents Killed in Gang Shootout",
 	"sentimentFactor":0.98,
 	"expiryTime":10,
-	"affectedIndustries":["tech"],
-"affectedStocks": [],
+	"affectedIndustries":["drugs"],
+"affectedStocks": ["METH"],
 	"probability":0.002
 },
 {
-	"name":"Technology Sector Hit Hard by Sudden Market Selloff",
-	"sentimentFactor":0.97,
+	"name":"Heisenberg Signs Deal to Merge Heisenberg Empire with Local Distributors",
+	"sentimentFactor":0.98,
 	"expiryTime":10,
-	"affectedIndustries":["tech"],
-"affectedStocks": [],
-	"probability":0.002
-},
-{
-	"name":"Cybersecurity Threats Increase Costs and Risks for Tech Companies",
-	"sentimentFactor":0.97,
-	"expiryTime":10,
-	"affectedIndustries":["tech"],
-"affectedStocks": [],
-	"probability":0.002
-},
-
-
-{
-	"name":"Tech Companies Lead Market with Strong Quarterly Earnings Growth",
-	"sentimentFactor":1.02,
-	"expiryTime":10,
-	"affectedIndustries":["tech"],
-    "affectedStocks": []
-},
-{
-	"name":"Innovative Breakthroughs in AI Technology Revolutionize Industry",
-	"sentimentFactor":1.02,
-	"expiryTime":10,
-	"affectedIndustries":["tech"],
-"affectedStocks": [],
-	"probability":0.002
-},
-{
-	"name":"Tech Sector Sees Surge in Investment Amid Positive Market Trends",
-	"sentimentFactor":1.02,
-	"expiryTime":10,
-	"affectedIndustries":["tech"],
-"affectedStocks": [],
-	"probability":0.002
-},
-{
-	"name":"New Government Policies to Boost Growth in Technology Industry",
-	"sentimentFactor":1.02,
-	"expiryTime":10,
-	"affectedIndustries":["tech"],
-"affectedStocks": [],
-	"probability":0.002
-},
-{
-	"name":"Technology Sector Benefits from Increased Remote Work Demand",
-	"sentimentFactor":1.02,
-	"expiryTime":10,
-	"affectedIndustries":["tech"],
-"affectedStocks": [],
-	"probability":0.002
-},
-{
-	"name":"Tech Stocks Rally on News of Successful 5G Network Deployments",
-	"sentimentFactor":1.02,
-	"expiryTime":10,
-	"affectedIndustries":["tech"],
-"affectedStocks": [],
-	"probability":0.002
-},
-{
-	"name":"Renewed Investor Confidence as Tech Companies Exceed Expectations",
-	"sentimentFactor":1.02,
-	"expiryTime":10,
-	"affectedIndustries":["tech"],
-"affectedStocks": [],
+	"affectedIndustries":["drugs"],
+"affectedStocks": ["METH"],
 	"probability":0.002
 },
 
 {
-	"name":"Global Tech Sector Panic: Major Cybersecurity Breach Affects Thousands of Companies",
-	"sentimentFactor":0.75,
-	"expiryTime":1,
-	"affectedIndustries":["tech"],
-"affectedStocks": [],
-	"probability":0.0007
+	"name":"Prison Economy Spirals As Price Of Pack Of Cigarettes Surpasses Two Hand Jobs",
+	"sentimentFactor":1.02,
+	"expiryTime":10,
+	"affectedIndustries":["drugs"],
+"affectedStocks": ["SMOKE"],
+	"probability":0.002
 },
 {
-	"name":"Tech Industry in Turmoil: New Regulations Cripple Profit Models",
-	"sentimentFactor":0.85,
-	"expiryTime":1,
-	"affectedIndustries":["tech"],
-"affectedStocks": [],
-	"probability":0.0007
+	"name":"Colorado Wildfires: More Than 100 km of Cannabis Farms Destroyed in Blaze",
+	"sentimentFactor":1.02,
+	"expiryTime":10,
+	"affectedIndustries":["drugs"],
+"affectedStocks": ["WEED"],
+	"probability":0.002
 },
 {
-	"name":"Massive Tech Stock Sell-Off as Investors Fear Bubble Burst",
-	"sentimentFactor":0.83,
-	"expiryTime":1,
-	"affectedIndustries":["tech"],
-"affectedStocks": [],
-	"probability":0.0007
-},
-{
-	"name":"Tech Industry Crisis: Supply Chain Collapse Halts Production Worldwide",
-	"sentimentFactor":0.72,
-	"expiryTime":1,
-	"affectedIndustries":["tech"],
-"affectedStocks": [],
-	"probability":0.0007
-},
-{
-	"name":"Tech Market Plummets as Key Technologies Become Obsolete Overnight",
-	"sentimentFactor":0.8,
-	"expiryTime":1,
-	"affectedIndustries":["tech"],
-"affectedStocks": [],
-	"probability":0.0007
-},
-{
-	"name":"Widespread Tech Company Bankruptcies Following Credit Crunch",
-	"sentimentFactor":0.77,
-	"expiryTime":1,
-	"affectedIndustries":["tech"],
-"affectedStocks": [],
-	"probability":0.0007
-},
-{
-	"name":"Tech Stocks Crash as International Trade Wars Escalate",
-	"sentimentFactor":0.8,
-	"expiryTime":1,
-	"affectedIndustries":["tech"],
-"affectedStocks": [],
-	"probability":0.0007
+	"name":"Prison Soap Containers Discovered as Excellent Way to Hide Weed Smell",
+	"sentimentFactor":1.02,
+	"expiryTime":10,
+	"affectedIndustries":["drugs"],
+"affectedStocks": ["WEED"],
+	"probability":0.002
 },
 
-
-{
-	"name":"Tech Sector Surges on Breakthrough in Renewable Energy Technology",
-	"sentimentFactor":1.25,
-	"expiryTime":1,
-	"affectedIndustries":["tech"],
-"affectedStocks": [],
-	"probability":0.0007
-},
-{
-	"name":"Sudden Market Optimism as Tech Leads Economic Recovery",
-	"sentimentFactor":1.25,
-	"expiryTime":1,
-	"affectedIndustries":["tech"],
-"affectedStocks": [],
-	"probability":0.0007
-},
-{
-	"name":"Global Tech Investment Boom Following Major Trade Agreement",
-	"sentimentFactor":1.25,
-	"expiryTime":1,
-	"affectedIndustries":["tech"],
-"affectedStocks": [],
-	"probability":0.0007
-},
-{
-	"name":"Tech Stocks Skyrocket Amid Revolutionary Advances in AI",
-	"sentimentFactor":1.25,
-	"expiryTime":1,
-	"affectedIndustries":["tech"],
-"affectedStocks": [],
-	"probability":0.0007
-},
-{
-	"name":"Tech Sector Triumphs with Major Advances in Quantum Computing",
-	"sentimentFactor":1.25,
-	"expiryTime":1,
-	"affectedIndustries":["tech"],
-"affectedStocks": [],
-	"probability":0.0007
-},
-{
-	"name":"Global Shift to Digital Services Triggers Rapid Growth in Tech",
-	"sentimentFactor":1.25,
-	"expiryTime":1,
-	"affectedIndustries":["tech"],
-"affectedStocks": [],
-	"probability":0.0007
-},
-{
-	"name":"Market Frenzy as New Tech Ecosystems Drive Unprecedented Growth",
-	"sentimentFactor":1.25,
-	"expiryTime":1,
-	"affectedIndustries":["tech"],
-"affectedStocks": [],
-	"probability":0.0007
-},
 
 
 
