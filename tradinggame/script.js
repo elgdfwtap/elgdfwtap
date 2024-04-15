@@ -82,11 +82,11 @@ const market = {
 		pastData:[]
 	},
 	{
-		name: "TV",
+		name: "PORN",
 		industry:"commodities",
 		volatility:0.02,
-		longName:"Television Rentals, 1 night",
-		intPrice: 2,
+		longName:"Naked Woman Picture Acquisition, 1 Magazine",
+		intPrice: 10,
 		pastData:[]
 	},
 	{
@@ -130,18 +130,18 @@ const market = {
 		pastData:[]
 	},
 	{
-		name: "RMJB",
+		name: "BEAT",
 		industry:"favors",
 		volatility:0.03,
-		longName:"Rimjob, 1 ct",
-		intPrice: 65,
+		longName:"Beatings, 1 ct",
+		intPrice: 200,
 		pastData:[]
 	},
 	{
 		name: "HIT",
 		industry:"favors",
 		volatility:0.05,
-		longName:"Premeditated attack, 1 ct",
+		longName:"Contract Killings, 1 ct",
 		intPrice: 2000,
 		pastData:[]
 	},
