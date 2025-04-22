@@ -105,6 +105,28 @@
     dateSelect.addEventListener("change", renderForecasts);
 
     loadForecasts();
+
+document.addEventListener("DOMContentLoaded", function () {
+    document.querySelectorAll("img[data-caption]").forEach((img) => {
+      const fig = document.createElement("figure");
+      fig.style.display = "inline-block";
+      fig.style.margin = "10px";
+      fig.style.textAlign = "center";
+
+      const clonedImg = img.cloneNode(true);
+      clonedImg.style.maxWidth = "300px";
+      clonedImg.style.height = "auto";
+
+      const figcaption = document.createElement("figcaption");
+      const figNo = img.getAttribute("data-figno");
+      const captionText = img.getAttribute("data-caption");
+      figcaption.innerText = `Figure ${figNo}: ${captionText}`;
+
+      fig.appendChild(clonedImg);
+      fig.appendChild(figcaption);
+      img.replaceWith(fig);
+    });
+  });
   </script>
 </body>
 </html>

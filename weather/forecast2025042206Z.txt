@@ -2,20 +2,23 @@
 	<div data-day="1">
 		<h2> Day 1 Forecast; Valid Tuesday, April 22</h2>
 		Showers likely tonight north of Champaign from around 8PM to 3AM tomorrow on I-57.
-		Some pockets of higher supercell probability of SCP=4 around Iowa. Good moisture and shear for tornados, and higher cape moving in from the west into the Chicago area. <img src="screenshots/2025042202.png" />Stronger pockets of supercell conditions in central Kansas around 8PM. <img src="screenshots/2025042201.png" />However, I don't think it's likely to produce tornados since there is a lack of strong storms, mostly weak messy precipitation, implied by low lightning density across the forecast area, except for some possibly stronger cells in Kansas.
-	</div>
+		Some pockets of higher supercell probability of SCP=4 around Iowa. Good moisture and shear for tornados, and higher cape moving in from the west into the Chicago area. (Figure 2) Stronger pockets of supercell conditions in central Kansas around 8PM. (Figure 1) However, I don't think it's likely to produce tornados since there is a lack of strong storms, mostly weak messy precipitation, implied by low lightning density across the forecast area, except for some possibly stronger cells in Kansas.
+<br>
+<img data-figno="1" data-caption="HRRR Supercell Composite" src="screenshots/2025042201.png" /><img data-figno="2" data-caption="HRRR MUCape" src="screenshots/2025042202.png" />	
+</div>
 	<div data-day="2">
 	<h2> Day 2 Forecast; Valid Wednesday, April 23</h2>
-		Showers across Iowa and northern Illinois today. More probable are some medium-intensity cells forming in Iowa in the early morning hours of Wednesday, around midnight. Later in the day, more favorable conditions for supercells around southern Nebraska to central Kansas, stretching to northern Wisconsin. <img src="screenshots/2025042203.png" />Tornados most probable around north central Kansas, Southeastern Nebraska, and Northeastern Wisconsin. The highest MUCape is in Kansas, with most of the state above 1000 J/kg. Strong thunderstorms are likely in this area, perhaps some with rotation. <img src="screenshots/2025042204.png" /> However, the 0-3 km cape is limited for much of this area, so tornadic potetial is more limited. 0-3 km cape is higher in Wisconsin, where I expect there to be potential for small tornados. Larger tornados, however, are inibited by a lack of strong storms. <img src="screenshots/2025042205.png" /> The area west of Kansas City should expect a high likelihood for severe thunderstorms, expected to pop around 3 PM and lasting until 2AM the next morning.
+		Showers across Iowa and northern Illinois today. More probable are some medium-intensity cells forming in Iowa in the early morning hours of Wednesday, around midnight. Later in the day, more favorable conditions for supercells around southern Nebraska to central Kansas, stretching to northern Wisconsin. Tornados most probable around north central Kansas, Southeastern Nebraska, and Northeastern Wisconsin. (Figure 3) The highest MUCape is in Kansas, with most of the state above 1000 J/kg. Strong thunderstorms are likely in this area, perhaps some with rotation. (Figure 4) However, the 0-3 km cape is limited for much of this area, so tornadic potetial is more limited. 0-3 km cape is higher in Wisconsin, where I expect there to be potential for small tornados. Larger tornados, however, are inibited by a lack of strong storms.(Figure 5) The area west of Kansas City should expect a high likelihood for severe thunderstorms, expected to pop around 3 PM and lasting until 2AM the next morning.<br>
+<img data-figno="3" data-caption="HRRR Supercell Composite" src="screenshots/2025042203.png" /><img data-figno="4" data-caption="HRRR MUCape" src="screenshots/2025042204.png" /> <img data-figno="5" data-caption="HRRR 0-3km CAPE" src="screenshots/2025042205.png" />
 	</div>
 	<div data-day="3">
 	<h2> Day 3 Forecast; Valid Thursday, April 24</h2>
-Stronger supercells are likely in the afternoon on Thursday, stretching along the entire Oklahoma-Kansas border. This risk goes from about 3PM to Midnight. These storms are brought on by a very high cape of over 3500 J/kg in this area, and a strong cap producing explosive storms later in the day. <img src="screenshots/2025042206.png" /><img src="screenshots/2025042207.png" />
+Stronger supercells are likely in the afternoon on Thursday, stretching along the entire Oklahoma-Kansas border. This risk goes from about 3PM to Midnight. These storms are brought on by a very high cape of over 3500 J/kg in this area, and a strong cap producing explosive storms later in the day. <br><img data-figno="6" data-caption="NAM Lid Strength" src="screenshots/2025042206.png" /><img data-figno="7" data-caption="NAM CAPE" src="screenshots/2025042207.png" />
 	</div>
 	<div data-day="4">
 	<h2> Day 4 Forecast; Valid Friday, April 25</h2>
-	Low potential for severe weather brought on by a lack of winds, high moisture however means a rainy day across many southern states including Champaign.
-<img src="screenshots/2025042208.png" />
+	Low potential for severe weather brought on by a lack of winds, high moisture however means a rainy day across many southern states including Champaign.<br>
+<img data-figno="8" data-caption="NAM Accumulated Precipitation" src="screenshots/2025042208.png" />
 	</div>
 	<div data-day="5">
 	<h2> Day 5 Forecast; Valid Saturday</h2>
@@ -24,11 +27,12 @@ No significant weather likely today brought on by a lack of winds in the south a
 	
 	<div data-day="6">
 	<h2> Day 6 Forecast; Valid Sunday, April 27</h2>
-	Calm weather in the morning, but as a trough in the upper atmosphere pulls in the moisture sitting in the southern US, it should draw in and merge across many central states, creating potential for a severe weather event. <img src="screenshots/2025042209.png" /><img src="screenshots/2025042210.png" /> As a significant amount of windshear moves in from the southwest, an area of increased likelihood for supercells travels up from central Oklahoma to Nebraska.<img src="screenshots/2025042211.png" /> A supercell risk is likely from 8PM to about 4AM that night.
+	Calm weather in the morning, but as a trough in the upper atmosphere pulls in the moisture sitting in the southern US, it should draw in and merge across many central states, creating potential for a severe weather event. <img src="screenshots/2025042209.png" /><img src="screenshots/2025042210.png" /> As a significant amount of windshear moves in from the southwest, an area of increased likelihood for supercells travels up from central Oklahoma to Nebraska. A supercell risk is likely from 8PM to about 4AM that night.<br>
+<img data-figno="11" data-caption="GFS Supercell Composite" src="screenshots/2025042211.png" />
 	</div>
 	<div data-day="7">
 	<h2> Day 7 Forecast; Valid Monday, April 28</h2>
-	A severe weather event is likely on Monday afternoon as the trough continues to travel east and draw up more moisture. The bulk shear is even stronger today in the north. A severe weather outbreak is likely in an area stretching from Eastern Kanasas across Northern Missouri and Iowa to Wisconsin. Wisconsin is currently expected to have the most severe weather, lasting from noon to about 10pm. <img src="screenshots/2025042212.png" /><img src="screenshots/2025042213.png" /><img src="screenshots/2025042214.png" />
+	A severe weather event is likely on Monday afternoon as the trough continues to travel east and draw up more moisture. The bulk shear is even stronger today in the north. A severe weather outbreak is likely in an area stretching from Eastern Kanasas across Northern Missouri and Iowa to Wisconsin. Wisconsin is currently expected to have the most severe weather, lasting from noon to about 10pm.<br> <img data-figno="12" data-caption="GFS 500mb Wind Speed" src="screenshots/2025042212.png" /><img data-figno="13" data-caption="GFS Surface Moisture" src="screenshots/2025042213.png" /><img data-figno="14" data-caption="GFS Bulk Shear" src="screenshots/2025042214.png" />
 	</div>
 
 </div>
