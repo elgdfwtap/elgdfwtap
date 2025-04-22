@@ -24,9 +24,31 @@ html,body,h1,h2,h3,h4,h5,h6 {font-family: "Roboto", sans-serif;}
 <!-- Navbar -->
 <div class="w3-top">
   <div class="w3-bar w3-theme w3-top w3-left-align w3-large">
-    <a class="w3-bar-item w3-button w3-right w3-hide-large w3-hover-white w3-large w3-theme-l1" href="javascript:void(0)" onclick="w3_open()"><i class="fa fa-bars"></i></a>
     <a href="index.html" class="w3-bar-item w3-button w3-hide-small w3-hover-white">Entry 1</a>
-    <a href="#" class="w3-bar-item w3-button w3-theme-l1">Entry 2</a>
+<a href="entry2.html" class="w3-bar-item w3-button w3-hide-small w3-hover-white">Entry 2</a>
+<a href="entry3.html" class="w3-bar-item w3-button w3-hide-small w3-hover-white">Entry 3</a>
+<a href="entry4.html" class="w3-bar-item w3-button w3-hide-small w3-hover-white">Entry 4</a>
+<a href="entry5.html" class="w3-bar-item w3-button w3-hide-small w3-hover-white">Entry 5</a>
+<a href="entry6.html" class="w3-bar-item w3-button w3-hide-small w3-hover-white">Entry 6</a>
+<a href="entry7.html" class="w3-bar-item w3-button w3-hide-small w3-hover-white">Entry 7</a>
+<a href="entry8.html" class="w3-bar-item w3-button w3-hide-small w3-hover-white">Entry 8</a>
+<a href="entry9.html" class="w3-bar-item w3-button w3-hide-small w3-hover-white">Entry 9</a>
+<a href="entry10.html" class="w3-bar-item w3-button w3-hide-small w3-hover-white">Entry 10</a>
+
+
+<script>
+  (function() {
+    var currentPage = location.pathname.split('/').pop(); // Get filename like 'entry10.html'
+    var links = document.querySelectorAll('.w3-bar-item');
+
+    links.forEach(function(link) {
+      var href = link.getAttribute('href');
+      if (href === currentPage) {
+        link.classList.add('w3-theme-l1');
+      }
+    });
+  })();
+</script>
       </div>
 </div>
 
