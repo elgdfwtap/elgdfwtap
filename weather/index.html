@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>7-Day Weather Forecast Viewer</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    img {
+      max-width: 300px;
+      height: auto;
+      display: inline-block;
+      margin: 5px;
+    }
+    .forecast-entry {
+      border: 1px solid #ccc;
+      padding: 15px;
+      margin-bottom: 20px;
+      background: #f9f9f9;
+    }
+    .controls {
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>7-Day Weather Forecast Viewer</h1>
+  <div class="controls">
+    <label><input type="checkbox" id="hide-history" /> Show only most recent forecast</label>
+    <br>
+    <label for="date-select">Choose a historical date: </label>
+    <select id="date-select"></select>
+  </div>
+  <div id="forecast-container"></div>
+
+  <script>
+    const forecasts = {};
+    const container = document.getElementById("forecast-container");
+    const hideHistoryCheckbox = document.getElementById("hide-history");
+    const dateSelect = document.getElementById("date-select");
+
+    // Sample load - in real version replace with fetch to file list + parsing
+    const files = ["forecast2025042206Z.txt"];
+
+    async function loadForecasts() {
+      for (const file of files) {
+        const res = await fetch(file);
+        const text = await res.text();
+        const dom = new DOMParser().parseFromString(text, "text/html");
+        const root = dom.querySelector("div[data-date]");
+        const date = root.getAttribute("data-date");
+        const time = root.getAttribute("data-time");
+
+        for (let i = 1; i <= 7; i++) {
+          const dayDiv = root.querySelector(`div[data-day='${i}']`);
+          if (!dayDiv) continue;
+
+          const html = dayDiv.innerHTML;
+          if (!forecasts[i]) forecasts[i] = [];
+          forecasts[i].push({ date, time, html });
+        }
+
+        // Populate date dropdown
+        if (![...dateSelect.options].some(o => o.value === date)) {
+          const opt = document.createElement("option");
+          opt.value = date;
+          opt.textContent = date;
+          dateSelect.appendChild(opt);
+        }
+      }
+      renderForecasts();
+    }
+
+    function renderForecasts() {
+      container.innerHTML = "";
+      const showLatestOnly = hideHistoryCheckbox.checked;
+      const selectedDate = dateSelect.value;
+
+      for (const day in forecasts) {
+        const dayForecasts = forecasts[day]
+          .filter(f => !selectedDate || f.date === selectedDate)
+          .sort((a, b) => b.time.localeCompare(a.time));
+
+        if (showLatestOnly && dayForecasts.length > 0) {
+          const f = dayForecasts[0];
+          const div = document.createElement("div");
+          div.className = "forecast-entry";
+          div.innerHTML = `<h2>Day ${day}</h2>${f.html}`;
+          container.appendChild(div);
+        } else {
+          for (const f of dayForecasts) {
+            const div = document.createElement("div");
+            div.className = "forecast-entry";
+            div.innerHTML = `<h2>Day ${day} (from ${f.date} ${f.time})</h2>${f.html}`;
+            container.appendChild(div);
+          }
+        }
+      }
+    }
+
+    hideHistoryCheckbox.addEventListener("change", renderForecasts);
+    dateSelect.addEventListener("change", renderForecasts);
+
+    loadForecasts();
+  </script>
+</body>
+</html>
