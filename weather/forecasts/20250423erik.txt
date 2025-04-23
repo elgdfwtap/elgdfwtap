@@ -1,13 +1,13 @@
 {
   "date": "20250423",
   "time": "T1",
-  "forecaster": "EriErik",
+  "forecaster": "Erik",
   "forecasts": [
     {
       "day": 1,
       "valid": "20250423",
       "issued": "20250423T1100",
-      "forecaster": "EriErik",
+      "forecaster": "Erik",
       "text": "Possible supercell formation in Kanses today west of Kansas City, and some small thunderstorms are projected to form around 6PM, and last until 10PM. However, a lack of 0-3 km cape inhibits storm formation at low altitudes, leading to high elevation storms with low chances of forming tornadoes. (Figure 1) At this time, around 8 PM, some stronger more isolated supercell should form in in a line stretching from the western panhandle of Nebraska to Northern Texas. These storms have the potential to produce strong winds and damaging hail, but like before, a lack of lower level cape inhibits the formation of tornadoes. (Figure 2) The area most likely to see severe thunderstorms appears to be western Nebraska, but the models are inconsistent on the formation of thunderstorms in other areas. The storms should last overnight until about 10AM on Thursday. (Figure 3) Tornadoes are unlikely in Iowa or Wisconsin due to a lack of precipitation earlier in the evening in Wisconsin (Figure 4), and a lack of a mid level jet in Iowa (Figure 5)",
       "figures": [
         {
@@ -41,7 +41,7 @@
       "day": 2,
       "valid": "20250424",
       "issued": "20250423T1100",
-      "forecaster": "EriErik",
+      "forecaster": "Erik",
       "text": "High moisture in the great plains on Thursday and a lot of heating causes a very high CAPE value in across Texas, Western Oklahoma, and Colorado (Figure 1) (Figure 2). After the early morning supercell from the previous night dissapates across Oklahoma, models show a new round of storm formation in a line across texas (Figure 3) and should track before merging. However, this line of thunderstorms does not have as much rotation and probably will not produce any large dangerous tornados, except for a brief period of time on the north end of the flank when the cells are more isolated. More interestingly, an isolated supercell or two is predicted to form in Colorado around La Junta and western texas near Interstate 10, and will likely produce tornados as they are in an area of high 0-3km CAPE (Figure 4) (Figure 5).",
       "figures": [
         {
@@ -75,7 +75,7 @@
       "day": 3,
       "valid": "20250425",
       "issued": "20250423T1100",
-      "forecaster": "EriErik",
+      "forecaster": "Erik",
       "text": "Parts of West Texas remain favorable for supercell formation along the dryline, but I feel it is not likely due to a lack of high wind speed in the midlevel (Figure 1) (Figure 2). These supercell conditions exist until Saturday.",
       "figures": [
         {
@@ -94,7 +94,7 @@
       "day": 4,
       "valid": "20250426",
       "issued": "20250423T1100",
-      "forecaster": "EriErik",
+      "forecaster": "Erik",
       "text": "Parts of West Texas remain favorable for supercell formation along the dryline, but I feel it is not likely due to a lack of high wind speed in the midlevel.",
       "figures": []
     },
@@ -102,7 +102,7 @@
       "day": 5,
       "valid": "20250427",
       "issued": "20250423T1100",
-      "forecaster": "EriErik",
+      "forecaster": "Erik",
       "text": "As a trough moves in and picks up moisture, a convergence in Kansas is likely to occur with strong potential for supercell formation in that area. (Figure 1) (Figure 2) (Figure 3)",
       "figures": [
         {
@@ -126,7 +126,7 @@
       "day": 6,
       "valid": "20250428",
       "issued": "20250423T1100",
-      "forecaster": "EriErik",
+      "forecaster": "Erik",
       "text": "The area of the potential tornado outbreak on Monday has moved further to the west (Figure 1) as the trough moves across this area.",
       "figures": [
         {
@@ -140,7 +140,7 @@
       "day": 7,
       "valid": "20250429",
       "issued": "20250423T1100",
-      "forecaster": "EriErik",
+      "forecaster": "Erik",
       "text": "As the trough continues moving across the midwest, the midlevel jet picks up a lot of speed (Figure 1) and creates an area of potential supercell formation in Michigan, Indiana, Ohio, and Ontario. (Figure 2)",
       "figures": [
         {
@@ -159,7 +159,7 @@
       "day": 8,
       "valid": "20250430",
       "issued": "20250423T1100",
-      "forecaster": "EriErik",
+      "forecaster": "Erik",
       "text": "More quiet today as the trough has passed, except the trough further bulges down a little in texas creating potential for storms there.",
       "figures": []
     }
