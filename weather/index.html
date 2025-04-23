@@ -2,131 +2,311 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>7-Day Weather Forecast Viewer</title>
+  <title>Forecast Viewer by Valid Date</title>
   <style>
     body {
       font-family: Arial, sans-serif;
       margin: 20px;
     }
-    img {
-      max-width: 300px;
-      height: auto;
-      display: inline-block;
-      margin: 5px;
+
+    h2 {
+      margin-top: 40px;
     }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 40px;
+    }
+
+    th, td {
+      border: none;
+      padding: 10px;
+      vertical-align: top;
+      text-align: left;
+	  min-width:400px;
+    }
+
+    th {
+      background-color: #f0f0f0;
+    }
+
     .forecast-entry {
-      border: 1px solid #ccc;
-      padding: 15px;
-      margin-bottom: 20px;
-      background: #f9f9f9;
+      padding: 5px;
     }
-    .controls {
+
+    .forecast-entry h3 {
+      margin-top: 0;
+    }
+
+    figure {
+      display: inline-block;
+      margin: 10px;
+      text-align: center;
+    }
+
+    img {
+      max-width: 200px;
+      height: auto;
+    }
+
+    .no-forecast {
+      color: #999;
+      text-align: center;
+      vertical-align: middle;
+      height: 100px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .filter-bar {
       margin-bottom: 20px;
     }
   </style>
 </head>
 <body>
-  <h1>7-Day Weather Forecast Viewer</h1>
-  <div class="controls">
-    <label><input type="checkbox" id="hide-history" /> Show only most recent forecast</label>
-    <br>
-    <label for="date-select">Choose a historical date: </label>
-    <select id="date-select"></select>
-  </div>
-  <div id="forecast-container"></div>
-
+  <h1>Forecasts Organized by Valid Date</h1>
+	<div class="filter-bar">
+	  <label>
+		<input type="checkbox" id="toggle-most-recent" checked />
+		Show only most recent forecast per valid day
+	  </label>
+	  <br><br>
+	  <label for="start-date">Start date:</label>
+	  <input type="date" id="start-date" />
+	  <label for="end-date">End date:</label>
+	  <input type="date" id="end-date" />
+	</div>
+	<div id="forecast-container"></div>
   <script>
-    const forecasts = {};
-    const container = document.getElementById("forecast-container");
-    const hideHistoryCheckbox = document.getElementById("hide-history");
-    const dateSelect = document.getElementById("date-select");
+    const forecastDir = "forecasts/";
+    const forecastRegex = /^(\d{8})(\d{2})(.*)\.txt$/;
 
-    // Sample load - in real version replace with fetch to file list + parsing
-    const files = ["forecast2025042206Z.txt"];
-
-    async function loadForecasts() {
-      for (const file of files) {
-        const res = await fetch(file);
-        const text = await res.text();
-        const dom = new DOMParser().parseFromString(text, "text/html");
-        const root = dom.querySelector("div[data-date]");
-        const date = root.getAttribute("data-date");
-        const time = root.getAttribute("data-time");
-
-        for (let i = 1; i <= 7; i++) {
-          const dayDiv = root.querySelector(`div[data-day='${i}']`);
-          if (!dayDiv) continue;
-
-          const html = dayDiv.innerHTML;
-          if (!forecasts[i]) forecasts[i] = [];
-          forecasts[i].push({ date, time, html });
-        }
-
-        // Populate date dropdown
-        if (![...dateSelect.options].some(o => o.value === date)) {
-          const opt = document.createElement("option");
-          opt.value = date;
-          opt.textContent = date;
-          dateSelect.appendChild(opt);
-        }
-      }
-      renderForecasts();
+    async function listForecastFiles() {
+      // Replace this with real listing from a server or index file
+      return [
+        "20250422erik.txt",
+		"20250423erik.txt"
+		
+      ];
     }
 
-    function renderForecasts() {
-      container.innerHTML = "";
-      const showLatestOnly = hideHistoryCheckbox.checked;
-      const selectedDate = dateSelect.value;
-
-      for (const day in forecasts) {
-        const dayForecasts = forecasts[day]
-          .filter(f => !selectedDate || f.date === selectedDate)
-          .sort((a, b) => b.time.localeCompare(a.time));
-
-        if (showLatestOnly && dayForecasts.length > 0) {
-          const f = dayForecasts[0];
-          const div = document.createElement("div");
-          div.className = "forecast-entry";
-          div.innerHTML = `<h2>Day ${day}</h2>${f.html}`;
-          container.appendChild(div);
-        } else {
-          for (const f of dayForecasts) {
-            const div = document.createElement("div");
-            div.className = "forecast-entry";
-            div.innerHTML = `<h2>Day ${day} (from ${f.date} ${f.time})</h2>${f.html}`;
-            container.appendChild(div);
-          }
-        }
-      }
+    async function fetchForecast(filename) {
+      const res = await fetch(forecastDir + filename);
+      const text = await res.text();
+      return { filename, content: JSON.parse(text) };
     }
 
-    hideHistoryCheckbox.addEventListener("change", renderForecasts);
-    dateSelect.addEventListener("change", renderForecasts);
+    function formatDate(yyyymmdd) {
+      const y = yyyymmdd.substring(0, 4);
+      const m = yyyymmdd.substring(4, 6) - 1;
+      const d = yyyymmdd.substring(6, 8);
+      const date = new Date(y, m, d);
+      return date.toLocaleDateString("en-US", {
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric"
+      });
+    }
 
-    loadForecasts();
+    function createFigure(fig) {
+      const figure = document.createElement("figure");
+      const img = document.createElement("img");
+      img.src = fig.src;
+      img.alt = fig.caption;
 
-document.addEventListener("DOMContentLoaded", function () {
-    document.querySelectorAll("img[data-caption]").forEach((img) => {
-      const fig = document.createElement("figure");
-      fig.style.display = "inline-block";
-      fig.style.margin = "10px";
-      fig.style.textAlign = "center";
+      const cap = document.createElement("figcaption");
+      cap.textContent = `Figure ${fig.figno}: ${fig.caption}`;
 
-      const clonedImg = img.cloneNode(true);
-      clonedImg.style.maxWidth = "300px";
-      clonedImg.style.height = "auto";
+      figure.appendChild(img);
+      figure.appendChild(cap);
+      return figure;
+    }
 
-      const figcaption = document.createElement("figcaption");
-      const figNo = img.getAttribute("data-figno");
-      const captionText = img.getAttribute("data-caption");
-      figcaption.innerText = `Figure ${figNo}: ${captionText}`;
+	function renderForecastTables(forecastsByValid, forecasters, onlyMostRecent) {
+	  const container = document.getElementById("forecast-container");
+	  container.innerHTML = "";
 
-      fig.appendChild(clonedImg);
-      fig.appendChild(figcaption);
-      img.replaceWith(fig);
-    });
-  });
+	  const startDateInput = document.getElementById("start-date").value;
+	  const endDateInput = document.getElementById("end-date").value;
+
+	  const start = startDateInput ? new Date(startDateInput) : null;
+	  const end = endDateInput ? new Date(endDateInput) : null;
+
+	  const sortedValidDays = Object.keys(forecastsByValid).sort(function (a, b) {
+		return b.localeCompare(a);
+	  });
+
+	  for (let i = sortedValidDays.length - 1; i >= 0; i--) {
+		const validDay = sortedValidDays[i];
+		const validDateObj = new Date(
+		  validDay.substring(0, 4),
+		  parseInt(validDay.substring(4, 6)) - 1,
+		  validDay.substring(6, 8)
+		);
+
+		// Skip if outside the date range
+		if ((start && validDateObj < start) || (end && validDateObj > end)) {
+		  continue;
+		}
+
+		const issuedGroups = forecastsByValid[validDay]; // issued date → { forecaster → forecast }
+
+		// Create table and caption
+		const caption = document.createElement("h2");
+		caption.textContent = "Valid Forecast Date: " + formatDate(validDay);
+		container.appendChild(caption);
+
+		const table = document.createElement("table");
+
+		// === TABLE HEADER ===
+		const thead = document.createElement("thead");
+		const headRow = document.createElement("tr");
+
+		const labelHeader = document.createElement("th");
+		labelHeader.textContent = "Issued";
+		headRow.appendChild(labelHeader);
+
+		for (let j = 0; j < forecasters.length; j++) {
+		  const name = forecasters[j];
+		  const th = document.createElement("th");
+		  th.textContent = name;
+		  headRow.appendChild(th);
+		}
+
+		thead.appendChild(headRow);
+		table.appendChild(thead);
+
+		// === TABLE BODY ===
+		const tbody = document.createElement("tbody");
+		const sortedIssued = Object.keys(issuedGroups).sort(function (a, b) {
+		  return b.localeCompare(a);
+		});
+
+		// Loop through each date this forecast was issued on (rows)
+		for (let k = 0; k < sortedIssued.length; k++) {
+		  const issued = sortedIssued[k];
+		  const row = document.createElement("tr");
+
+		  // First column = the issuance date
+		  const labelCell = document.createElement("td");
+		  labelCell.textContent = formatDate(issued);
+		  row.appendChild(labelCell);
+
+		  // Now fill each cell for each forecaster
+		  for (let j = 0; j < forecasters.length; j++) {
+			const name = forecasters[j];
+			const td = document.createElement("td");
+
+			const forecast = issuedGroups[issued][name];
+
+			if (forecast) {
+			  // Build forecast block
+			  const entry = document.createElement("div");
+			  entry.className = "forecast-entry";
+
+			  const h3 = document.createElement("h3");
+			  h3.textContent = "Issued: " + formatDate(forecast.issued.substring(0, 8));
+			  entry.appendChild(h3);
+
+			  const p = document.createElement("p");
+			  p.textContent = forecast.text;
+			  entry.appendChild(p);
+
+			  const figs = document.createElement("div");
+			  for (let f = 0; f < forecast.figures.length; f++) {
+				const fig = forecast.figures[f];
+				figs.appendChild(createFigure(fig));
+			  }
+
+			  entry.appendChild(figs);
+			  td.appendChild(entry);
+
+			} else {
+			  // No forecast for this forecaster on this issuance
+			  td.className = "no-forecast";
+			  td.innerHTML = "<div>NO PREDICTION</div>";
+			}
+
+			row.appendChild(td);
+		  }
+
+		  tbody.appendChild(row);
+
+		  if (onlyMostRecent) {
+			break; // Only show the most recent issuance per valid date
+		  }
+		}
+
+		table.appendChild(tbody);
+		container.appendChild(table);
+	  }
+	}
+	async function init() {
+	  const filenames = await listForecastFiles();
+	  const fileData = await Promise.all(filenames.map(fetchForecast));
+
+	  const forecastsByValid = {};
+	  const forecasters = new Set();
+
+	  fileData.forEach(({ content }) => {
+		content.forecasts.forEach(f => {
+		  forecasters.add(f.forecaster);
+		  const valid = f.valid;
+		  const issued = f.issued.substring(0, 8);
+
+		  if (!forecastsByValid[valid]) forecastsByValid[valid] = {};
+		  if (!forecastsByValid[valid][issued]) forecastsByValid[valid][issued] = {};
+
+		  forecastsByValid[valid][issued][f.forecaster] = {
+			issued: f.issued,
+			forecaster: f.forecaster,
+			text: f.text,
+			figures: f.figures
+		  };
+		});
+	  });
+
+	  const sortedForecasters = Array.from(forecasters).sort();
+
+	  const toggle = document.getElementById("toggle-most-recent");
+	  const startDateInput = document.getElementById("start-date");
+	  const endDateInput = document.getElementById("end-date");
+
+	  // ✅ Now it's safe to use them
+	  const today = new Date();
+	  const sevenDaysLater = new Date(today);
+	  sevenDaysLater.setDate(today.getDate() + 7);
+
+	  function toDateInputString(date) {
+		const year = date.getFullYear();
+		const month = String(date.getMonth() + 1).padStart(2, '0');
+		const day = String(date.getDate()).padStart(2, '0');
+		return `${year}-${month}-${day}`;
+	  }
+
+	  startDateInput.value = toDateInputString(today);
+	  endDateInput.value = toDateInputString(sevenDaysLater);
+
+	  function render() {
+		renderForecastTables(forecastsByValid, sortedForecasters, toggle.checked);
+	  }
+
+	  toggle.addEventListener("change", render);
+	  startDateInput.addEventListener("change", render);
+	  endDateInput.addEventListener("change", render);
+
+	  render();
+	}
+
+
+
+    window.onload = function () {
+	  init();
+	};
+
   </script>
 </body>
 </html>

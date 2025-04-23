@@ -1,0 +1,94 @@
+{
+  "date": "20250401",
+  "time": "15",
+  "forecaster": "Sluke",
+  "forecasts": [
+    {
+      "day": 1,
+      "valid": "20250401",
+      "issued": "20250401",
+      "forecaster": "Sluke",
+      "text": "Some storms tonight",
+      "figures": []
+    },
+    {
+      "day": 2,
+      "valid": "20250402",
+      "issued": "20250401",
+      "forecaster": "Sluke",
+      "text": "Partly Cloudy, showers after 2, temperature drop",
+      "figures": [
+        {
+          "figno": 3,
+          "caption": "NAM Forecast Sounding",
+          "src": "screenshots/2025042208.png"
+        }
+      ]
+    },
+	{
+      "day": 3,
+      "valid": "20250403",
+      "issued": "20250401",
+      "forecaster": "Sluke",
+      "text": "Temperatures rise, chance of precip 30%",
+      "figures": []
+    },
+	{
+      "day": 4,
+      "valid": "20250404",
+      "issued": "20250401",
+      "forecaster": "Sluke",
+      "text": "Possible severe weather as a jet stream trough combines with moisture",
+      "figures": []
+    },
+	{
+      "day": 1,
+      "valid": "20250402",
+      "issued": "20250402",
+      "forecaster": "Sluke",
+      "text": "Partly cloudy, showers begin at 2:30, temperatures to drop overnight to reach a low of 40 degrees",
+      "figures": []
+    },
+	{
+      "day": 2,
+      "valid": "20250403",
+      "issued": "20250402",
+      "forecaster": "Sluke",
+      "text": "Temperatures rise before noon, a chance of showers before 11am, with cooler temperatures again overnight",
+      "figures": []
+    },
+	{
+      "day": 3,
+      "valid": "20250404",
+      "issued": "20250402",
+      "forecaster": "Sluke",
+      "text": "Models show a strengthening lower level jet, increasing the possibility of severe weather",
+      "figures": []
+    },
+	{
+      "day": 1,
+      "valid": "20250403",
+      "issued": "20250403T1200",
+      "forecaster": "Sluke",
+      "text": "Temperatures reach a high of 70 today, with showers continuing until 1 pm. Lower temperatures overnight.",
+      "figures": []
+    },
+	{
+      "day": 2,
+      "valid": "20250404",
+      "issued": "20250403T1200",
+      "forecaster": "Sluke",
+      "text": "A high risk for a tornado outbreak exists tomorrow, as projected cape values have increased significantly for the forecast. Expect a tornado watch.",
+      "figures": []
+    },
+	{
+      "day": 1,
+      "valid": "20250404",
+      "issued": "20250404T1400",
+      "forecaster": "Sluke",
+      "text": "Multiple isolated supercells are expected to form at around 4 PM and move into the forecast area, and are expected to produce tornadoes. This a is a particularly dangerous situation, and residents should be prepared to seek shelter...",
+      "figures": []
+    }
+	
+  ]
+}

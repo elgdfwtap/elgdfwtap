@@ -1,0 +1,78 @@
+import re
+import json
+from datetime import datetime, timedelta
+
+def parse_forecast_text(text):
+    lines = text.strip().split('\n')
+    forecaster = lines[0].strip()
+    issued = lines[1].strip()
+    body = '\n'.join(lines[2:])
+
+    # Split forecast sections by DAY1, DAY2, etc.
+    entries = re.split(r'(DAY\d+)', body)
+    day_blocks = list(zip(entries[1::2], entries[2::2]))  # [('DAY1', '...'), ...]
+
+    forecasts = []
+    base_date = datetime.strptime(issued[:8], "%Y%m%d")
+
+    for day_label, content in day_blocks:
+        day_num = int(day_label[3:])
+        valid_date = (base_date + timedelta(days=day_num - 1)).strftime("%Y%m%d")
+
+        figures = []
+        def fig_replacer(match):
+            figno = len(figures) + 1
+            caption = match.group(1).strip()
+            src = match.group(2).strip()
+            figures.append({
+                "figno": figno,
+                "caption": caption,
+                "src": src
+            })
+            return f"(Figure {figno})"
+
+        # Replace figure text with placeholders and extract info
+        cleaned_text = re.sub(r"\(Figure\s+\d+\s*:\s*([^(]+)\(([^)]+)\)\)", fig_replacer, content).strip()
+
+        forecasts.append({
+            "day": day_num,
+            "valid": valid_date,
+            "issued": issued,
+            "forecaster": forecaster,
+            "text": cleaned_text,
+            "figures": figures
+        })
+
+    result = {
+        "date": issued[:8],
+        "time": issued[8:10],
+        "forecaster": forecaster,
+        "forecasts": forecasts
+    }
+
+    return result
+
+# === Example Usage ===
+example_input = """
+EriErik
+20250423T1100
+DAY1
+Possible supercell formation in Kanses today west of Kansas City, and some small thunderstorms are projected to form around 6PM, and last until 10PM. However, a lack of 0-3 km cape inhibits storm formation at low altitudes, leading to high elevation storms with low chances of forming tornadoes. (Figure 1: HRRR 0-3km CAPE (https://i.ibb.co/CDcbmMD/Screenshot-2025-04-23-110827.png)) At this time, around 8 PM, some stronger more isolated supercell should form in in a line stretching from the western panhandle of Nebraska to Northern Texas. These storms have the potential to produce strong winds and damaging hail, but like before, a lack of lower level cape inhibits the formation of tornadoes. (Figure 2: HRRR Updraft Helicity Swaths (https://i.ibb.co/WWBbLLFj/Screenshot-2025-04-23-111323.png)) The area most likely to see severe thunderstorms appears to be western Nebraska, but the models are inconsistent on the formation of thunderstorms in other areas. The storms should last overnight until about 10AM on Thursday. (Figure 3: HRRR Showing Supercells on Reflectivity(https://i.ibb.co/Pv6Hf3qJ/Screenshot-2025-04-23-111450.png)) Tornadoes are unlikely in Iowa or Wisconsin due to a lack of precipitation earlier in the evening in Wisconsin (Figure 4: Accumulated Precipitation 2PM - 8PM(https://i.ibb.co/DgGXPvcv/Screenshot-2025-04-23-112824.png)), and a lack of a mid level jet in Iowa (Figure 5: 500mb Wind Speed(https://i.ibb.co/vxm3s4Rk/Screenshot-2025-04-23-112935.png))
+DAY2
+High moisture in the great plains on Thursday and a lot of heating causes a very high CAPE value in across Texas, Western Oklahoma, and Colorado (Figure 6: Dewpoint Temperatures on Thursday(https://i.ibb.co/YTFwW2sS/Screenshot-2025-04-23-113815.png)) (Figure 7: HRRR MUCAPE (https://i.ibb.co/vxD3wn7y/Screenshot-2025-04-23-113902.png)). After the early morning supercell from the previous night dissapates across Oklahoma, models show a new round of storm formation in a line across texas (Figure 8: Thunderstorms forming in a dryline(https://i.ibb.co/prQphn3j/Screenshot-2025-04-23-114118.png)) and should track before merging. However, this line of thunderstorms does not have as much rotation and probably will not produce any large dangerous tornados, except for a brief period of time on the north end of the flank when the cells are more isolated. More interestingly, an isolated supercell or two is predicted to form in Colorado around La Junta and western texas near Interstate 10, and will likely produce tornados as they are in an area of high 0-3km CAPE (Figure 9: Updraft Helicity Swaths (https://i.ibb.co/GvDsrncq/Screenshot-2025-04-23-120244.png)) (Figure 10: 0-3km CAPE(https://i.ibb.co/YFrjFwnh/Screenshot-2025-04-23-120336.png)).
+DAY3
+Parts of West Texas remain favorable for supercell formation along the dryline, but I feel it is not likely due to a lack of high wind speed in the midlevel (Figure 11: NAM Supercell Composite(https://i.ibb.co/mCT37vGN/Screenshot-2025-04-23-120530.png)) (Figure 12: 500 mb wind speed (https://i.ibb.co/jv3VmLc5/Screenshot-2025-04-23-120554.png)). These supercell conditions exist until Saturday.
+DAY4
+Parts of West Texas remain favorable for supercell formation along the dryline, but I feel it is not likely due to a lack of high wind speed in the midlevel.
+DAY5
+As a trough moves in and picks up moisture, a convergence in Kansas is likely to occur with strong potential for supercell formation in that area. (Figure 13: 500 mb wind speed(https://i.ibb.co/LhSpnh1B/Screenshot-2025-04-23-121123.png)) (Figure 14: Surface Dewpoint Temperature(https://i.ibb.co/NhVj5fR/Screenshot-2025-04-23-121148.png)) (Figure 15: Supercell Composite (https://i.ibb.co/Kc4V8P1q/Screenshot-2025-04-23-121211.png))
+DAY6
+The area of the potential tornado outbreak on Monday has moved further to the west (Figure 16: Supercell Composite(https://i.ibb.co/chbJp4nk/Screenshot-2025-04-23-121303.png)) as the trough moves across this area.
+DAY7
+As the trough continues moving across the midwest, the midlevel jet picks up a lot of speed (Figure 17: 500mb Wind Speed(https://i.ibb.co/MDpN67tk/Screenshot-2025-04-23-121439.png)) and creates an area of potential supercell formation in Michigan, Indiana, Ohio, and Ontario. (Figure 18: Supercell Composite (https://i.ibb.co/cW10Vbh/Screenshot-2025-04-23-121524.png))
+DAY8
+More quiet today as the trough has passed, except the trough further bulges down a little in texas creating potential for storms there.
+"""
+
+parsed = parse_forecast_text(example_input)
+print(json.dumps(parsed, indent=2))

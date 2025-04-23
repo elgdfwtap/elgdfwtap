@@ -1,0 +1,70 @@
+{
+  "date": "20250401",
+  "time": "15",
+  "forecaster": "Slevor",
+  "forecasts": [
+    {
+      "day": 1,
+      "valid": "20250401",
+      "issued": "20250401",
+      "forecaster": "Slevor",
+      "text": "Scattered rain across the forecast area. A low of 50 tonight.",
+      "figures": []
+    },
+    {
+      "day": 2,
+      "valid": "20250402",
+      "issued": "20250401",
+      "forecaster": "Slevor",
+      "text": "Temperatures should increase tomorrow, following a high pressure system",
+      "figures": [
+        {
+          "figno": 3,
+          "caption": "NAM Forecast Sounding",
+          "src": "screenshots/2025042208.png"
+        }
+      ]
+    },
+	{
+      "day": 3,
+      "valid": "20250403",
+      "issued": "20250401",
+      "forecaster": "Slevor",
+      "text": "Temperatures are projected to rise further, followed by a period of calm",
+      "figures": []
+    },
+	{
+      "day": 4,
+      "valid": "20250404",
+      "issued": "20250401",
+      "forecaster": "Slevor",
+      "text": "A trough pushes in fast, creating thunderstorms for the prediction area",
+      "figures": []
+    },
+	{
+      "day": 1,
+      "valid": "20250403",
+      "issued": "20250403T0800",
+      "forecaster": "Slevor",
+      "text": "High temperatures today, with showers starting at 10am and lasting until 3 PM.",
+      "figures": []
+    },
+	{
+      "day": 2,
+      "valid": "20250404",
+      "issued": "20250403T0800",
+      "forecaster": "Slevor",
+      "text": "A moderate tornado risk exists for the forecast area tomorrow, as a strong low level jet pushes in.",
+      "figures": []
+    },
+	{
+      "day": 1,
+      "valid": "20250404",
+      "issued": "20250404T1600",
+      "forecaster": "Slevor",
+      "text": "...A TORNADO WARNING REMAINS IN EFFECT UNTIL 1145 PM CDT FOR NORTHWESTERN WILL...SOUTHEASTERN DUPAGE AND SOUTH CENTRAL COOK COUNTIES...At 1115 PM CDT, a confirmed large and extremely dangerous tornado  was located over Darien, or over far east Woodridge, moving east at 45 mph. Radar confirms debris with this tornado moving over  populated areas. This is a PARTICULARLY DANGEROUS SITUATION. TAKE COVER NOW! HAZARD...Damaging tornado.",
+      "figures": []
+    }
+	
+  ]
+}
