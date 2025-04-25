@@ -45,12 +45,12 @@
         {
           "figno": 1,
           "caption": "Supercell Composite at 10PM",
-          "src": "Figure 3: 0-3km CAPE (screenshots/Screenshot 2025-04-25 111949.png"
+          "src": "screenshots/Screenshot 2025-04-25 111949.png"
         },
         {
           "figno": 2,
           "caption": "Lid Strength Index",
-          "src": "Figure 3: 0-3km CAPE (screenshots/Screenshot 2025-04-25 112129.png"
+          "src": "screenshots/Screenshot 2025-04-25 112129.png"
         }
       ]
     },
@@ -64,32 +64,32 @@
         {
           "figno": 1,
           "caption": "Bulk Shear",
-          "src": "Figure 3: 0-3km CAPE (screenshots/Screenshot 2025-04-25 112345.png"
+          "src": "screenshots/Screenshot 2025-04-25 112345.png"
         },
         {
           "figno": 2,
           "caption": "Surface Dewpoint",
-          "src": "Figure 3: 0-3km CAPE (screenshots/Screenshot 2025-04-25 112452.png"
+          "src": "screenshots/Screenshot 2025-04-25 112452.png"
         },
         {
           "figno": 3,
           "caption": "Supercell Composite",
-          "src": "Figure 3: 0-3km CAPE (screenshots/Screenshot 2025-04-25 112423.png"
+          "src": "screenshots/Screenshot 2025-04-25 112423.png"
         },
         {
           "figno": 4,
           "caption": "Significant tornado parameter",
-          "src": "Figure 3: 0-3km CAPE (screenshots/Screenshot 2025-04-25 112609.png"
+          "src": "screenshots/Screenshot 2025-04-25 112609.png"
         },
         {
           "figno": 5,
           "caption": "MUCAPE",
-          "src": "Figure 3: 0-3km CAPE (screenshots/Screenshot 2025-04-25 112821.png"
+          "src": "screenshots/Screenshot 2025-04-25 112821.png"
         },
         {
           "figno": 6,
           "caption": "Lid Strength Index",
-          "src": "Figure 3: 0-3km CAPE (screenshots/Screenshot 2025-04-25 112848.png"
+          "src": "screenshots/Screenshot 2025-04-25 112848.png"
         },
         {
           "figno": 7,
