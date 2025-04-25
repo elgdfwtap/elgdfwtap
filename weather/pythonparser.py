@@ -55,7 +55,7 @@ def parse_forecast_text(text):
 # === Example Usage ===
 example_input = """
 Erik
-20250423T1100
+20250425T1100
 DAY1
 Rainy day for Champaign today with a chance of isolated showers until 9PM (Figure 1: Precipitation Accumulation (screenshots/Screenshot 2025-04-25 110424.png)). The high today will be around 70 degrees and will occur at 5PM, and the low will be 45 degrees at 6AM tomorrow morning. Supercell formation likely in Texas today as a line storms forms in the west of the state and tracks east, likely picking up some rotation along the way (Figure 2: Reflectivity showing supercells tracking east (screenshots/Screenshot 2025-04-25 110843.png)). Severe thunderstorms capable of producing hail and winds are likely, but no tornado as there is a lack of CAPE in the lower levels (Figure 3: 0-3km CAPE (screenshots/Screenshot 2025-04-25 111026.png)). These thunderstorms are likely to merge into much larger systems later tonight into early next morning, and give a lot of precipitation to north Texas, and bring rain to Oklahoma and Arkansas into Saturday and Sunday.
 DAY2

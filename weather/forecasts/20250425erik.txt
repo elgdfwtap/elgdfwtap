@@ -1,12 +1,12 @@
 {
-  "date": "20250423",
+  "date": "20250425",
   "time": "T1",
   "forecaster": "Erik",
   "forecasts": [
     {
       "day": 1,
-      "valid": "20250423",
-      "issued": "20250423T1100",
+      "valid": "20250425",
+      "issued": "20250425T1100",
       "forecaster": "Erik",
       "text": "Rainy day for Champaign today with a chance of isolated showers until 9PM (Figure 1). The high today will be around 70 degrees and will occur at 5PM, and the low will be 45 degrees at 6AM tomorrow morning. Supercell formation likely in Texas today as a line storms forms in the west of the state and tracks east, likely picking up some rotation along the way (Figure 2). Severe thunderstorms capable of producing hail and winds are likely, but no tornado as there is a lack of CAPE in the lower levels (Figure 3). These thunderstorms are likely to merge into much larger systems later tonight into early next morning, and give a lot of precipitation to north Texas, and bring rain to Oklahoma and Arkansas into Saturday and Sunday.",
       "figures": [
@@ -29,16 +29,16 @@
     },
     {
       "day": 2,
-      "valid": "20250424",
-      "issued": "20250423T1100",
+      "valid": "20250426",
+      "issued": "20250425T1100",
       "forecaster": "Erik",
       "text": "A large system will move across Oklahoma and Arkansas, but due to a messy system and limited updraft it will not produce severe weather.",
       "figures": []
     },
     {
       "day": 3,
-      "valid": "20250425",
-      "issued": "20250423T1100",
+      "valid": "20250427",
+      "issued": "20250425T1100",
       "forecaster": "Erik",
       "text": "High risk for supercells later in the day on sunday in North Texas, Oklahoma, Kansas, and Nebraska (Figure 1), but in reality no supercells are likely to form due to a very strong cap in the area (Figure 2); However, if the cap does pop it is likely to produce severe thunderstorms.",
       "figures": [
@@ -56,8 +56,8 @@
     },
     {
       "day": 4,
-      "valid": "20250426",
-      "issued": "20250423T1100",
+      "valid": "20250428",
+      "issued": "20250425T1100",
       "forecaster": "Erik",
       "text": "As the trough moves up on Monday it picks up a strong lower level jet with up to 60 knots of bulk shear (Figure 1) and a lot of moisture (Figure 2), and a severe weather event \tis highly likely (Figure 3). The supercell risk appears to peak near 7PM. It brings with it a high likelyhood of significant tornados (Figure 4), some areas near Des Moines up to STP=6.1, likely causing a tornado outbreak in Iowa and Kansas, and perhaps parts of Missouri. This outbreak is capable of producing large violent tornados. I have never seen the STP this high before. A lot of potential energy (Figure 5) and a good cap, strong but not too strong to inhibit storm formation (Figure 6) will cause high energy storms which explode into the jet stream and begin rotating with a powerful updraft, and are isolated enough to have unrestrained powerful mesocyclones. Furthermore, strong cape near the surface (Figure 7) will lead to the formation of large violent tornados at the bottoms of these swirling updrafts. The storms are likely to start around mid afternoon, around 7 PM, and continue late into the night.",
       "figures": [
@@ -100,8 +100,8 @@
     },
     {
       "day": 5,
-      "valid": "20250427",
-      "issued": "20250423T1100",
+      "valid": "20250429",
+      "issued": "20250425T1100",
       "forecaster": "Erik",
       "text": "As the dryline moves east, storms are likely on tuesday afternoon as heating occurs again. Due to a lot of surface CAPE (Figure 1), tornados cannot be ruled out across Central Illinois, Indiana, and Michigan. While not as severe as Monday, if severe thunderstorms do occur they may produce tornadoes (Figure 2). These storms will probably start around 1PM, and move into Ohio, New York, and Ontario.",
       "figures": [
@@ -119,16 +119,16 @@
     },
     {
       "day": 6,
-      "valid": "20250428",
-      "issued": "20250423T1100",
+      "valid": "20250430",
+      "issued": "20250425T1100",
       "forecaster": "Erik",
       "text": "Some likelyhood for supercells in Texas, but no tornado risk as the surface based CAPE is very low.",
       "figures": []
     },
     {
       "day": 7,
-      "valid": "20250429",
-      "issued": "20250423T1100",
+      "valid": "20250501",
+      "issued": "20250425T1100",
       "forecaster": "Erik",
       "text": "As the trough in texas moves east, rain is likely in Dixie alley, like East Texas, Arkansas, Tennessee, and Southern Illinois (Figure 1). Supercells are more likely in the Texas area at this point. Illinois may see some rain.",
       "figures": [
@@ -141,8 +141,8 @@
     },
     {
       "day": 8,
-      "valid": "20250430",
-      "issued": "20250423T1100",
+      "valid": "20250502",
+      "issued": "20250425T1100",
       "forecaster": "Erik",
       "text": "Quiet day on Friday, not likely to see severe weather.",
       "figures": []
