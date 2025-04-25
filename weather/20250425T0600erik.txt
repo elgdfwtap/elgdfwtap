@@ -1,59 +1,3 @@
-import re
-import json
-from datetime import datetime, timedelta
-
-def parse_forecast_text(text):
-    lines = text.strip().split('\n')
-    forecaster = lines[0].strip()
-    issued = lines[1].strip()
-    body = '\n'.join(lines[2:])
-
-    # Split forecast sections by DAY1, DAY2, etc.
-    entries = re.split(r'(DAY\d+)', body)
-    day_blocks = list(zip(entries[1::2], entries[2::2]))  # [('DAY1', '...'), ...]
-
-    forecasts = []
-    base_date = datetime.strptime(issued[:8], "%Y%m%d")
-
-    for day_label, content in day_blocks:
-        day_num = int(day_label[3:])
-        valid_date = (base_date + timedelta(days=day_num - 1)).strftime("%Y%m%d")
-
-        figures = []
-        def fig_replacer(match):
-            figno = len(figures) + 1
-            caption = match.group(1).strip()
-            src = match.group(2).strip()
-            figures.append({
-                "figno": figno,
-                "caption": caption,
-                "src": src
-            })
-            return f"(Figure {figno})"
-
-        # Replace figure text with placeholders and extract info
-        cleaned_text = re.sub(r"\(Figure\s+\d+\s*:\s*([^(]+)\(([^)]+)\)\)", fig_replacer, content).strip()
-
-        forecasts.append({
-            "day": day_num,
-            "valid": valid_date,
-            "issued": issued,
-            "forecaster": forecaster,
-            "text": cleaned_text,
-            "figures": figures
-        })
-
-    result = {
-        "date": issued[:8],
-        "time": issued[8:10],
-        "forecaster": forecaster,
-        "forecasts": forecasts
-    }
-
-    return result
-
-# === Example Usage ===
-example_input = """
 Erik
 20250423T1100
 DAY1
@@ -72,7 +16,3 @@ DAY7
 As the trough in texas moves east, rain is likely in Dixie alley, like East Texas, Arkansas, Tennessee, and Southern Illinois (Figure 14: 500mb Wind Speed (screenshots/Screenshot 2025-04-25 114108.png)). Supercells are more likely in the Texas area at this point. Illinois may see some rain.
 DAY8
 Quiet day on Friday, not likely to see severe weather.
-"""
-
-parsed = parse_forecast_text(example_input)
-print(json.dumps(parsed, indent=2))
