@@ -1,0 +1,78 @@
+import re
+import json
+from datetime import datetime, timedelta
+
+def parse_forecast_text(text):
+    lines = text.strip().split('\n')
+    forecaster = lines[0].strip()
+    issued = lines[1].strip()
+    body = '\n'.join(lines[2:])
+
+    # Split forecast sections by DAY1, DAY2, etc.
+    entries = re.split(r'(DAY\d+)', body)
+    day_blocks = list(zip(entries[1::2], entries[2::2]))  # [('DAY1', '...'), ...]
+
+    forecasts = []
+    base_date = datetime.strptime(issued[:8], "%Y%m%d")
+
+    for day_label, content in day_blocks:
+        day_num = int(day_label[3:])
+        valid_date = (base_date + timedelta(days=day_num - 1)).strftime("%Y%m%d")
+
+        figures = []
+        def fig_replacer(match):
+            figno = len(figures) + 1
+            caption = match.group(1).strip()
+            src = match.group(2).strip()
+            figures.append({
+                "figno": figno,
+                "caption": caption,
+                "src": src
+            })
+            return f"(Figure {figno})"
+
+        # Replace figure text with placeholders and extract info
+        cleaned_text = re.sub(r"\(Figure\s+\d+\s*:\s*([^(]+)\(([^)]+)\)\)", fig_replacer, content).strip()
+
+        forecasts.append({
+            "day": day_num,
+            "valid": valid_date,
+            "issued": issued,
+            "forecaster": forecaster,
+            "text": cleaned_text,
+            "figures": figures
+        })
+
+    result = {
+        "date": issued[:8],
+        "time": issued[8:10],
+        "forecaster": forecaster,
+        "forecasts": forecasts
+    }
+
+    return result
+
+# === Example Usage ===
+example_input = """
+Erik
+20250425T1100
+DAY1
+Rainy day for Champaign today with a chance of isolated showers until 9PM (Figure 1: Precipitation Accumulation (screenshots/Screenshot 2025-04-25 110424.png)). The high today will be around 70 degrees and will occur at 5PM, and the low will be 45 degrees at 6AM tomorrow morning. Supercell formation likely in Texas today as a line storms forms in the west of the state and tracks east, likely picking up some rotation along the way (Figure 2: Reflectivity showing supercells tracking east (screenshots/Screenshot 2025-04-25 110843.png)). Severe thunderstorms capable of producing hail and winds are likely, but no tornado as there is a lack of CAPE in the lower levels (Figure 3: 0-3km CAPE (screenshots/Screenshot 2025-04-25 111026.png)). These thunderstorms are likely to merge into much larger systems later tonight into early next morning, and give a lot of precipitation to north Texas, and bring rain to Oklahoma and Arkansas into Saturday and Sunday.
+DAY2
+A large system will move across Oklahoma and Arkansas, but due to a messy system and limited updraft it will not produce severe weather.
+DAY3
+High risk for supercells later in the day on sunday in North Texas, Oklahoma, Kansas, and Nebraska (Figure 4: Supercell Composite at 10PM (Figure 3: 0-3km CAPE (screenshots/Screenshot 2025-04-25 111949.png)), but in reality no supercells are likely to form due to a very strong cap in the area (Figure 5: Lid Strength Index (Figure 3: 0-3km CAPE (screenshots/Screenshot 2025-04-25 112129.png)); However, if the cap does pop it is likely to produce severe thunderstorms.
+DAY4
+As the trough moves up on Monday it picks up a strong lower level jet with up to 60 knots of bulk shear (Figure 6: Bulk Shear (Figure 3: 0-3km CAPE (screenshots/Screenshot 2025-04-25 112345.png)) and a lot of moisture (Figure 8: Surface Dewpoint (Figure 3: 0-3km CAPE (screenshots/Screenshot 2025-04-25 112452.png)), and a severe weather event 	is highly likely (Figure 7: Supercell Composite (Figure 3: 0-3km CAPE (screenshots/Screenshot 2025-04-25 112423.png)). The supercell risk appears to peak near 7PM. It brings with it a high likelyhood of significant tornados (Figure 8: Significant tornado parameter (Figure 3: 0-3km CAPE (screenshots/Screenshot 2025-04-25 112609.png)), some areas near Des Moines up to STP=6.1, likely causing a tornado outbreak in Iowa and Kansas, and perhaps parts of Missouri. This outbreak is capable of producing large violent tornados. I have never seen the STP this high before. A lot of potential energy (Figure 9: MUCAPE (Figure 3: 0-3km CAPE (screenshots/Screenshot 2025-04-25 112821.png)) and a good cap, strong but not too strong to inhibit storm formation (Figure 10: Lid Strength Index (Figure 3: 0-3km CAPE (screenshots/Screenshot 2025-04-25 112848.png)) will cause high energy storms which explode into the jet stream and begin rotating with a powerful updraft, and are isolated enough to have unrestrained powerful mesocyclones. Furthermore, strong cape near the surface (Figure 11: Surface based CAPE (screenshots/Screenshot 2025-04-25 113012.png)) will lead to the formation of large violent tornados at the bottoms of these swirling updrafts. The storms are likely to start around mid afternoon, around 7 PM, and continue late into the night.
+DAY5
+As the dryline moves east, storms are likely on tuesday afternoon as heating occurs again. Due to a lot of surface CAPE (Figure 12: SBCAPE (screenshots/Screenshot 2025-04-25 113656.png)), tornados cannot be ruled out across Central Illinois, Indiana, and Michigan. While not as severe as Monday, if severe thunderstorms do occur they may produce tornadoes (Figure 13: Supercell Composite (screenshots/Screenshot 2025-04-25 113818.png)). These storms will probably start around 1PM, and move into Ohio, New York, and Ontario.
+DAY6
+Some likelyhood for supercells in Texas, but no tornado risk as the surface based CAPE is very low.
+DAY7
+As the trough in texas moves east, rain is likely in Dixie alley, like East Texas, Arkansas, Tennessee, and Southern Illinois (Figure 14: 500mb Wind Speed (screenshots/Screenshot 2025-04-25 114108.png)). Supercells are more likely in the Texas area at this point. Illinois may see some rain.
+DAY8
+Quiet day on Friday, not likely to see severe weather.
+"""
+
+parsed = parse_forecast_text(example_input)
+print(json.dumps(parsed, indent=2))
