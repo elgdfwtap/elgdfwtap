@@ -1,0 +1,140 @@
+body{
+  background-color:gray;
+}
+@font-face{
+  font-family: "hwyD";
+  src:url("Highway D 2K.ttf") format("truetype"),
+}
+@font-face{
+  font-family: "hwyE";
+  src:url("Highway E 2K.ttf") format("truetype"),
+}
+@font-face{
+  font-family: "hwyEm";
+  src:url("Highway E Mod 2K.ttf") format("truetype"),
+}
+.panel{
+  background-color:green;
+  height:auto;
+  width:auto;
+  display:inline-block;
+  border:2pt solid white;
+  border-radius:12pt;
+  text-align:center;
+ padding:0pt;
+}
+.multipanelcontainer{
+  height:auto;
+  width:auto;
+  display:inline-block;
+  border:1px solid black;
+}
+.panel-exit{
+  float:right;
+  background-color:green;
+  height:auto;
+  width:auto;
+  display:inline-block;
+  border:2pt solid white;
+  border-radius:12pt;
+  text-align:center;
+ padding:0pt;
+}
+.exit{
+  font-size:14.07pt;
+  letter-spacing: 1.7pt;
+  position:relative;
+  bottom:2pt;
+}
+.exit-num{
+  font-size:21.094pt;
+  position:relative;
+  top:2pt;
+}
+.sign-table{
+  margin:0pt;
+  padding:0pt;  
+  display: grid;
+  place-items: center; /* centers both vertically and horizontally */
+
+}
+tr{
+  margin:0px;
+  padding:0px;
+}
+td{
+  margin:0px;
+  padding:0px;
+  font-family:'hwyE';
+  letter-spacing:4pt;
+  font-size:22.5pt;
+  color:white;
+}
+p{
+  margin-top:0pt;
+  margin-bottom:0pt;
+  margin-left:15pt;
+  margin-right:15pt;
+}
+img{
+  height:36pt;
+  display:block;
+}
+.dest{
+  font-family:'hwyEm';
+  color:white;
+  font-size:22.5pt;
+  letter-spacing:5pt;
+  padding:0pt;
+}
+.dist{
+  font-family:'hwyE';
+  color:white;
+  font-size:16.875pt;
+  letter-spacing:3.125
+}
+.dist-num{
+  font-family:'hwyE';
+  font-size:25.312pt;
+  position:relative;
+  top:2pt
+}
+.markercontainer{
+  position:relative;
+  display:inline-block;
+  font-size:25.3125pt;
+  margin-left:9pt;
+  margin-right:9pt;
+  letter-spacing: 1pt;
+}
+.usmarker,.interstatemarker,.rectmarker{
+  color:black;
+  position: absolute;
+  letter-spacing: 2pt;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  margin: 0;
+}
+.usmarkerwide,.interstatemarkerwide,.usmarkerwide,.rectmarker{
+  color:black;
+  font-family: HwyD;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  margin: 0;
+}
+.interstatemarker,.interstatemarkerwide{
+  color:white;
+  font-size:21.0937pt;
+}
+.dir{
+  font-size:16.875pt;
+  letter-spacing:3pt;
+  margin-left:5pt;
+  
+}
+.dir-cap{
+  font-size:21.094pt;
+}
