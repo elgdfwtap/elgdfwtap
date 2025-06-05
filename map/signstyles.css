@@ -3,18 +3,18 @@ body{
 }
 @font-face{
   font-family: "hwyD";
-  src::url("Highway D 2K.woff2") format("woff2"),url("Highway D 2K.ttf") format("truetype"),url("Highway D 2K.otf") format("opentype");
+  src:url("Highway D 2K.woff2") format("woff2"),url("Highway D 2K.ttf") format("truetype"),url("Highway D 2K.otf") format("opentype");
   font-display: swap;
   
 }
 @font-face{
   font-family: "hwyE";
-  src::url("Highway E 2K.woff2") format("woff2"),url("Highway E 2K.ttf") format("truetype"),url("Highway E 2K.otf") format("opentype");
+  src:url("Highway E 2K.woff2") format("woff2"),url("Highway E 2K.ttf") format("truetype"),url("Highway E 2K.otf") format("opentype");
   font-display: swap;
 }
 @font-face{
   font-family: "hwyEm";
-  src::url("Highway E Mod 2K.woff2") format("woff2"),url("Highway E Mod 2K.ttf") format("truetype"),url("Highway E Mod 2K.otf") format("opentype");
+  src:url("Highway E Mod 2K.woff2") format("woff2"),url("Highway E Mod 2K.ttf") format("truetype"),url("Highway E Mod 2K.otf") format("opentype");
   font-display: swap;
 }
 .panel{
