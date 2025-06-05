@@ -3,18 +3,18 @@ body{
 }
 @font-face{
   font-family: "hwyD";
-  src:url("Highway D 2K.woff2") format("woff2"),url("Highway D 2K.ttf") format("truetype"),url("Highway D 2K.otf") format("opentype");
+  src:url("./HighwayD2K.woff2") format("woff2"),url("HighwayD2K.ttf") format("truetype");
   font-display: swap;
   
 }
 @font-face{
   font-family: "hwyE";
-  src:url("Highway E 2K.woff2") format("woff2"),url("Highway E 2K.ttf") format("truetype"),url("Highway E 2K.otf") format("opentype");
+  src:url("./HighwayE2K.woff2") format("woff2"),url("HighwayE2K.ttf") format("truetype");
   font-display: swap;
 }
 @font-face{
   font-family: "hwyEm";
-  src:url("Highway E Mod 2K.woff2") format("woff2"),url("Highway E Mod 2K.ttf") format("truetype"),url("Highway E Mod 2K.otf") format("opentype");
+  src:url("./HighwayEMod2K.woff2") format("woff2"),url("HighwayEMod2K.ttf") format("truetype");
   font-display: swap;
 }
 .panel{
@@ -76,7 +76,7 @@ body{
 }
 tbody{
 	display:block;
-	
+}
 tr{
   margin:0px;
   padding:0px;
@@ -113,13 +113,13 @@ img{
   font-family:'hwyE';
   color:white;
   font-size:16.875pt;
-  letter-spacing:3.125
+  letter-spacing:3.125pt;
 }
 .dist-num{
   font-family:'hwyE';
   font-size:25.312pt;
   position:relative;
-  top:2pt
+  top:2pt;
 }
 .markercontainer{
   position:relative;
