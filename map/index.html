@@ -5,8 +5,9 @@
 	<link rel='stylesheet' href='signstyles.css'>
 </head>
 <body>
-<div id="city-results" style="padding:1em 0;font-family:sans-serif;font-size:1.1em;"></div>
+
 <div id="map" style="height: 600px; width: 100%;"></div>
+<div id="city-results" style="padding:1em 0;font-family:sans-serif;font-size:1.1em;"></div>
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script>
 let cityList = [];
@@ -376,7 +377,10 @@ function getExitsAheadAlongRouteFromData(relationData, relation1, userLat, userL
 
 
 async function fetchExpandedRelation(relationId, role = null) {
-  const roleClause = role ? `way(r:"${role}")` : "way(r)";
+  const roleClause = (!role || role === "unclassified")
+	  ? "way(r)"
+	  : `way(r:"${role}")`;
+
   const query = `
     [out:json][timeout:25];
     relation(${relationId});
@@ -548,7 +552,7 @@ async function getExitDetails(nodeIds, relationData) {
       for (const nid of w.nodes) {
         if (!nodeIds.includes(nid)) continue;
         if (!grouped[nid]) grouped[nid] = [];
-        if (dir === "outbound" || isMainline) {
+        
           grouped[nid].push({
             id: w.id,
             tags: w.tags || {},
@@ -557,7 +561,15 @@ async function getExitDetails(nodeIds, relationData) {
             lat: w.center?.lat,
             lon: w.center?.lon
           });
-        }
+		  console.log({
+            id: w.id,
+            tags: w.tags || {},
+            direction: dir,
+            isMainline,
+            lat: w.center?.lat,
+            lon: w.center?.lon
+          });
+        
       }
     }
 
@@ -572,88 +584,159 @@ async function getExitDetails(nodeIds, relationData) {
 
 
 // Main
-async function main() {
-  //await loadCityList();
-  const map = L.map('map').setView([39, -90], 7);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
-  let clicks = [];
-  let markers = [];
-		map.on('click', async function (e) {
-	  clicks.push([e.latlng.lat, e.latlng.lng]);
-	  markers.push(L.marker(e.latlng).addTo(map));
+async function _simulateLocationInputCore(lat, lon, map, state) {
+  state.clicks.push([lat, lon]);
+  state.markers.push(L.marker([lat, lon]).addTo(map));
 
-	  if (clicks.length === 2) {
-		const [[lat1, lon1], [lat2, lon2]] = clicks;
+  if (state.clicks.length === 2) {
+    const [[lat1, lon1], [lat2, lon2]] = state.clicks;
 
-		if (
-		  typeof lat1 === 'number' && typeof lon1 === 'number' &&
-		  typeof lat2 === 'number' && typeof lon2 === 'number'
-		) {
-		  const routes = await getApplicableRoutes(lat1, lon1, lat2, lon2);
-		  console.log("Nearby routes:", routes);
-		  displayRoutes(routes);
+    if (
+      typeof lat1 === 'number' && typeof lon1 === 'number' &&
+      typeof lat2 === 'number' && typeof lon2 === 'number'
+    ) {
+      const routes = await getApplicableRoutes(lat1, lon1, lat2, lon2);
+      console.log("Nearby routes:", routes);
+      displayRoutes(routes);
 
-		  if (routes.length > 0) {
-			const topRoute = routes[0];
-			const bearing = calculateBearing(lat1, lon1, lat2, lon2);
+      if (routes.length > 0) {
+        const topRoute = routes[0];
+        const bearing = calculateBearing(lat1, lon1, lat2, lon2);
 
-			const relationData = await fetchExpandedRelation(topRoute.id, topRoute.bestRole);
-			if (!relationData) {
-			  console.warn("Could not fetch expanded relation for top route.");
-			  return;
-			}
-			const ways = relationData.elements.filter(e => e.type === 'way' && Array.isArray(e.geometry));
-			const userPoint = { lat: lat2, lon: lon2 };
-			const { stitchedPoints, stitchedWays } =  stitchRouteGeometryFromStart(ways, userPoint);
-			// Store for global reference if needed
-			window._activeRelationData = relationData;
+        const relationData = await fetchExpandedRelation(topRoute.id, topRoute.bestRole);
+		
+        if (!relationData) {
+          console.warn("Could not fetch expanded relation for top route.");
+          return;
+        }
+		window._activeTopRoute = topRoute; // Store route info for reuse
 
-			const exits = getExitsAheadAlongRouteFromData(relationData, topRoute, lat2, lon2, bearing, stitchedPoints);
-			const allNodeIds = exits.map(e => e.nodeId).filter(id => typeof id === 'number');
-			
-			console.log("Passed nodeIds:", allNodeIds);
-			console.log("Passed relationData is valid:", !!relationData && Array.isArray(relationData.elements));
+        const ways = relationData.elements.filter(e => e.type === 'way' && Array.isArray(e.geometry));
+        const userPoint = { lat: lat2, lon: lon2 };
+        const { stitchedPoints, stitchedWays } = stitchRouteGeometryFromStart(ways, userPoint);
 
-			const allDetails = await getExitDetails(allNodeIds, relationData);
+        window._activeRelationData = relationData;
 
-			for (const exit of exits) {
-			  exit.details = allDetails[exit.nodeId] || [];
-			  
-			}
-			const container = document.getElementById('city-results');
-			exits.forEach(exit => {
-			  const panel = renderExitPanel(exit);
-			  if (panel) container.appendChild(panel);
-			});
-			plotExitsOnMap(map, exits);
-			plotStitchedRouteOnMap(map, stitchedWays)
-			if (exits.length) {
-			  console.log("Upcoming exits:", exits);
-			  const div = document.getElementById('city-results');
-			  div.innerHTML += `<br><b>Upcoming exits:</b><ul style=\"padding-left:1.2em;\">` +
-				exits.map(e => `<li><b>Exit ${e.ref}</b>${e.name ? ": " + e.name : ""} — ${e.dist.toFixed(1)} mi ahead` +
-				  (e.details.length ? `<br><i>${e.details.map(d => Object.entries(d.tags).map(([k, v]) => `${k}: ${v}`).join(", ")).join("<br>")}</i>` : '') +
-				  `</li>`).join('') +
-				`</ul>`;
-			} else {
-			  console.log("No upcoming exits detected on this route.");
-			}
-			
-		  }
-		} else {
-		  console.warn("Invalid coordinates for route detection:", { lat1, lon1, lat2, lon2 });
-		}
+        const exits = getExitsAheadAlongRouteFromData(relationData, topRoute, lat2, lon2, bearing, stitchedPoints);
+        const allNodeIds = exits.map(e => e.nodeId).filter(id => typeof id === 'number');
 
-		clicks = [];
-		markers.forEach(m => map.removeLayer(m));
-		markers = [];
-	  }
-	});
+        console.log("Passed nodeIds:", allNodeIds);
+        console.log("Passed relationData is valid:", !!relationData && Array.isArray(relationData.elements));
 
+        const allDetails = await getExitDetails(allNodeIds, relationData);
+        for (const exit of exits) {
+          exit.details = allDetails[exit.nodeId] || [];
+        }
 
+        const container = document.getElementById('city-results');
+        exits.forEach(exit => {
+          const panel = renderExitPanel(exit);
+          if (panel) container.appendChild(panel);
+        });
+
+        plotExitsOnMap(map, exits);
+        plotStitchedRouteOnMap(map, stitchedWays);
+		
+		
+        if (exits.length) {
+          console.log("Upcoming exits:", exits);
+          const div = document.getElementById('city-results');
+          div.innerHTML += `<br><b>Upcoming exits:</b><ul style="padding-left:1.2em;">` +
+            exits.map(e => `<li><b>Exit ${e.ref}</b>${e.name ? ": " + e.name : ""} — ${e.dist.toFixed(1)} mi ahead` +
+              (e.details.length ? `<br><i>${e.details.map(d => Object.entries(d.tags).map(([k, v]) => `${k}: ${v}`).join(", ")).join("<br>")}</i>` : '') +
+              `</li>`).join('') +
+            `</ul>`;
+        } else {
+          console.log("No upcoming exits detected on this route.");
+        }
+      }
+    } else {
+      console.warn("Invalid coordinates for route detection:", { lat1, lon1, lat2, lon2 });
+    }
+
+    state.clicks = [];
+    state.markers.forEach(m => map.removeLayer(m));
+    state.markers = [];
+  }
 }
-// Calculate distance along a route relation between two nodes
-// Calculate distance along a route relation between two nodes
+async function _simulateFollowupLocationInputCore(lat, lon, map, state) {
+  const activeRelation = window._activeRelationData;
+  if (!activeRelation || !Array.isArray(activeRelation.elements)) {
+    console.warn("No active route. Recomputing from scratch.");
+    return _simulateLocationInputCore(lat, lon, map, state);
+  }
+
+  const userPoint = { lat, lon };
+  const ways = activeRelation.elements.filter(e => e.type === 'way' && Array.isArray(e.geometry));
+  const { stitchedPoints } = stitchRouteGeometryFromStart(ways, userPoint);
+
+  // Distance check: if too far from route, re-run main logic
+  const maxAllowedDistanceMeters = 500; // adjust as needed
+  const minDist = stitchedPoints.reduce((min, pt) => {
+    const d = L.latLng(pt.lat, pt.lon).distanceTo(L.latLng(lat, lon));
+    return Math.min(min, d);
+  }, Infinity);
+
+  if (minDist > maxAllowedDistanceMeters) {
+    console.log(`Off-route detected (${minDist.toFixed(1)}m). Recomputing full route.`);
+    return _simulateLocationInputCore(lat, lon, map, state);
+  }
+
+  const topRoute = window._activeTopRoute;
+  const bearing = 0; // optional: compute bearing between previous and current point if needed
+  const exits = getExitsAheadAlongRouteFromData(activeRelation, topRoute, lat, lon, bearing, stitchedPoints);
+
+  const allNodeIds = exits.map(e => e.nodeId).filter(id => typeof id === 'number');
+  const allDetails = await getExitDetails(allNodeIds, activeRelation);
+  for (const exit of exits) {
+    exit.details = allDetails[exit.nodeId] || [];
+  }
+
+  const container = document.getElementById('city-results');
+  container.innerHTML = ''; // Clear previous content
+  exits.forEach(exit => {
+    const panel = renderExitPanel(exit);
+    if (panel) container.appendChild(panel);
+  });
+
+  if (exits.length) {
+    const div = document.getElementById('city-results');
+    div.innerHTML += `<br><b>Upcoming exits:</b><ul style="padding-left:1.2em;">` +
+      exits.map(e => `<li><b>Exit ${e.ref}</b>${e.name ? ": " + e.name : ""} — ${e.dist.toFixed(1)} mi ahead` +
+        (e.details.length ? `<br><i>${e.details.map(d => Object.entries(d.tags).map(([k, v]) => `${k}: ${v}`).join(", ")).join("<br>")}</i>` : '') +
+        `</li>`).join('') +
+      `</ul>`;
+  } else {
+    console.log("No exits ahead.");
+  }
+
+  plotExitsOnMap(map, exits); // Optional update to map visuals
+}
+
+async function main() {
+  const map = L.map('map').setView([41.67967981033211, -88.07787125051011], 15);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
+
+  const state = {
+    clicks: [],
+    markers: []
+  };
+
+  map.on('click', function (e) {
+    _simulateLocationInputCore(e.latlng.lat, e.latlng.lng, map, state);
+  });
+    map.on('contextmenu', function (e) {
+    _simulateFollowupLocationInputCore(e.latlng.lat, e.latlng.lng, map, state);
+  });
+
+  window.simulateFollowupLocationInput = (lat, lon) =>
+    _simulateFollowupLocationInputCore(lat, lon, map, state);
+
+
+  // Safe name that avoids recursion
+  window.simulateLocationInput = (lat, lon) => _simulateLocationInputCore(lat, lon, map, state);
+}
+
 // Calculate distance along a route relation between two coordinates (fallback from nodeId)
 function getRouteDistanceAlongStitchedPath(stitchedPoints, toIdx) {
   let dist = 0;
@@ -677,7 +760,8 @@ function renderExitPanel(exit) {
   }
   const distanceDisplay = Number.isInteger(distance) ? `${distance}` : distance.toFixed(1);
 
-  const road = (exit.details || []).find(w => w.direction === 'outbound' && w.tags);
+  const road = (exit.details || []).find(w => w.direction === 'outbound' && !w.isMainline && w.tags);
+
   if (!road) return ''; // Skip if no useful outbound road
 
   const tags = road.tags;
@@ -698,37 +782,83 @@ function renderExitPanel(exit) {
   const panelTable = document.createElement('table');
   panelTable.className = 'sign-table';
 
-  const refGroups = [
-    { refs: tags['destination:ref'], label: null },
-    { refs: tags['destination:ref:to'], label: 'TO' },
-    { refs: tags.ref, label: null }
-  ].filter(g => g.refs);
+  const wrapperCell = document.createElement('td'); // Top-level <td> to contain all ref group tables
 
-  refGroups.forEach(group => {
-    const innerTable = document.createElement('table');
-    innerTable.className = 'sign-table';
-    const row = document.createElement('tr');
+	const refGroups = [
+  { refs: tags['destination:ref'], label: null },
+  { refs: tags['destination:ref:to'], label: 'TO' },
+  { refs: tags.ref, label: null }
+].filter(g => g.refs);
 
-    if (group.label) {
-      const toCell = document.createElement('td');
-      toCell.innerHTML = `<p class="to">${group.label}</p>`;
-      row.appendChild(toCell);
+const mainTable = document.createElement('table');
+mainTable.className = 'main-sign-table';
+
+refGroups.forEach((group, groupIndex) => {
+  console.log(`Processing group ${groupIndex}`, group);
+
+  const groupRow = document.createElement('tr');
+
+  // Left cell (TO label)
+  const labelCell = document.createElement('td');
+  if (group.label) {
+    labelCell.innerHTML = `<p class="to">${group.label}</p>`;
+  }
+  groupRow.appendChild(labelCell);
+
+  // Right cell (ref list)
+  const refsCell = document.createElement('td');
+  const refs = group.refs.split(';').map(r => r.trim());
+
+  refs.forEach((refText, refIndex) => {
+    console.log(`  Processing `, refText, " ",refIndex);
+
+    // Create one flat table per ref
+    const signTable = document.createElement('table');
+    signTable.className = 'sign-table';
+
+    const signRow = document.createElement('tr');
+
+    // Get the shield element
+    const shield = renderShieldRow(refText);
+    if (shield) {
+      console.log(`    Got shield for ref "${refText}":`, shield);
+
+      if (shield.tagName === 'TABLE') {
+        console.warn(`⚠️ renderShieldRow returned a full <table> for "${refText}" — should return a <div> or <img> instead!`);
+      }
+
+      const shieldCell = document.createElement('td');
+      shieldCell.appendChild(shield);
+      signRow.appendChild(shieldCell);
+    } else {
+      console.warn(`⚠️ No shield returned for "${refText}"`);
     }
 
-    const refs = group.refs.split(';').map(r => r.trim());
-    refs.forEach(refText => {
-      const shield = renderShieldRow(refText);
-      if (shield) row.appendChild(shield);
+    // Get direction if present
+    const dirMatch = refText.match(/\b(North|South|East|West)\b/i);
+    if (dirMatch) {
+      const dirText = dirMatch[1];
+      console.log(`    Found direction: ${dirText}`);
 
-      const dirMatch = refText.match(/\b(North|South|East|West)\b/i);
-      if (dirMatch) {
-        const dir = document.createElement('td');
-        dir.innerHTML = `<p class='dir'><span class='dir-cap'>${dirMatch[1][0]}</span>${dirMatch[1].slice(1).toUpperCase()}</p>`;
-        row.appendChild(dir);
-      }
-    });
-	 panelTable.appendChild(row);
-   });
+      const dirCell = document.createElement('td');
+      dirCell.innerHTML = `<p class='dir'><span class='dir-cap'>${dirText[0]}</span>${dirText.slice(1).toUpperCase()}</p>`;
+      signRow.appendChild(dirCell);
+    }
+
+    // Append row to table, and table to refsCell
+    signTable.appendChild(signRow);
+    refsCell.appendChild(signTable);
+  });
+
+  groupRow.appendChild(refsCell);
+  mainTable.appendChild(groupRow);
+});
+
+console.log('Final mainTable structure:', mainTable);
+panel.appendChild(mainTable);
+
+
+	   
 
 
   let dests = [];
@@ -758,40 +888,65 @@ function renderExitPanel(exit) {
 }
 
 function renderShieldRow(refText) {
-  const row = document.createElement('tr');
-  const cell = document.createElement('td');
+	console.log(refText, " refText 45634");
+  const match = refText.match(/^([A-Z]{1,2})\s+(\d+)/);
+	if (!match) return null;
 
-  const match = refText.match(/(I|US|IL|SR|MO|IN)?\s*(\d+)/i);
-  if (!match) return row;
+	const type = match[1];
+	const num = match[2];
 
-  const type = match[1]?.toUpperCase() || 'I';
-  const num = match[2];
+
   let icon = 'interstatemarker.png';
   let cls = 'interstatemarker';
-
+  console.log(type, " type 45634");
   if (type === 'US') {
     icon = 'usmarker.png';
     cls = 'usmarker';
-  } else if (type === 'IL' || type === 'SR' || type === 'MO' || type === 'IN') {
+  }else if(type === "I"){
+	  icon='interstatemarker.png';
+	  cls='interstatemarker';
+  }else if(type === 'IL'){
+	  icon='ilmarker.png';
+	  cls='rectmarkertextbove';
+  }else if (type === 'IN'){
+	icon='inmarker.png';
+	cls='rectmarkertextabove';
+  }else if(type==='CA'){
+	  icon='camarker.png';
+	  cls='camarker';
+  }else if(type==="NY"){
+	  icon='nymarker.png';
+	  cls='nymarker';
+  }else if(type==="DE" || type==="IA" || type === "KY" || type === "MS" || type === "NJ" ){
+	  icon='circmarker.png';
+	  cls='circmarker';
+  } else{
     icon = 'rectmarker.png';
     cls = 'rectmarker';
   }
-
+  cls = cls+" shieldnumber";
   if (num.length > 2) {
     icon = icon.replace('.png', 'wide.png');
-	cls = cls.replace('marker', 'markerwide');
+    cls = cls+ " wide";
   }
 
-  cell.innerHTML = `
-    <table class='sign-table'>
-      <tr>
-        <td><div class='markercontainer'><img src='${icon}'/><p class='${cls}'>${num}</p></div></td>
-      </tr>
-    </table>
-  `;
-  row.appendChild(cell);
-  return row;
+  // Return just a <div> to be placed inside a <td>
+  const container = document.createElement('div');
+  container.className = 'markercontainer';
+
+  const img = document.createElement('img');
+  img.src = icon;
+
+  const label = document.createElement('p');
+  label.className = cls;
+  label.textContent = num;
+
+  container.appendChild(img);
+  container.appendChild(label);
+
+  return container;
 }
+
 
 function abbreviateStreet(name) {
   return name.replace(/avenue/i, 'Ave')
@@ -801,15 +956,22 @@ function abbreviateStreet(name) {
              .replace(/road/i, 'Rd')
 			 .replace(/parkway/i, 'Pkwy')
 			 .replace(/highway/i, 'Hwy')
-			 .replace(/expressway/i, 'Expy')
+			 .replace(/expressway/i, 'Expwy')
 			 .replace(/way/i, 'Wy')
 			 .replace(/international/i, "Intl'")
-			 .replace(/saint/i, "St.")
-			 .replace(/bridge/i, "Br.")
+			 .replace(/saint/i, "St")
+			 .replace(/bridge/i, "Br")
 			 .replace(/north/i, "N").replace(/east/i, "E").replace(/south/i, "S").replace(/west/i, "W")
 			 .replace(/first/i, "1st").replace(/second/i, "2nd").replace(/third/i, "3rd").replace(/fourth/i, "4th").replace(/fifth/i, "5th")
-			 .replace(/sixth/i, "6th").replace(/seventh/i, "7th").replace(/eighth/i, "8th").replace(/ninth/i, "9th").replace(/tenth/i, "10th");
-
+			 .replace(/sixth/i, "6th").replace(/seventh/i, "7th").replace(/eighth/i, "8th").replace(/ninth/i, "9th").replace(/tenth/i, "10th")
+			 .replace(/center/i, "Ctr")
+			 .replace(/court/i, "Ct")
+			 .replace(/circle/i, "Cir")
+			 .replace(/freeway/i, "Fwy")
+			 .replace(/hospital/i, "Hosp")
+			 .replace(/mountain/i, "Mtn")
+			 .replace(/thruway/i, "Thwy")
+			 .replace(/trail/i, "Tr")
 }
 
 // INSERT INTO MAIN

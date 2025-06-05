@@ -33,6 +33,15 @@ body{
   display:inline-block;
   border:1px solid black;
 }
+.main-sign-table{
+  margin:0pt;
+  padding:0pt;  
+  display: block;
+  text-align:center;
+  width:auto;
+  height:auto;
+  place-items: center; /* centers both vertically and horizontally */
+}
 .panel-exit{
   float:right;
   background-color:green;
@@ -58,13 +67,20 @@ body{
 .sign-table{
   margin:0pt;
   padding:0pt;  
-  display: grid;
+  display: inline-block;
+  text-align:center;
+  width:auto;
+  height:auto;
   place-items: center; /* centers both vertically and horizontally */
 
 }
+tbody{
+	display:block;
+	
 tr{
   margin:0px;
   padding:0px;
+  display:block;
 }
 td{
   margin:0px;
@@ -73,6 +89,7 @@ td{
   letter-spacing:4pt;
   font-size:22.5pt;
   color:white;
+  display:inline-block;
 }
 p{
   margin-top:0pt;
@@ -83,6 +100,7 @@ p{
 img{
   height:36pt;
   display:block;
+  margin-top:3pt;
 }
 .dest{
   font-family:'hwyEm';
@@ -110,35 +128,53 @@ img{
   margin-left:9pt;
   margin-right:9pt;
   letter-spacing: 1pt;
+
 }
-.usmarker,.interstatemarker,.rectmarker{
+ 
+.shieldnumber{
   color:black;
   position: absolute;
   letter-spacing: 2pt;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  margin: 0;
+  margin: 0;	
 }
-.usmarkerwide,.interstatemarkerwide,.usmarkerwide,.rectmarker{
-  color:black;
+.rectmarkertextbove{
+  font-size:20pt;
+    
+  top: 70%;
+}
+  .circmarker{
+    font-size:21pt;
+    top:55%;
+  }
+  .camarker{
+    color:white;
+    font-size:18pt;
+    top:70%;
+  }
+.usmarker{
+  font-size:21pt;
+}
+.wide{
   font-family: HwyD;
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  margin: 0;
 }
-.interstatemarker,.interstatemarkerwide{
+.interstatemarker{
   color:white;
   font-size:21.0937pt;
 }
 .dir{
   font-size:16.875pt;
   letter-spacing:3pt;
-  margin-left:5pt;
-  
+  margin-left:0pt;
+  margin-right:5pt;
+  position:relative;
+  bottom:2pt;
 }
 .dir-cap{
   font-size:21.094pt;
+}
+.sign-table:shield{
+  display:inline;
 }
