@@ -31,7 +31,7 @@ body{
   height:auto;
   width:auto;
   display:inline-block;
-  border:1px solid black;
+  background-color:green;
 }
 .main-sign-table{
   margin:0pt;
@@ -49,7 +49,7 @@ body{
   width:auto;
   display:inline-block;
   border:2pt solid white;
-  border-radius:12pt;
+  border-radius:5pt;
   text-align:center;
  padding:0pt;
 }
@@ -158,7 +158,7 @@ img{
   font-size:21pt;
 }
 .wide{
-  font-family: HwyD;
+  font-family: "hwyD";
 }
 .interstatemarker{
   color:white;
