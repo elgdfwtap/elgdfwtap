@@ -3,15 +3,15 @@ body{
 }
 @font-face{
   font-family: "hwyD";
-  src:url("Highway D 2K.ttf") format("truetype"),
+  src:url("Highway D 2K.ttf") format("truetype"),url("Highway D 2K.otf") format("opentype"),
 }
 @font-face{
   font-family: "hwyE";
-  src:url("Highway E 2K.ttf") format("truetype"),
+  src:url("Highway E 2K.ttf") format("truetype"),url("Highway E 2K.otf") format("opentype"),
 }
 @font-face{
   font-family: "hwyEm";
-  src:url("Highway E Mod 2K.ttf") format("truetype"),
+  src:url("Highway E Mod 2K.ttf") format("truetype"),url("Highway E Mod 2K.otf") format("opentype"),
 }
 .panel{
   background-color:green;
