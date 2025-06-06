@@ -1,5 +1,6 @@
 body{
   background-color:green;
+  text-align:center;
 }
 @font-face{
   font-family: "hwyD";
@@ -17,6 +18,8 @@ body{
   src:url("./HighwayEMod2K.woff2") format("woff2"),url("HighwayEMod2K.ttf") format("truetype");
   font-display: swap;
 }
+
+
 .panel{
   background-color:green;
   height:auto;
@@ -51,7 +54,7 @@ body{
   border:2pt solid white;
   border-radius:5pt;
   text-align:center;
- padding:0pt;
+  padding:0pt;
 }
 .exit{
   font-size:14.07pt;
@@ -177,4 +180,34 @@ img{
 }
 .sign-table:shield{
   display:inline;
+}
+@media (max-width: 699px) {
+  .multipanelcontainer {
+    width: 50%; /* Viewport width */
+    box-sizing: border-box; /* Include padding and border in the width */
+  }
+  .panel-exit{
+	  width:100%;
+	  text-align:right;
+	  border:none;
+	  background-color:transparent;
+	  border-bottom:2pt solid white;
+	  border-radius:0pt;
+  }
+  .panel{
+	  border:none;
+  }
+  .multipanelcontainer{
+	border-radius:12pt;
+	border:2pt solid white;
+  }
+}
+@media (max-width: 499px) {
+  .multipanelcontainer , .panel{
+    width: 100%; /* Viewport width */
+    box-sizing: border-box; /* Include padding and border in the width */
+  }
+  .multipanelcontainer{
+	margin-top:5pt;  
+  }
 }
