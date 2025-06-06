@@ -1,6 +1,7 @@
 body{
   background-color:green;
   text-align:center;
+  width:100vw;
 }
 @font-face{
   font-family: "hwyD";
@@ -18,7 +19,9 @@ body{
   src:url("./HighwayEMod2K.woff2") format("woff2"),url("HighwayEMod2K.ttf") format("truetype");
   font-display: swap;
 }
-
+ul{
+	width:100vw;
+}
 
 .panel{
   background-color:green;
@@ -28,7 +31,8 @@ body{
   border:2pt solid white;
   border-radius:12pt;
   text-align:center;
- padding:0pt;
+  padding:0pt;
+  vertical-align: middle;
 }
 .multipanelcontainer{
   height:auto;
@@ -75,10 +79,13 @@ body{
   padding:0pt;  
   display: inline-block;
   text-align:center;
-  width:auto;
+  width:100%;
   height:auto;
   place-items: center; /* centers both vertically and horizontally */
 
+}
+.shield-group{
+  width:auto;
 }
 tbody{
 	display:block;
@@ -234,4 +241,29 @@ p.warning{
   margin-right:0pt;
   margin-top:1pt;
   font-size:16.875pt;
+  
+}
+.warning-text-big{
+  position:relative;
+	font-size:22.5pt;
+  bottom:0pt;
+}
+p.warning-text-speed{
+	position:relative;
+	bottom:4pt;
+  letter-spacing:3pt;
+  padding-left:7pt;
+  padding-right:3pt;
+  margin-top:9pt;
+  margin-bottom:2pt;
+}
+.inst{
+  font-family:'hwyE';
+  color:white;
+  font-size:16.875pt;
+  letter-spacing:3.125pt;
+}
+.apl-row{
+  display: flex;
+  justify-content: space-between; 
 }
