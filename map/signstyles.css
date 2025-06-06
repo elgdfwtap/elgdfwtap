@@ -45,7 +45,7 @@ body{
   height:auto;
   place-items: center; /* centers both vertically and horizontally */
 }
-.panel-exit{
+.panel-exit,.panel-exit-left{
   float:right;
   background-color:green;
   height:auto;
@@ -55,6 +55,9 @@ body{
   border-radius:5pt;
   text-align:center;
   padding:0pt;
+}
+.panel-exit-left{
+  float:left;
 }
 .exit{
   font-size:14.07pt;
@@ -186,13 +189,16 @@ img{
     width: 50%; /* Viewport width */
     box-sizing: border-box; /* Include padding and border in the width */
   }
-  .panel-exit{
+  .panel-exit, .panel-exit-left{
 	  width:100%;
 	  text-align:right;
 	  border:none;
 	  background-color:transparent;
 	  border-bottom:2pt solid white;
 	  border-radius:0pt;
+  }
+  .panel-exit-left{
+	text-align:left;
   }
   .panel{
 	  border:none;
@@ -210,4 +216,22 @@ img{
   .multipanelcontainer{
 	margin-top:5pt;  
   }
+}
+.warning{
+	border-radius:3pt;
+	background-color:gold;
+	color:black;
+  text-align:center;
+  float:left;
+  margin-top:6pt;
+  margin-left:12pt;
+  margin-right:12pt;
+  
+}
+p.warning{
+	color:black;
+	margin-left:4pt;
+  margin-right:0pt;
+  margin-top:1pt;
+  font-size:16.875pt;
 }

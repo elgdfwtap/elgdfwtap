@@ -6,7 +6,10 @@
 	<link rel='stylesheet' href='signstyles.css'>
 </head>
 <body>
-
+<div class="multipanelcontainer">
+	<div class=panel><table class='sign-table'><tr><td onmouseup='togglemap()' id="showhide">Hide Map</td></tr></table></div>
+	<div class=panel><table class='sign-table'><tr><td onmouseup='togglegps()' id="gps">Stop GPS</td></tr></table></div>
+</div>
 <div id="map" style="height: 600px; width: 100%;"></div>
 <div id="city-results" style="padding:1em 0;font-family:sans-serif;font-size:1.1em;"></div>
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
@@ -83,6 +86,16 @@ function calculateBearing(lat1, lon1, lat2, lon2) {
   return (toDeg(brng) + 360) % 360;
 }
 
+function togglemap(){
+	map=document.getElementById('map');
+	if(map.style.display != 'none'){
+		map.style.display='none';
+		showhide.innerText='Show Map';
+	}else{
+		map.style.display='block';
+		showhide.innerText='Hide Map';
+	}
+}
 // --- NEW FUNCTION: Query route relations nearby ---
 function displayRoutes(routes) {
   const div = document.getElementById('city-results');
@@ -344,9 +357,9 @@ function getExitsAheadAlongRouteFromData(relationData, relation1, userLat, userL
 
   const exits = [];
 
-  // Preprocess: create map of stitched index per exit node
+  // Preprocess: include only nodes with highway=motorway_junction
   const exitMatches = nodes
-    .filter(n => n.tags?.highway === 'motorway_junction' && n.tags.ref)
+    .filter(n => n.tags?.highway === 'motorway_junction')
     .map(n => {
       const idx = stitchedPoints.findIndex(pt => (pt.lat - n.lat) ** 2 + (pt.lon - n.lon) ** 2 < 0.0001);
       return idx !== -1 ? { node: n, idx } : null;
@@ -356,21 +369,23 @@ function getExitsAheadAlongRouteFromData(relationData, relation1, userLat, userL
 
   for (const { node, idx } of exitMatches) {
     const dist = getRouteDistanceAlongStitchedPath(stitchedPoints, idx);
+    const tags = node.tags || {};
 
     exits.push({
-      ref: node.tags.ref,
-      name: node.tags.name || '',
+      ref: tags.ref || '',
+      name: tags.name || '',
       lat: node.lat,
       lon: node.lon,
-	  nodeId: node.id,
-	  tags: node.tags,  
+      nodeId: node.id,
+      tags: tags,
       dist
     });
   }
 
   console.log("Detected exits from stitched route:", exits);
   return exits;
-} 
+}
+
 
 
 
@@ -519,11 +534,11 @@ async function getExitDetails(nodeIds, relationData) {
 
   const ids = nodeIds.join(',');
   const query = `
-	  [out:json][timeout:25];
-	  node(id:${ids});
-	  way(bn)[highway~"motorway|trunk|primary|secondary|tertiary|motorway_link|trunk_link"];
-	  out body center;
-	`;
+    [out:json][timeout:25];
+    node(id:${ids});
+    way(bn)[highway~"motorway|trunk|primary|secondary|tertiary|motorway_link|trunk_link"];
+    out body center;
+  `;
 
   const url = `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`;
   console.log("Fetching exit road details from URL:", url);
@@ -531,16 +546,18 @@ async function getExitDetails(nodeIds, relationData) {
   try {
     const res = await fetch(url);
     const text = await res.text();
-    console.log("Raw Overpass response (first 300 chars):", text.slice(0, 300));
     const data = JSON.parse(text);
     console.log("Parsed exit road way elements:", data.elements);
 
     const mainlineWayIds = new Set(
       relationData.elements.filter(e => e.type === 'way').map(e => e.id)
     );
-    const grouped = {};
 
-    for (const w of data.elements) {
+    const grouped = {};
+    const nodes = data.elements.filter(e => e.type === 'node');
+    const ways = data.elements.filter(e => e.type === 'way');
+
+    for (const w of ways) {
       if (!Array.isArray(w.nodes) || w.nodes.length < 2) {
         console.warn("Skipping way without nodes:", w);
         continue;
@@ -553,34 +570,108 @@ async function getExitDetails(nodeIds, relationData) {
       for (const nid of w.nodes) {
         if (!nodeIds.includes(nid)) continue;
         if (!grouped[nid]) grouped[nid] = [];
-        
-          grouped[nid].push({
-            id: w.id,
-            tags: w.tags || {},
-            direction: dir,
-            isMainline,
-            lat: w.center?.lat,
-            lon: w.center?.lon
-          });
-		  console.log({
-            id: w.id,
-            tags: w.tags || {},
-            direction: dir,
-            isMainline,
-            lat: w.center?.lat,
-            lon: w.center?.lon
-          });
-        
+
+        grouped[nid].push({
+		  id: w.id,
+		  tags: w.tags || {},
+		  direction: dir,
+		  isMainline,
+		  lat: w.center?.lat,
+		  lon: w.center?.lon,
+		  nodes: w.nodes
+		});
+
       }
     }
+	
+    // Compute exit side and lane counts
+    for (const nid of Object.keys(grouped)) {
+      const items = grouped[nid];
+      const inbound = items.find(w => w.direction === 'inbound');
+      const outMain = items.find(w => w.direction === 'outbound' && w.isMainline);
+      const outExit = items.find(w => w.direction === 'outbound' && !w.isMainline);
 
-    console.log("Grouped exit details:", grouped);
+      let isRExit = null;
+      let laneCounts = [null, null, null];
+
+
+      if (inbound && outMain && outExit && (Array.isArray(inbound.nodes) && Array.isArray(outMain.nodes) && Array.isArray(outExit.nodes))) {
+        const nodeId = parseInt(nid); // current junction node ID
+        let inboundSeg = null, outMainSeg = null, outExitSeg = null;
+      
+        // Inbound: use the node *before* the junction
+        const inboundIdx = inbound.nodes.indexOf(nodeId);
+        if (inboundIdx > 0) {
+          const n1 = inbound.nodes[inboundIdx - 1];
+          const n2 = nodeId;
+          const p1 = nodes.find(n => n.id === n1);
+          const p2 = nodes.find(n => n.id === n2);
+          if (p1 && p2) inboundSeg = [p1, p2];
+        }
+      
+        // Outbound mainline: use the node *after* the junction
+        const outMainIdx = outMain.nodes.indexOf(nodeId);
+        if (outMainIdx >= 0 && outMainIdx + 1 < outMain.nodes.length) {
+          const n1 = nodeId;
+          const n2 = outMain.nodes[outMainIdx + 1];
+          const p1 = nodes.find(n => n.id === n1);
+          const p2 = nodes.find(n => n.id === n2);
+          if (p1 && p2) outMainSeg = [p1, p2];
+        }
+      
+        // Outbound exit: use the node *after* the junction
+        const outExitIdx = outExit.nodes.indexOf(nodeId);
+        if (outExitIdx >= 0 && outExitIdx + 1 < outExit.nodes.length) {
+          const n1 = nodeId;
+          const n2 = outExit.nodes[outExitIdx + 1];
+          const p1 = nodes.find(n => n.id === n1);
+          const p2 = nodes.find(n => n.id === n2);
+          if (p1 && p2) outExitSeg = [p1, p2];
+        }
+      
+        if (inboundSeg && outMainSeg && outExitSeg) {
+          const bearingMainline = calculateBearing(
+            outMainSeg[0].lat, outMainSeg[0].lon,
+            outMainSeg[1].lat, outMainSeg[1].lon
+          );
+      
+          const bearingExit = calculateBearing(
+            outExitSeg[0].lat, outExitSeg[0].lon,
+            outExitSeg[1].lat, outExitSeg[1].lon
+          );
+      
+          // Compute relative angle
+          const angleDiff = ((bearingExit - bearingMainline + 540) % 360) - 180;
+      
+          isRExit = angleDiff > 0;
+        }
+      }
+
+
+
+		if (inbound) {
+		  laneCounts[0] = parseInt(inbound.tags.lanes, 10) || null;
+		}
+		if (outMain) {
+		  laneCounts[1] = parseInt(outMain.tags.lanes, 10) || null;
+		}
+		if (outExit) {
+		  laneCounts[2] = parseInt(outExit.tags.lanes, 10) || null;
+		}
+
+
+      grouped[nid].isRExit = isRExit;
+      grouped[nid].laneCounts = laneCounts;
+    }
+
+    console.log("Grouped exit details with direction and lanes:", grouped);
     return grouped;
   } catch (err) {
     console.error("Failed to fetch bulk exit road details", err);
     return {};
   }
 }
+
 
 
 
@@ -624,10 +715,19 @@ async function _simulateLocationInputCore(lat, lon, map, state) {
         console.log("Passed nodeIds:", allNodeIds);
         console.log("Passed relationData is valid:", !!relationData && Array.isArray(relationData.elements));
 
-        const allDetails = await getExitDetails(allNodeIds, relationData);
-        for (const exit of exits) {
-          exit.details = allDetails[exit.nodeId] || [];
-        }
+		const allDetails = await getExitDetails(allNodeIds, relationData);
+		for (const exit of exits) {
+		  const detail = allDetails[exit.nodeId] || [];
+		  exit.details = detail;
+
+		  // Attach computed metadata from detail array (where it was injected in getExitDetails)
+		  if ('isRExit' in detail) {
+			exit.isRExit = detail.isRExit;
+		  }
+		  if ('laneCounts' in detail) {
+			exit.laneCounts = detail.laneCounts;
+		  }
+		}
 
         const container = document.getElementById('city-results');
         exits.forEach(exit => {
@@ -643,10 +743,19 @@ async function _simulateLocationInputCore(lat, lon, map, state) {
           console.log("Upcoming exits:", exits);
           const div = document.getElementById('city-results');
           div.innerHTML += `<br><b>Upcoming exits:</b><ul style="padding-left:1.2em;">` +
-            exits.map(e => `<li><b>Exit ${e.ref}</b>${e.name ? ": " + e.name : ""} — ${e.dist.toFixed(1)} mi ahead` +
-              (e.details.length ? `<br><i>${e.details.map(d => Object.entries(d.tags).map(([k, v]) => `${k}: ${v}`).join(", ")).join("<br>")}</i>` : '') +
-              `</li>`).join('') +
-            `</ul>`;
+			  exits.map(e =>
+				`<li>
+				  <b>Exit ${e.ref}</b>${e.name ? ": " + e.name : ""} — ${e.dist.toFixed(1)} mi ahead
+				  <br><i>${
+					e.details.length
+					  ? e.details.map(d => Object.entries(d.tags).map(([k, v]) => `${k}: ${v}`).join(", ")).join("<br>")
+					  : ''
+				  }</i>
+				  <p class="exit-raw">${JSON.stringify(e)}</p>
+				</li>`
+			  ).join('') +
+			  `</ul>`;
+
         } else {
           console.log("No upcoming exits detected on this route.");
         }
@@ -736,6 +845,7 @@ async function main() {
 
   // Safe name that avoids recursion
   window.simulateLocationInput = (lat, lon) => _simulateLocationInputCore(lat, lon, map, state);
+  startGeolocationLoop(map, state);
 }
 
 // Calculate distance along a route relation between two coordinates (fallback from nodeId)
@@ -751,8 +861,18 @@ function getRouteDistanceAlongStitchedPath(stitchedPoints, toIdx) {
   }
   return dist;
 }
-function renderExitPanel(exit) {
-  const exitNumber = exit.ref;
+function renderExitPanel(exit, index = 0) {
+  if (index === 0 && exit.dist < 2) {
+    // Skip rendering for very close first exit and call custom function
+    if (typeof renderFirstExit === 'function') {
+      return renderFirstExit(exit) || '';
+    } else {
+      console.warn("renderFirstExit is not defined.");
+      return '';
+    }
+  }
+
+  const exitNumber = exit.ref || '';
   let distance = exit.dist;
   if (distance > 5) {
     distance = Math.round(distance);
@@ -762,7 +882,6 @@ function renderExitPanel(exit) {
   const distanceDisplay = Number.isInteger(distance) ? `${distance}` : distance.toFixed(1);
 
   const road = (exit.details || []).find(w => w.direction === 'outbound' && !w.isMainline && w.tags);
-
   if (!road) return ''; // Skip if no useful outbound road
 
   const tags = road.tags;
@@ -770,97 +889,103 @@ function renderExitPanel(exit) {
   container.className = 'multipanelcontainer';
 
   const exitBlock = document.createElement('div');
-  exitBlock.className = 'panel-exit';
-  exitBlock.innerHTML = `
-    <table class='sign-table'>
-      <td><p class='exit'>EXIT <span class='exit-num'>${exitNumber}</span></p></td>
-    </table>
-  `;
+  // Set the exit block class depending on whether it's a left or right exit
+  if (exit.isRExit === false) {
+    exitBlock.className = 'panel-exit-left';
+  } else {
+    exitBlock.className = 'panel-exit';
+  }
+  
+  // Create the HTML for the exit label
+  const table = document.createElement('table');
+  table.className = 'sign-table';
+  if (exit.isRExit === false) {
+	  const rowWarning=document.createElement('tr');
+	  const cellWarning = document.createElement('td');
+	  cellWarning.className='warning';
+	  const paraWarning=document.createElement('p');
+	  paraWarning.className='warning warning-text';
+	  paraWarning.innerHTML='LEFT';
+	  cellWarning.appendChild(paraWarning);
+	  rowWarning.appendChild(cellWarning);
+	  table.appendChild(rowWarning);
+  }
+  const row = document.createElement('tr');
+  const cell = document.createElement('td');
+  
+  const para = document.createElement('p');
+  para.className = 'exit';
+  para.innerHTML = `EXIT <span class='exit-num'>${exitNumber}</span>`;
+  
+  cell.appendChild(para);
+  row.appendChild(cell);
+  table.appendChild(row);
+  
+  
+  exitBlock.appendChild(table);
+  
+  // Add the exit block to the main container
   container.appendChild(exitBlock);
+
 
   const panel = document.createElement('div');
   panel.className = 'panel';
   const panelTable = document.createElement('table');
   panelTable.className = 'sign-table';
 
-  const wrapperCell = document.createElement('td'); // Top-level <td> to contain all ref group tables
+  const wrapperCell = document.createElement('td');
 
-	const refGroups = [
-  { refs: tags['destination:ref'], label: null },
-  { refs: tags['destination:ref:to'], label: 'TO' },
-  { refs: tags.ref, label: null }
-].filter(g => g.refs);
+  const refGroups = [
+    { refs: tags['destination:ref'], label: null },
+    { refs: tags['destination:ref:to'], label: 'TO' },
+    { refs: tags.ref, label: null }
+  ].filter(g => g.refs);
 
-const mainTable = document.createElement('table');
-mainTable.className = 'main-sign-table';
+  const mainTable = document.createElement('table');
+  mainTable.className = 'main-sign-table';
 
-refGroups.forEach((group, groupIndex) => {
-  console.log(`Processing group ${groupIndex}`, group);
+  refGroups.forEach((group, groupIndex) => {
+    const groupRow = document.createElement('tr');
 
-  const groupRow = document.createElement('tr');
+    const labelCell = document.createElement('td');
+    if (group.label) {
+      labelCell.innerHTML = `<p class="to">${group.label}</p>`;
+    }
+    groupRow.appendChild(labelCell);
 
-  // Left cell (TO label)
-  const labelCell = document.createElement('td');
-  if (group.label) {
-    labelCell.innerHTML = `<p class="to">${group.label}</p>`;
-  }
-  groupRow.appendChild(labelCell);
+    const refsCell = document.createElement('td');
+    const refs = group.refs.split(';').map(r => r.trim());
 
-  // Right cell (ref list)
-  const refsCell = document.createElement('td');
-  const refs = group.refs.split(';').map(r => r.trim());
+    refs.forEach(refText => {
+      const signTable = document.createElement('table');
+      signTable.className = 'sign-table';
 
-  refs.forEach((refText, refIndex) => {
-    console.log(`  Processing `, refText, " ",refIndex);
+      const signRow = document.createElement('tr');
 
-    // Create one flat table per ref
-    const signTable = document.createElement('table');
-    signTable.className = 'sign-table';
-
-    const signRow = document.createElement('tr');
-
-    // Get the shield element
-    const shield = renderShieldRow(refText);
-    if (shield) {
-      console.log(`    Got shield for ref "${refText}":`, shield);
-
-      if (shield.tagName === 'TABLE') {
-        console.warn(`⚠️ renderShieldRow returned a full <table> for "${refText}" — should return a <div> or <img> instead!`);
+      const shield = renderShieldRow(refText);
+      if (shield) {
+        const shieldCell = document.createElement('td');
+        shieldCell.appendChild(shield);
+        signRow.appendChild(shieldCell);
       }
 
-      const shieldCell = document.createElement('td');
-      shieldCell.appendChild(shield);
-      signRow.appendChild(shieldCell);
-    } else {
-      console.warn(`⚠️ No shield returned for "${refText}"`);
-    }
+      const dirMatch = refText.match(/\b(North|South|East|West)\b/i);
+      if (dirMatch) {
+        const dirText = dirMatch[1];
+        const dirCell = document.createElement('td');
+        dirCell.innerHTML = `<p class='dir'><span class='dir-cap'>${dirText[0]}</span>${dirText.slice(1).toUpperCase()}</p>`;
+        signRow.appendChild(dirCell);
+      }
 
-    // Get direction if present
-    const dirMatch = refText.match(/\b(North|South|East|West)\b/i);
-    if (dirMatch) {
-      const dirText = dirMatch[1];
-      console.log(`    Found direction: ${dirText}`);
+      signTable.appendChild(signRow);
+      refsCell.appendChild(signTable);
+    });
 
-      const dirCell = document.createElement('td');
-      dirCell.innerHTML = `<p class='dir'><span class='dir-cap'>${dirText[0]}</span>${dirText.slice(1).toUpperCase()}</p>`;
-      signRow.appendChild(dirCell);
-    }
-
-    // Append row to table, and table to refsCell
-    signTable.appendChild(signRow);
-    refsCell.appendChild(signTable);
+    groupRow.appendChild(refsCell);
+    mainTable.appendChild(groupRow);
   });
 
-  groupRow.appendChild(refsCell);
-  mainTable.appendChild(groupRow);
-});
-
-console.log('Final mainTable structure:', mainTable);
-panel.appendChild(mainTable);
-
-
-	   
-
+  panel.appendChild(mainTable);
 
   let dests = [];
   if (tags.destination) {
@@ -876,7 +1001,7 @@ panel.appendChild(mainTable);
     row.appendChild(cell);
     panelTable.appendChild(row);
   });
-  
+
   const distRow = document.createElement('tr');
   distRow.innerHTML = `<td><p class="dist"><span class="dist-num">${distanceDisplay}</span> MILES</p></td>`;
   panelTable.appendChild(distRow);
@@ -885,8 +1010,10 @@ panel.appendChild(mainTable);
   container.appendChild(document.createElement('br'));
   container.appendChild(panel);
   container.appendChild(document.createElement('br'));
+
   return container;
 }
+
 
 function renderShieldRow(refText) {
 	console.log(refText, " refText 45634");
@@ -974,21 +1101,131 @@ function abbreviateStreet(name) {
 			 .replace(/thruway/i, "Thwy")
 			 .replace(/trail/i, "Tr")
 }
+let gpsCheckCounter = 0;
+let gpsIntervalId = null;
+let gpsActive = true;
+function isUserNearStitchedGeometry(lat, lon, toleranceMeters = 300) {
+  const stitchedPoints = window._activeRelationData && window._activeRelationData.elements
+    ? stitchRouteGeometryFromStart(
+        window._activeRelationData.elements.filter(e => e.type === 'way' && Array.isArray(e.geometry)),
+        { lat, lon }
+      ).stitchedPoints
+    : [];
 
-// INSERT INTO MAIN
-// const container = document.getElementById('city-results');
-// exits.forEach(exit => {
-//   const panel = renderExitPanel(exit);
-//   if (panel) container.appendChild(panel);
-// });
+  if (!stitchedPoints.length) return false;
 
+  const userLatLng = L.latLng(lat, lon);
+  return stitchedPoints.some(pt => userLatLng.distanceTo(L.latLng(pt.lat, pt.lon)) <= toleranceMeters);
+}
+function startGeolocationLoop(map, state) {
+  window._gpsMapRef = map;
+  window._gpsStateRef = state;
 
-// INSERT INTO MAIN
-// const container = document.getElementById('city-results');
-// exits.forEach(exit => {
-//   const panel = renderExitPanel(exit);
-//   if (panel) container.appendChild(panel);
-// });
+  let gpsCheckCounter = 0;
+  let gpsMarkers = [];
+  let primaryMarkers = [];
+  let secondaryMarker = null;
+
+  return setInterval(() => {
+    if (!gpsActive) return;
+
+    navigator.geolocation.getCurrentPosition(async pos => {
+      const lat = pos.coords.latitude;
+      const lon = pos.coords.longitude;
+      gpsCheckCounter++;
+
+      map.setView([lat, lon]); // 👈 Auto-center to user location
+
+      // Black pin for GPS location
+      const gpsMarker = L.circleMarker([lat, lon], {
+        radius: 6,
+        color: 'black',
+        fillColor: 'black',
+        fillOpacity: 1
+      }).addTo(map);
+      gpsMarkers.push(gpsMarker);
+      if (gpsMarkers.length > 3) {
+        const old = gpsMarkers.shift();
+        map.removeLayer(old);
+      }
+
+      const stitchedExists = !!window._activeRelationData && Array.isArray(window._activeRelationData.elements);
+      const nearRoute = stitchedExists && isUserNearStitchedGeometry(lat, lon);
+
+      if (stitchedExists && nearRoute) {
+        console.log("User is near route. Making followup call.");
+        if (secondaryMarker) map.removeLayer(secondaryMarker);
+        secondaryMarker = L.circleMarker([lat, lon], {
+          radius: 6,
+          color: 'blue',
+          fillColor: 'blue',
+          fillOpacity: 1
+        }).addTo(map);
+
+        await _simulateFollowupLocationInputCore(lat, lon, map, state);
+      } else {
+        if (gpsCheckCounter % 12 === 0) {
+          console.log("User not near route. Making primary call (rate-limited).");
+
+          const primaryMarker = L.circleMarker([lat, lon], {
+            radius: 6,
+            color: 'red',
+            fillColor: 'red',
+            fillOpacity: 1
+          }).addTo(map);
+          primaryMarkers.push(primaryMarker);
+          if (primaryMarkers.length > 2) {
+            const old = primaryMarkers.shift();
+            map.removeLayer(old);
+          }
+
+          const before = window._activeRelationData;
+          await _simulateLocationInputCore(lat, lon, map, state);
+          const after = window._activeRelationData;
+
+          if (after && after !== before) {
+            console.log("Route updated, making a second primary call.");
+            const primaryMarker2 = L.circleMarker([lat, lon], {
+              radius: 6,
+              color: 'red',
+              fillColor: 'red',
+              fillOpacity: 1
+            }).addTo(map);
+            primaryMarkers.push(primaryMarker2);
+            if (primaryMarkers.length > 2) {
+              const old = primaryMarkers.shift();
+              map.removeLayer(old);
+            }
+
+            await _simulateLocationInputCore(lat, lon, map, state);
+          }
+        } else {
+          console.log(`Skipping primary call this cycle (${gpsCheckCounter % 12}/12)`);
+        }
+      }
+    }, err => {
+      console.warn("Geolocation error:", err);
+    });
+  }, 5000);
+}
+
+function togglegps() {
+  gpsActive = !gpsActive;
+  const btn = document.getElementById('gps');
+
+  if (gpsActive) {
+    btn.textContent = "Stop GPS";
+    if (!gpsIntervalId) {
+      gpsIntervalId = startGeolocationLoop(window._gpsMapRef, window._gpsStateRef);
+    }
+  } else {
+    btn.textContent = "Start GPS";
+    if (gpsIntervalId) {
+      clearInterval(gpsIntervalId);
+      gpsIntervalId = null;
+    }
+  }
+}
 
 
 window.onload = main;
