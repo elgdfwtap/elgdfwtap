@@ -1021,9 +1021,9 @@ function getRouteDistanceAlongStitchedPath(stitchedPoints, toIdx) {
 let firstExitType = 0; // 0 = APL, 1 = diagramatic, 2 = pull through
 
 function renderFirstExit(exit, index=0){
-	//if (exit.dist >1){
-	//	return renderPullThrough(exit);
-	//}else{
+	if (exit.dist >1){
+		return renderPullThrough(exit);
+	}else{
 		switch (firstExitType){
 			case 0:
 				return renderAPL(exit);
@@ -1037,7 +1037,7 @@ function renderFirstExit(exit, index=0){
 				}
 				
 		}
-	//}
+	}
 }
 
 function renderPullThroughClose(exit, index=0){
@@ -1201,10 +1201,28 @@ function renderAPL(exit){
 	}
   }else{
 	console.log('failed all lane counts not null')
-	if(exit.laneCounts[2] == 1){
-		distRow.innerHTML = '<td><p class="dist">RIGHT LANE</p></td>';	
+	if(exit.laneCounts[2] != null){
+		console.log('lane 2 exists');
+		if(exit.isRExit===false){
+			if(exit.laneCounts[2] == 1){
+				distRow.innerHTML = '<td><p class="dist">LEFT LANE</p></td>';	
+			}else{
+				distRow.innerHTML = '<td><p class="dist">LEFT <span class="dist-num">'+exit.laneCounts[2] + ' </span> LANES</p></td>';	
+			}
+		}else{
+			if(exit.laneCounts[2] == 1){
+				distRow.innerHTML = '<td><p class="dist">RIGHT LANE</p></td>';	
+			}else{
+				distRow.innerHTML = '<td><p class="dist">RIGHT <span class="dist-num">'+exit.laneCounts[2] + ' </span> LANES</p></td>';	
+			}
+		}
 	}else{
-		distRow.innerHTML = '<td><p class="dist">RIGHT <span class="dist-num">'+exit.laneCounts[2] + ' </span> LANES</p></td>';	
+		console.log('failed lane 2 test');
+		if(exit.isRExit===false){
+				distRow.innerHTML = '<td><p class="dist">NEXT LEFT</p></td>';	
+		}else{
+				distRow.innerHTML = '<td><p class="dist">NEXT RIGHT</p></td>';	
+		}
 	}
   }
   if(typeof road.tags['maxspeed:advisory'] !== 'undefined'){
@@ -1229,16 +1247,16 @@ function renderDiagrammatic(exit){
 }
 
 function renderExitPanel(exit, index) {
-  //if (index === 0 && exit.dist < 2) {
-  //  if (typeof renderFirstExit === 'function') {
+  if (index === 0 && exit.dist < 2) {
+    if (typeof renderFirstExit === 'function') {
       return renderFirstExit(exit) || '';
-  /*  } else {
+    } else {
       console.warn("renderFirstExit is not defined.");
       return '';
     }
   }else{
 	return renderDistanceSign(exit);
-  }*/
+  }
   
 }
 function renderDistanceSign (exit){
