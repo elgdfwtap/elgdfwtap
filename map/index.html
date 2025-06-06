@@ -117,6 +117,13 @@ function displayRoutes(routes) {
     }).join('') +
     `</ul>`;
 }
+function getRoutePriority(network) {
+
+  if (/^US:I\b/i.test(network)) return 3;         // Interstate
+  if (/^US:US\b/i.test(network)) return 2;        // US Highway
+  if (/^US:.*$/i.test(network)) return 1;         // State or other US routes
+  return 0;                                       // Unknown or non-preferred
+}
 
 async function getApplicableRoutes(lat1, lon1, lat2, lon2) {
   const query = `
@@ -205,13 +212,19 @@ async function getApplicableRoutes(lat1, lon1, lat2, lon2) {
         name: rel.tags?.name || '',
         route: rel.tags?.route || '',
         directionScore: bestScore,
+		priority: getRoutePriority(rel.tags?.network),
         bestRole,
         overpassUrl
       };
     });
 
     console.log("Scored routes:", scoredRoutes);
-    return scoredRoutes.sort((a, b) => b.directionScore - a.directionScore);
+    return scoredRoutes.sort((a, b) => {
+	  const aScore = a.priority * 1000 + a.directionScore;
+	  const bScore = b.priority * 1000 + b.directionScore;
+	  return bScore - aScore;
+	});
+
   } catch (err) {
     console.error("Error fetching or processing routes:", err);
     return [];
@@ -355,22 +368,32 @@ function getExitsAheadAlongRouteFromData(relationData, relation1, userLat, userL
     return [];
   }
 
+  const userIdx = getInterpolatedIndexOnPath(userPoint, stitchedPoints);
+  if (userIdx === null) {
+    console.warn("User point not on path.");
+    return [];
+  }
+
   const exits = [];
 
-  // Preprocess: include only nodes with highway=motorway_junction
   const exitMatches = nodes
     .filter(n => n.tags?.highway === 'motorway_junction')
     .map(n => {
-      const idx = stitchedPoints.findIndex(pt => (pt.lat - n.lat) ** 2 + (pt.lon - n.lon) ** 2 < 0.0001);
+      const idx = stitchedPoints.findIndex(pt => (pt.lat - n.lat) ** 2 + (pt.lon - n.lon) ** 2 < 0.0000001);
       return idx !== -1 ? { node: n, idx } : null;
     })
     .filter(Boolean)
-    .sort((a, b) => a.idx - b.idx); // Sort by appearance order in stitched geometry
-
+    .sort((a, b) => a.idx - b.idx);
+  console.log('stitchedPoints: ',stitchedPoints);
   for (const { node, idx } of exitMatches) {
-    const dist = getRouteDistanceAlongStitchedPath(stitchedPoints, idx);
-    const tags = node.tags || {};
+    const exitDist = getRouteDistanceAlongStitchedPath(stitchedPoints, idx);
+    const userDist = getRouteDistanceAlongStitchedPath(stitchedPoints, userIdx);
+    const distFromUser = exitDist - userDist;
+	console.log(' INDICES AND DISTANCES FOR EXIT ' + node.tags.ref+': '+'exitIndex:'+idx+', userIndex:'+userIdx+', Distances:' +exitDist+' - '+userDist+' = '+distFromUser);
 
+    if (distFromUser <= 0) continue;
+
+    const tags = node.tags || {};
     exits.push({
       ref: tags.ref || '',
       name: tags.name || '',
@@ -378,12 +401,57 @@ function getExitsAheadAlongRouteFromData(relationData, relation1, userLat, userL
       lon: node.lon,
       nodeId: node.id,
       tags: tags,
-      dist
+      dist: distFromUser
     });
   }
-
-  console.log("Detected exits from stitched route:", exits);
+	
+  console.log("Detected exits ahead:", exits);
   return exits;
+  
+}
+
+// Returns fractional index on path
+function getInterpolatedIndexOnPath(point, path) {
+  let closestSeg = -1;
+  let minDist = Infinity;
+  let tClosest = 0;
+
+  for (let i = 0; i < path.length - 1; i++) {
+    const a = path[i];
+    const b = path[i + 1];
+    const proj = projectPointToSegment(point, a, b);
+    if (proj.dist < minDist) {
+      minDist = proj.dist;
+      closestSeg = i;
+      tClosest = proj.t;
+    }
+  }
+
+  if (closestSeg === -1) return null;
+  return closestSeg + tClosest;
+}
+
+// Uses haversine distance for projection
+function projectPointToSegment(p, a, b) {
+  const ax = a.lon, ay = a.lat;
+  const bx = b.lon, by = b.lat;
+  const px = p.lon, py = p.lat;
+
+  const dx = bx - ax;
+  const dy = by - ay;
+  const lenSq = dx * dx + dy * dy;
+
+  if (lenSq === 0) return { t: 0, dist: haversine(py, px, ay, ax) };
+
+  let t = ((px - ax) * dx + (py - ay) * dy) / lenSq;
+  t = Math.max(0, Math.min(1, t));
+  const projLat = ay + t * dy;
+  const projLon = ax + t * dx;
+
+  return {
+    t,
+    dist: haversine(py, px, projLat, projLon)
+  };
 }
 
 
@@ -447,6 +515,7 @@ function stitchRouteGeometryFromStart(ways, startPoint, tolerance = 1e-5) {
 
   ways.forEach(way => {
     if (!Array.isArray(way.geometry) || way.geometry.length < 2 || !Array.isArray(way.nodes)) return;
+
     const startNode = way.nodes[0];
     const endNode = way.nodes[way.nodes.length - 1];
 
@@ -454,32 +523,56 @@ function stitchRouteGeometryFromStart(ways, startPoint, tolerance = 1e-5) {
     if (!nodeToWays.has(endNode)) nodeToWays.set(endNode, []);
 
     nodeToWays.get(startNode).push({ way, forward: true });
-    // Only allow forward stitching
-
     waySegments.set(way.id, way.geometry);
   });
 
-  let closest = { node: null, dist: Infinity };
-  for (const [nodeId, segs] of nodeToWays.entries()) {
-    for (const { way } of segs) {
-      const geom = way.geometry;
-      const ref = geom[0];
-      const d = (ref.lat - startPoint.lat) ** 2 + (ref.lon - startPoint.lon) ** 2;
-      if (d < closest.dist) {
-        closest = { node: nodeId, dist: d };
+  // Try to find the closest segment along all ways
+  let closest = {
+    way: null,
+    index: -1,
+    dist: Infinity,
+    nodeBefore: null
+  };
+
+  for (const way of ways) {
+    const geom = way.geometry;
+    const nodes = way.nodes;
+
+    for (let i = 0; i < geom.length - 1; i++) {
+      const a = geom[i];
+      const b = geom[i + 1];
+      const proj = projectPointToSegment(startPoint, a, b);
+      if (proj.dist < closest.dist) {
+        closest = {
+          way,
+          index: i,
+          dist: proj.dist,
+          nodeBefore: nodes[i]
+        };
       }
     }
   }
 
-  if (!closest.node || !nodeToWays.has(closest.node)) {
-    console.warn("No forward ways connected to user node.");
-    return [];
+  if (!closest.nodeBefore) {
+    console.warn("No segment close enough to user point.");
+    return { stitchedPoints: [], stitchedWays: [] };
+  }
+
+  const seedNode = closest.nodeBefore;
+  const startWays = nodeToWays.get(seedNode);
+  if (!startWays || startWays.length === 0) {
+    console.warn("Found segment, but seed node is not a valid entry point:", seedNode);
   }
 
   const visited = new Set();
   const stitched = [];
   const stitchedWays = [];
-  const stack = [...nodeToWays.get(closest.node)];
+
+  const stack = [...(startWays || [])];
+  if (stack.length === 0) {
+    console.warn("No forward ways from seed node; trying fallback using the segment’s parent way.");
+    stack.push({ way: closest.way, forward: true });
+  }
 
   while (stack.length) {
     const { way } = stack.pop();
@@ -500,12 +593,12 @@ function stitchRouteGeometryFromStart(ways, startPoint, tolerance = 1e-5) {
   console.log("Stitched segment count:", stitchedWays.length);
   console.log("Total stitched points:", stitched.length);
 
-
   return { stitchedPoints: stitched, stitchedWays };
 }
 
+
 // Visualize stitched route with ordered markers
-function plotStitchedRouteOnMap(map, stitchedWays) {
+function plotStitchedRouteOnMap(map, stitchedWays,stitchedPoints, userLat, userLon) {
   stitchedWays.forEach((way, index) => {
     const latlngs = way.geometry.map(p => [p.lat, p.lon]);
     L.polyline(latlngs, {
@@ -525,7 +618,53 @@ function plotStitchedRouteOnMap(map, stitchedWays) {
       })
     }).addTo(map);*/
   });
+  if (!stitchedPoints || stitchedPoints.length < 2) {
+    console.warn("Stitched points are insufficient to plot location.");
+    return;
+  }
+
+  const userPoint = { lat: userLat, lon: userLon };
+
+  // Project user onto the stitched path
+  let closestSegIdx = -1;
+  let minDist = Infinity;
+  let tClosest = 0;
+
+  for (let i = 0; i < stitchedPoints.length - 1; i++) {
+    const a = stitchedPoints[i];
+    const b = stitchedPoints[i + 1];
+    const proj = projectPointToSegment(userPoint, a, b);
+    if (proj.dist < minDist) {
+      minDist = proj.dist;
+      closestSegIdx = i;
+      tClosest = proj.t;
+    }
+  }
+
+  if (closestSegIdx === -1) {
+    console.warn("User point does not project onto stitched route.");
+    return;
+  }
+
+  // Interpolated position along the segment
+  const a = stitchedPoints[closestSegIdx];
+  const b = stitchedPoints[closestSegIdx + 1];
+  const lat = a.lat + tClosest * (b.lat - a.lat);
+  const lon = a.lon + tClosest * (b.lon - a.lon);
+
+  // Plot the user location marker
+  const marker = L.marker([lat, lon], {
+    radius: 6,
+    color: 'blue',
+    fillColor: 'blue',
+    fillOpacity: 0.8
+  }).addTo(map);
+
+  console.log("Plotted user location at interpolated route point:", { lat, lon });
 }
+
+
+
 async function getExitDetails(nodeIds, relationData) {
   if (!Array.isArray(nodeIds) || nodeIds.length === 0) {
     console.warn("getExitDetails called with empty nodeIds array");
@@ -730,13 +869,18 @@ async function _simulateLocationInputCore(lat, lon, map, state) {
 		}
 
         const container = document.getElementById('city-results');
+		let index=0;
         exits.forEach(exit => {
-          const panel = renderExitPanel(exit);
-          if (panel) container.appendChild(panel);
+          const panel = renderExitPanel(exit, index);
+          if (panel) {
+			container.appendChild(panel);
+			index++;
+		  }
         });
 
-        plotExitsOnMap(map, exits);
-        plotStitchedRouteOnMap(map, stitchedWays);
+        
+        plotStitchedRouteOnMap(map, stitchedWays, stitchedPoints,lat2,lon2);
+		
 		
 		
         if (exits.length) {
@@ -778,10 +922,10 @@ async function _simulateFollowupLocationInputCore(lat, lon, map, state) {
 
   const userPoint = { lat, lon };
   const ways = activeRelation.elements.filter(e => e.type === 'way' && Array.isArray(e.geometry));
-  const { stitchedPoints } = stitchRouteGeometryFromStart(ways, userPoint);
+  const { stitchedPoints , stitchedWays } = stitchRouteGeometryFromStart(ways, userPoint);
 
   // Distance check: if too far from route, re-run main logic
-  const maxAllowedDistanceMeters = 500; // adjust as needed
+  const maxAllowedDistanceMeters = 1000; // adjust as needed
   const minDist = stitchedPoints.reduce((min, pt) => {
     const d = L.latLng(pt.lat, pt.lon).distanceTo(L.latLng(lat, lon));
     return Math.min(min, d);
@@ -795,18 +939,30 @@ async function _simulateFollowupLocationInputCore(lat, lon, map, state) {
   const topRoute = window._activeTopRoute;
   const bearing = 0; // optional: compute bearing between previous and current point if needed
   const exits = getExitsAheadAlongRouteFromData(activeRelation, topRoute, lat, lon, bearing, stitchedPoints);
-
   const allNodeIds = exits.map(e => e.nodeId).filter(id => typeof id === 'number');
   const allDetails = await getExitDetails(allNodeIds, activeRelation);
   for (const exit of exits) {
-    exit.details = allDetails[exit.nodeId] || [];
+    const detail = allDetails[exit.nodeId] || [];
+    exit.details = detail;
+     
+    // Attach computed metadata from detail array (where it was injected in getExitDetails)
+    if ('isRExit' in detail) {
+  	exit.isRExit = detail.isRExit;
+    }
+    if ('laneCounts' in detail) {
+  	exit.laneCounts = detail.laneCounts;
+    }
   }
-
+	
   const container = document.getElementById('city-results');
   container.innerHTML = ''; // Clear previous content
+  let index=0;
   exits.forEach(exit => {
-    const panel = renderExitPanel(exit);
-    if (panel) container.appendChild(panel);
+	if (typeof exit !== 'undefined' && typeof index !== 'undefined'){
+		console.log(exit.laneCounts);
+		const panel = renderExitPanel(exit, index);
+		if (panel) {container.appendChild(panel); index++;}
+	}
   });
 
   if (exits.length) {
@@ -819,7 +975,7 @@ async function _simulateFollowupLocationInputCore(lat, lon, map, state) {
   } else {
     console.log("No exits ahead.");
   }
-
+  plotStitchedRouteOnMap(map, stitchedWays,stitchedPoints, lat, lon);
   plotExitsOnMap(map, exits); // Optional update to map visuals
 }
 
@@ -861,79 +1017,300 @@ function getRouteDistanceAlongStitchedPath(stitchedPoints, toIdx) {
   }
   return dist;
 }
-function renderExitPanel(exit, index = 0) {
-  if (index === 0 && exit.dist < 2) {
-    // Skip rendering for very close first exit and call custom function
-    if (typeof renderFirstExit === 'function') {
+
+let firstExitType = 0; // 0 = APL, 1 = diagramatic, 2 = pull through
+
+function renderFirstExit(exit, index=0){
+	//if (exit.dist >1){
+	//	return renderPullThrough(exit);
+	//}else{
+		switch (firstExitType){
+			case 0:
+				return renderAPL(exit);
+			case 1:
+				return renderDiagrammatic(exit);
+			case 2:
+				if(exit.laneCounts[2] != null){
+						return renderPullThroughClose(exit);
+				}else{
+						return renderPullThrough(exit);
+				}
+				
+		}
+	//}
+}
+
+function renderPullThroughClose(exit, index=0){
+  const road = (exit.details || []).find(w => w.direction === 'outbound' && !w.isMainline && w.tags);
+  if (!road) return '';
+
+  const container = document.createElement('div');
+  container.className = 'multipanelcontainer';
+  if(exit.ref==''){
+  
+  }else{
+	const exitBlock = buildExitBlock(exit);
+	container.appendChild(exitBlock);
+	
+  }
+  let additionalRows = [];
+  const distRow = document.createElement('tr');
+  if(typeof exit.laneCounts[2] != null){
+	if(exit.isRExit===false){
+		if(exit.laneCounts[2] == 1){
+			distRow.innerHTML = '<td><p class="dist">LEFT LANE</p></td>';	
+		}else{
+			distRow.innerHTML = '<td><p class="dist">LEFT <span class="dist-num">'+exit.laneCounts[2] + ' </span> LANES</p></td>';	
+		}
+	}else{
+		if(exit.laneCounts[2] == 1){
+			distRow.innerHTML = '<td><p class="dist">RIGHT LANE</p></td>';	
+		}else{
+			distRow.innerHTML = '<td><p class="dist">RIGHT <span class="dist-num">'+exit.laneCounts[2] + ' </span> LANES</p></td>';	
+		}
+	}
+  }
+  if(typeof road.tags['maxspeed:advisory'] !== 'undefined'){
+	  if (road.tags['maxspeed:advisory'].match(/^\d+/) <= 35){
+		advSpeedRow = buildAdvSpeedRow(road.tags['maxspeed:advisory'].match(/^\d+/));
+		additionalRows.push(advSpeedRow);
+	  }
+  }
+  additionalRows.push(distRow);
+
+  const signPanel = buildSignPanel(road.tags, exit.dist, additionalRows);
+  
+  container.appendChild(document.createElement('br'));
+  container.appendChild(signPanel);
+  container.appendChild(document.createElement('br'));
+
+  return container;
+}
+
+function renderPullThrough(exit, index=0){
+	const road = (exit.details || []).find(w => w.direction === 'outbound' && !w.isMainline && w.tags);
+  if (!road) return '';
+
+  const container = document.createElement('div');
+  container.className = 'multipanelcontainer';
+  if(exit.ref==''){
+  
+  }else{
+	const exitBlock = buildExitBlock(exit);
+	container.appendChild(exitBlock);
+	
+  }
+  
+  const distRow = document.createElement('tr');
+  
+  const insttd = document.createElement('td');
+  const instpara=document.createElement('p');
+  instpara.className = ('inst');
+  
+  if(exit.isRExit === false){
+	
+	instpara.innerText= 'NEXT <p class="warning warning-text">LEFT</p>';
+  }else if(exit.isRExit){
+	instpara.innerText= 'NEXT RIGHT';
+  }else{
+	instpara.innerText= 'NEXT EXIT';
+  }
+  insttd.appendChild(instpara);
+  distRow.appendChild(insttd);
+  
+  const additionalRows = [];
+  if(typeof road.tags['maxspeed:advisory'] !== 'undefined'){
+	  if (road.tags['maxspeed:advisory'].match(/^\d+/) <= 35){
+		advSpeedRow = buildAdvSpeedRow(road.tags['maxspeed:advisory'].match(/^\d+/));
+		additionalRows.push(advSpeedRow);
+	  }
+  }
+  additionalRows.push(distRow);
+  const signPanel = buildSignPanel(road.tags, exit.dist, additionalRows);
+  
+  container.appendChild(document.createElement('br'));
+  container.appendChild(signPanel);
+  container.appendChild(document.createElement('br'));
+
+  return container;
+
+}
+function renderAPL(exit){
+  const road = (exit.details || []).find(w => w.direction === 'outbound' && !w.isMainline && w.tags);
+  if (!road) return '';
+
+  const container = document.createElement('div');
+  container.className = 'multipanelcontainer';
+  if(exit.ref==''){
+  
+  }else{
+	const exitBlock = buildExitBlock(exit);
+	container.appendChild(exitBlock);
+	
+  }
+  let additionalRows = [];
+  const distRow = document.createElement('tr');
+  distRow.className='apl-row';
+  if(exit.laneCounts[0] != null && exit.laneCounts[1] != null && exit.laneCounts[2] != null){
+	if(exit.isRExit===false){
+		if(exit.laneCounts[2] == 1){
+			distRow.innerHTML = '<td><p class="dist">LEFT LANE</p></td>';	
+		}else{
+			distRow.innerHTML = '<td><p class="dist">LEFT <span class="dist-num">'+exit.laneCounts[2] + ' </span> LANES</p></td>';	
+		}
+	}else{
+		optionCount = (exit.laneCounts[2] + exit.laneCounts[1]) - exit.laneCounts[0] ;
+		if(optionCount == 0){
+			for( var i = 0; i< exit.laneCounts[1]; i++){
+				const td = document.createElement('td');
+				td.className='arrowContainer';
+				td.innerHTML='<img src="apl_thru_arrow.png">';
+				distRow.appendChild(td);
+			}
+			for( var i = 0; i< exit.laneCounts[2]; i++){
+				const td = document.createElement('td');
+				td.className='arrowContainer';
+				td.innerHTML='<img src="apl_right_arrow.png">';
+				distRow.appendChild(td);
+			}
+		}else if(optionCount == 1){
+			for( var i = 0; i< exit.laneCounts[1]-1; i++){
+				const td = document.createElement('td');
+				td.className='arrowContainer';
+				td.innerHTML='<img src="apl_thru_arrow.png">';
+				distRow.appendChild(td);
+			}
+			const td = document.createElement('td');
+			td.className='arrowContainer';
+			td.innerHTML='<img src="apl_thru_right_arrow.png">';
+			distRow.appendChild(td);
+			for( var i = 0; i< exit.laneCounts[2]-1; i++){
+				const td = document.createElement('td');
+				td.className='arrowContainer';
+				td.innerHTML='<img src="apl_right_arrow.png">';
+				distRow.appendChild(td);
+			}
+		}else{
+			console.log('failed option count test')
+			if(exit.laneCounts[2] == 1){
+				distRow.innerHTML = '<td><p class="dist">RIGHT LANE</p></td>';	
+			}else{
+				distRow.innerHTML = '<td><p class="dist">RIGHT <span class="dist-num">'+exit.laneCounts[2] + ' </span> LANES</p></td>';	
+			}
+		}
+	}
+  }else{
+	console.log('failed all lane counts not null')
+	if(exit.laneCounts[2] == 1){
+		distRow.innerHTML = '<td><p class="dist">RIGHT LANE</p></td>';	
+	}else{
+		distRow.innerHTML = '<td><p class="dist">RIGHT <span class="dist-num">'+exit.laneCounts[2] + ' </span> LANES</p></td>';	
+	}
+  }
+  if(typeof road.tags['maxspeed:advisory'] !== 'undefined'){
+	  if (road.tags['maxspeed:advisory'].match(/^\d+/) <= 35){
+		advSpeedRow = buildAdvSpeedRow(road.tags['maxspeed:advisory'].match(/^\d+/));
+		additionalRows.push(advSpeedRow);
+	  }
+  }
+  additionalRows.push(distRow);
+
+  const signPanel = buildSignPanel(road.tags, exit.dist, additionalRows);
+  
+  container.appendChild(document.createElement('br'));
+  container.appendChild(signPanel);
+  container.appendChild(document.createElement('br'));
+
+  return container;
+}
+function renderDiagrammatic(exit){
+
+
+}
+
+function renderExitPanel(exit, index) {
+  //if (index === 0 && exit.dist < 2) {
+  //  if (typeof renderFirstExit === 'function') {
       return renderFirstExit(exit) || '';
-    } else {
+  /*  } else {
       console.warn("renderFirstExit is not defined.");
       return '';
     }
-  }
-
-  const exitNumber = exit.ref || '';
-  let distance = exit.dist;
-  if (distance > 5) {
-    distance = Math.round(distance);
-  } else {
-    distance = parseFloat(distance.toFixed(1));
-  }
-  const distanceDisplay = Number.isInteger(distance) ? `${distance}` : distance.toFixed(1);
-
+  }else{
+	return renderDistanceSign(exit);
+  }*/
+  
+}
+function renderDistanceSign (exit){
   const road = (exit.details || []).find(w => w.direction === 'outbound' && !w.isMainline && w.tags);
-  if (!road) return ''; // Skip if no useful outbound road
+  if (!road) return '';
 
-  const tags = road.tags;
   const container = document.createElement('div');
   container.className = 'multipanelcontainer';
-
-  const exitBlock = document.createElement('div');
-  // Set the exit block class depending on whether it's a left or right exit
-  if (exit.isRExit === false) {
-    exitBlock.className = 'panel-exit-left';
-  } else {
-    exitBlock.className = 'panel-exit';
-  }
+  if(exit.ref==''){
   
-  // Create the HTML for the exit label
+  }else{
+	const exitBlock = buildExitBlock(exit);
+	container.appendChild(exitBlock);
+	
+  }
+  const additionalRows = [buildDistanceRow(exit.dist)];
+  
+  const signPanel = buildSignPanel(road.tags, exit.dist, additionalRows);
+  
+  container.appendChild(document.createElement('br'));
+  container.appendChild(signPanel);
+  container.appendChild(document.createElement('br'));
+
+  return container;
+}
+function buildAdvSpeedRow(advSpeed){
+	const row = document.createElement('tr');
+	const cell = document.createElement('td');
+	const para=document.createElement('p');
+	para.className='warning warning-text-speed';
+	para.innerHTML = ('EXIT <span class="warning-text warning-text-big">'+advSpeed+'</span> MPH</p>');
+	cell.appendChild(para);
+	row.appendChild(cell);
+	return row;
+}
+function buildExitBlock(exit) {
+  const block = document.createElement('div');
+  block.className = exit.isRExit === false ? 'panel-exit-left' : 'panel-exit';
+
   const table = document.createElement('table');
   table.className = 'sign-table';
+
   if (exit.isRExit === false) {
-	  const rowWarning=document.createElement('tr');
-	  const cellWarning = document.createElement('td');
-	  cellWarning.className='warning';
-	  const paraWarning=document.createElement('p');
-	  paraWarning.className='warning warning-text';
-	  paraWarning.innerHTML='LEFT';
-	  cellWarning.appendChild(paraWarning);
-	  rowWarning.appendChild(cellWarning);
-	  table.appendChild(rowWarning);
+    const warnRow = document.createElement('tr');
+    const warnCell = document.createElement('td');
+    const warnPara = document.createElement('p');
+    warnPara.className = 'warning warning-text';
+    warnPara.innerHTML = 'LEFT';
+    warnCell.className = 'warning';
+    warnCell.appendChild(warnPara);
+    warnRow.appendChild(warnCell);
+    table.appendChild(warnRow);
   }
+
   const row = document.createElement('tr');
   const cell = document.createElement('td');
-  
   const para = document.createElement('p');
   para.className = 'exit';
-  para.innerHTML = `EXIT <span class='exit-num'>${exitNumber}</span>`;
-  
+  para.innerHTML = `EXIT <span class='exit-num'>${exit.ref || ''}</span>`;
   cell.appendChild(para);
   row.appendChild(cell);
   table.appendChild(row);
-  
-  
-  exitBlock.appendChild(table);
-  
-  // Add the exit block to the main container
-  container.appendChild(exitBlock);
 
-
+  block.appendChild(table);
+  return block;
+}
+function buildSignPanel(tags, distance, additionalRows) {
   const panel = document.createElement('div');
   panel.className = 'panel';
-  const panelTable = document.createElement('table');
-  panelTable.className = 'sign-table';
 
-  const wrapperCell = document.createElement('td');
+  const mainTable = document.createElement('table');
+  mainTable.className = 'main-sign-table';
 
   const refGroups = [
     { refs: tags['destination:ref'], label: null },
@@ -941,52 +1318,61 @@ function renderExitPanel(exit, index = 0) {
     { refs: tags.ref, label: null }
   ].filter(g => g.refs);
 
-  const mainTable = document.createElement('table');
-  mainTable.className = 'main-sign-table';
-
-  refGroups.forEach((group, groupIndex) => {
-    const groupRow = document.createElement('tr');
-
-    const labelCell = document.createElement('td');
+  refGroups.forEach(group => {
+    const row = document.createElement('tr');
     if (group.label) {
+      const labelCell = document.createElement('td');
       labelCell.innerHTML = `<p class="to">${group.label}</p>`;
+      row.appendChild(labelCell);
+    } else {
+      row.appendChild(document.createElement('td')); // empty cell
     }
-    groupRow.appendChild(labelCell);
 
     const refsCell = document.createElement('td');
-    const refs = group.refs.split(';').map(r => r.trim());
-
-    refs.forEach(refText => {
-      const signTable = document.createElement('table');
-      signTable.className = 'sign-table';
-
-      const signRow = document.createElement('tr');
-
-      const shield = renderShieldRow(refText);
-      if (shield) {
-        const shieldCell = document.createElement('td');
-        shieldCell.appendChild(shield);
-        signRow.appendChild(shieldCell);
-      }
-
-      const dirMatch = refText.match(/\b(North|South|East|West)\b/i);
-      if (dirMatch) {
-        const dirText = dirMatch[1];
-        const dirCell = document.createElement('td');
-        dirCell.innerHTML = `<p class='dir'><span class='dir-cap'>${dirText[0]}</span>${dirText.slice(1).toUpperCase()}</p>`;
-        signRow.appendChild(dirCell);
-      }
-
-      signTable.appendChild(signRow);
-      refsCell.appendChild(signTable);
+    group.refs.split(';').map(r => r.trim()).forEach(refText => {
+      const signTable = buildShieldTable(refText);
+      if (signTable) refsCell.appendChild(signTable);
     });
 
-    groupRow.appendChild(refsCell);
-    mainTable.appendChild(groupRow);
+    row.appendChild(refsCell);
+    mainTable.appendChild(row);
   });
 
   panel.appendChild(mainTable);
 
+  const destTable = document.createElement('table');
+  destTable.className = 'sign-table';
+
+  buildDestinationRows(tags).forEach(row => destTable.appendChild(row));
+  additionalRows.forEach(row => destTable.appendChild(row));
+  panel.appendChild(destTable);
+  return panel;
+}
+function buildShieldTable(refText) {
+  const table = document.createElement('table');
+  table.className = 'sign-table shield-group';
+
+  const row = document.createElement('tr');
+
+  const shield = renderShieldRow(refText);
+  if (shield) {
+    const shieldCell = document.createElement('td');
+    shieldCell.appendChild(shield);
+    row.appendChild(shieldCell);
+  }
+
+  const dirMatch = refText.match(/\b(North|South|East|West)\b/i);
+  if (dirMatch) {
+    const dirText = dirMatch[1];
+    const dirCell = document.createElement('td');
+    dirCell.innerHTML = `<p class='dir'><span class='dir-cap'>${dirText[0]}</span>${dirText.slice(1).toUpperCase()}</p>`;
+    row.appendChild(dirCell);
+  }
+
+  table.appendChild(row);
+  return table;
+}
+function buildDestinationRows(tags) {
   let dests = [];
   if (tags.destination) {
     dests = tags.destination.split(';').map(s => abbreviateStreet(s.trim()));
@@ -994,26 +1380,26 @@ function renderExitPanel(exit, index = 0) {
     dests = tags['destination:street'].split(';').map(s => abbreviateStreet(s.trim()));
   }
 
-  dests.forEach(name => {
+  return dests.map(name => {
     const row = document.createElement('tr');
     const cell = document.createElement('td');
     cell.innerHTML = `<p class='dest'>${name}</p>`;
     row.appendChild(cell);
-    panelTable.appendChild(row);
+    return row;
   });
-
-  const distRow = document.createElement('tr');
-  distRow.innerHTML = `<td><p class="dist"><span class="dist-num">${distanceDisplay}</span> MILES</p></td>`;
-  panelTable.appendChild(distRow);
-
-  panel.appendChild(panelTable);
-  container.appendChild(document.createElement('br'));
-  container.appendChild(panel);
-  container.appendChild(document.createElement('br'));
-
-  return container;
 }
+function buildDistanceRow(distance) {
+  if (distance > 5) {
+    distance = Math.round(distance);
+  } else {
+    distance = parseFloat(distance.toFixed(1));
+  }
+  const display = Number.isInteger(distance) ? `${distance}` : distance.toFixed(1);
 
+  const row = document.createElement('tr');
+  row.innerHTML = `<td><p class="dist"><span class="dist-num">${display}</span> MILES</p></td>`;
+  return row;
+}
 
 function renderShieldRow(refText) {
 	console.log(refText, " refText 45634");
@@ -1081,15 +1467,16 @@ function abbreviateStreet(name) {
              .replace(/street/i, 'St')
              .replace(/boulevard/i, 'Blvd')
              .replace(/drive/i, 'Dr')
-             .replace(/road/i, 'Rd')
+             .replace(/ road/i, ' Rd')
 			 .replace(/parkway/i, 'Pkwy')
 			 .replace(/highway/i, 'Hwy')
 			 .replace(/expressway/i, 'Expwy')
-			 .replace(/way/i, 'Wy')
+			 .replace(/ way/i, ' Wy')
 			 .replace(/international/i, "Intl'")
 			 .replace(/saint/i, "St")
 			 .replace(/bridge/i, "Br")
-			 .replace(/north/i, "N").replace(/east/i, "E").replace(/south/i, "S").replace(/west/i, "W")
+			 .replace(/northwest/i,"NW").replace(/southwest/i,"SW").replace(/northeast/i,"NE").replace(/southeast/i,"SE")
+			 .replace(/north/i, "<p class='dir'><span class='dir-cap'>N</span>ORTH</p>").replace(/east/i, "<p class='dir'><span class='dir-cap'>E</span>AST</p>").replace(/south/i, "<p class='dir'><span class='dir-cap'>S</span>OUTH</p>").replace(/west/i, "<p class='dir'><span class='dir-cap'>W</span>EST</p>")
 			 .replace(/first/i, "1st").replace(/second/i, "2nd").replace(/third/i, "3rd").replace(/fourth/i, "4th").replace(/fifth/i, "5th")
 			 .replace(/sixth/i, "6th").replace(/seventh/i, "7th").replace(/eighth/i, "8th").replace(/ninth/i, "9th").replace(/tenth/i, "10th")
 			 .replace(/center/i, "Ctr")
@@ -1164,7 +1551,7 @@ function startGeolocationLoop(map, state) {
 
         await _simulateFollowupLocationInputCore(lat, lon, map, state);
       } else {
-        if (gpsCheckCounter % 12 === 0) {
+        if (gpsCheckCounter % 6 === 0) {
           console.log("User not near route. Making primary call (rate-limited).");
 
           const primaryMarker = L.circleMarker([lat, lon], {
