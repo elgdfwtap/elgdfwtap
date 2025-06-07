@@ -267,3 +267,34 @@ p.warning-text-speed{
   display: flex;
   justify-content: space-between; 
 }
+.EO{
+	display:inline;
+	position:relative;
+	font-size: 14pt;
+	letter-spacing: 1pt;
+	float: none;
+  margin-left:0pt;
+  margin-right:0pt;
+  
+}
+.EOEXIT{
+	top: 15pt;
+	right: 2pt;
+}
+.EOONLY{
+  white-space: nowrap;
+  left: 18pt;
+  top: 15pt;
+}
+.arrowContainer{
+  white-space: nowrap;
+  width:50pt;
+  position: relative;
+}
+.apl-arrow{
+  display:inline-block;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}

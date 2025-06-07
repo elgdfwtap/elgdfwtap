@@ -792,7 +792,9 @@ async function getExitDetails(nodeIds, relationData) {
 		  laneCounts[0] = parseInt(inbound.tags.lanes, 10) || null;
 		}
 		if (outMain) {
+			
 		  laneCounts[1] = parseInt(outMain.tags.lanes, 10) || null;
+		  console.log(nid + 'outmain' + parseInt(outMain.tags.lanes, 10) || null);
 		}
 		if (outExit) {
 		  laneCounts[2] = parseInt(outExit.tags.lanes, 10) || null;
@@ -801,6 +803,7 @@ async function getExitDetails(nodeIds, relationData) {
 
       grouped[nid].isRExit = isRExit;
       grouped[nid].laneCounts = laneCounts;
+	  console.log(grouped[nid].laneCounts+ ' '+ grouped[nid].lat);
     }
 
     console.log("Grouped exit details with direction and lanes:", grouped);
@@ -1170,7 +1173,8 @@ function renderAPL(exit){
 			for( var i = 0; i< exit.laneCounts[2]; i++){
 				const td = document.createElement('td');
 				td.className='arrowContainer';
-				td.innerHTML='<img src="apl_right_arrow.png">';
+				//td.innerHTML='<span class="warning EO EOEXIT">EXIT</span><img class="apl-arrow" src="apl_right_arrow.png"><span class="warning EO EOONLY">ONLY</span>';
+				td.innerHTML='<img class="apl-arrow" src="apl_right_arrow.png">';
 				distRow.appendChild(td);
 			}
 		}else if(optionCount == 1){
@@ -1187,11 +1191,12 @@ function renderAPL(exit){
 			for( var i = 0; i< exit.laneCounts[2]-1; i++){
 				const td = document.createElement('td');
 				td.className='arrowContainer';
-				td.innerHTML='<img src="apl_right_arrow.png">';
+				//td.innerHTML='<span class="warning EO EOEXIT">EXIT</span><img class="apl-arrow" src="apl_right_arrow.png"><span class="warning EO EOONLY">ONLY</span>';
+				td.innerHTML='<img class="apl-arrow" src="apl_right_arrow.png">';
 				distRow.appendChild(td);
 			}
 		}else{
-			console.log('failed option count test')
+			console.log('EXIT '+exit.ref+' failed option count test' + exit.laneCounts);
 			if(exit.laneCounts[2] == 1){
 				distRow.innerHTML = '<td><p class="dist">RIGHT LANE</p></td>';	
 			}else{
@@ -1200,7 +1205,7 @@ function renderAPL(exit){
 		}
 	}
   }else{
-	console.log('failed all lane counts not null')
+	console.log('EXIT '+exit.ref+' failed all lane counts not null' + exit.laneCounts);
 	if(exit.laneCounts[2] != null){
 		console.log('lane 2 exists');
 		if(exit.isRExit===false){
