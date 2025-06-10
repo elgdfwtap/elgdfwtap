@@ -179,13 +179,13 @@ body{
 	width:33vw;
 	height:45vw;
 	
-	background-color:rgba(50,96,255,0.05);
+	background-color:rgba(80,102,255,0.05);
 	
 	box-sizing: border-box;
 }
 
 .filled{
-	background-color:rgba(50,96,255,0.9);
+	background-color:rgba(80,102,255,0.9);
 }
 #square-container{
 	position:fixed;
@@ -315,10 +315,10 @@ function initDateTime() {
 	function toggleDisplay() {
 		if(!isEditMode){
 			const squareContainer = document.getElementById('square-container');
-			if (squareContainer.style.display === 'none' || squareContainer.style.display === '') {
-				squareContainer.style.display = 'block';
+			if (squareContainer.style.visibility === 'hidden') {
+				squareContainer.style.visibility = 'visible';
 			} else {
-				squareContainer.style.display = 'none';
+				squareContainer.style.visibility = 'hidden';
 			}
 		}
 	}
@@ -335,7 +335,7 @@ function initDateTime() {
 		if (!isEditMode) {
 			// Enter edit mode
 			wasHiddenBeforeEdit = (squareContainer.style.display === 'none' || squareContainer.style.display === '');
-			squareContainer.style.display = 'block'; // Show container for editing
+			squareContainer.style.visibility = 'visibile';
 			zoneElement.style.color='red';
 			tableCells.forEach(cell => {
 				cell.addEventListener('touchend', toggleCellFill);
@@ -360,7 +360,7 @@ function initDateTime() {
 																 // Re-assigning toggleDisplay to the 'zone' element (p tag).
 			
 			if (wasHiddenBeforeEdit) {
-				squareContainer.style.display = 'none'; // Hide if it was hidden before entering edit mode
+				squareContainer.style.visibility = 'hidden'; // Hide if it was hidden before entering edit mode
 			}
 
 			isEditMode = false;
