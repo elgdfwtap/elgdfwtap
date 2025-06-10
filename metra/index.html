@@ -129,7 +129,7 @@ body{
 
 	  
 }
-    
+  
 .resize-input {
 	font-family:roboto-bold;
 	position:absolute;
@@ -144,7 +144,6 @@ body{
 	border-radius:13vw;
 	box-sizing: content-box;
 	border:none;
-    position: absolute;
     top: 0;
     left: 0;
     right: 0;
@@ -199,33 +198,35 @@ body{
 	margin-left:-1vw;
 	margin-right:-1vw;
 }
-
+.disable-dbl-tap-zoom {
+  touch-action: manipulation;
+}
 </style><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
 </head>
 <body onload='initDateTime()'>
-<div style="position:absolute; left:0; top:0; width:100vw; height:100vh; overflow:clip;">
-	<video id='background' autoplay playsInline muted loop> <source src="FullSizeRender.MOV" type='video/mp4'></video>
+<div class='disable-dbl-tap-zoom disable-dbl-tap-zoom' style="position:absolute; left:0; top:0; width:100vw; height:100vh; overflow:clip;">
+	<video class='disable-dbl-tap-zoom disable-dbl-tap-zoom' id='background' autoplay playsInline muted loop> <source src="FullSizeRender.MOV" type='video/mp4'></video>
 	<!--<img touchend='toggleDisplay()' id='background' src='squareref.png' />-->
-	<div class='blocker'></div>
+	<div class='blocker disable-dbl-tap-zoom'></div>
 	<p touchend='toggleEdit()' class='blue' id='zone'>4-1</p>
-	<p class='blue' id='passtype'>Day Pass</p>
+	<p class='blue disable-dbl-tap-zoom' id='passtype'>Day Pass</p>
 	
-	<div class='resize-container' >
-		<span class='resize-text' aria-hidden='true' ></span>
-		<input class='resize-input' type='input' id='TL' value=""></input>
+	<div class='resize-container disable-dbl-tap-zoom' >
+		<span class='resize-text disable-dbl-tap-zoom' aria-hidden='true' ></span>
+		<input class='resize-input disable-dbl-tap-zoom' type='input' id='TL' value=""></input>
 	</div>
-	<p id='DATE' class='lastLine'>6/9/2025</p>
-	<p id='TIME' class='lastLine'>7:41:19 AM</p>
-	<div touchend='toggleDisplay()' id='square-container'>
-		<table id='square-table'>
+	<p id='DATE' class='lastLine disable-dbl-tap-zoom'>6/9/2025</p>
+	<p id='TIME' class='lastLine disable-dbl-tap-zoom'>7:41:19 AM</p>
+	<div class='disable-dbl-tap-zoom' touchend='toggleDisplay()' id='square-container'>
+		<table class='disable-dbl-tap-zoom' id='square-table'>
 			<tr>
-				<td class='square'></td><td class='square'></td><td class='square'></td>
+				<td class='square disable-dbl-tap-zoom'></td><td class='square'></td><td class='square'></td>
 			</tr>
 			<tr>
-				<td class='square'></td><td class='square'></td><td class='square'></td>
+				<td class='square disable-dbl-tap-zoom'></td><td class='square'></td><td class='square'></td>
 			</tr>
 			<tr>
-				<td class='square'></td><td class='square'></td><td class='square'></td>
+				<td class='square disable-dbl-tap-zoom'></td><td class='square'></td><td class='square'></td>
 			</tr>
 		</table>
 	</div>
