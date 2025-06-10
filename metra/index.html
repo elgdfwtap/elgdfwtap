@@ -1,11 +1,70 @@
 <!DOCTYPE html>
 <html>
 <head>
+
 <style>
+
+
+
+
+
+@font-face{
+	font-family:'roboto-black';
+	src:
+		url('roboto-black.ttf') format('truetype');
+}
+@font-face{
+	font-family:'roboto-bold';
+	src:
+		url('roboto-bold.ttf') format('truetype');
+}
+
+/* Reset default input styles */
+input[type="text"] {
+  -webkit-appearance: none; /* Remove default WebKit/Safari styles */
+  -moz-appearance: none;    /* Remove default Mozilla/Firefox styles */
+  appearance: none;         /* Standard property */
+
+  background-color: transparent; /* No background */
+  border: none;                  /* No border */
+  outline: none;                 /* No outline on focus */
+  box-shadow: none;              /* No shadow */
+  padding: 0;                    /* No padding */
+  margin: 0;                     /* No margin */
+  resize: none;                  /* Prevent resizing for textarea-like inputs, though not strictly needed for type="text" */
+  width: auto;                   /* Allow width to be dictated by content if desired, or set explicitly */
+  display: inline;               /* Make it behave like an inline element if that's how your p tags are */
+}
+
+/* Apply paragraph-like styles */
+input[type="text"] {
+  font-family: inherit; /* Inherit font from parent, or set a specific font */
+  font-size: inherit;   /* Inherit font size, or set a specific size (e.g., 1em, 16px) */
+  font-weight: inherit; /* Inherit font weight, or set a specific weight (e.g., normal, 400) */
+  color: inherit;       /* Inherit text color, or set a specific color */
+  line-height: inherit; /* Inherit line height for proper text spacing */
+  text-align: inherit;  /* Inherit text alignment (left, right, center, justify) */
+  white-space: normal;  /* Allow text to wrap like a paragraph */
+  word-wrap: break-word; /* Ensure long words break */
+  overflow: visible;    /* Ensure content is visible */
+}
+
+/* Optional: If you want it to behave like a block-level paragraph */
+.input-as-p-block {
+  display: block;
+  margin-top: 1em;   /* Standard paragraph spacing */
+  margin-bottom: 1em; /* Standard paragraph spacing */
+}
+
+
 body{
 	padding:0px;
 	margin:0px;
-	overflow:clip;
+	overflow:hidden;
+	position:relative;
+	background-color:#001c42;
+	width:100vw;
+
 }
 #background{
 	margin:0px;
@@ -13,11 +72,192 @@ body{
 	width:100vw;
 	position:fixed;
 	background-color:#001c42;
+	top:0vw;
+	z-index:-1;
+}
+
+.lastLine{
+	z-index:1;
+	position:fixed;
+	top:41.5vw;
+	font-family:roboto-bold;
+	font-size:7.5vw;
+	color:#091736;
+	background-color:white;
+	width:50%;
+}
+#DATE{
+		left:4vw;
+}
+#TIME{
+  right:4vw;
+  text-align:right;
+}
+
+#TL{
+	
+}
+
+.resize-container {
+    display: inline-block;
+    position: absolute;
+	left:54.5vw;
+	height:auto;
+  top:12.1vw;
+  z-index:2;
+}
+
+.resize-input,
+.resize-text {
+    margin: 0;
+	  padding-left:9.5vw;
+	  padding-right:9.5vw;
+	  padding-top:2.8vw;
+	  font-family:roboto-bold;
+	  font-size:17vw;
+}
+
+.resize-text {
+    display: inline-block;
+    visibility: hidden;
+    white-space: pre;
+	border-radius:5vh;
+	
+
+	  
+}
+    
+.resize-input {
+	font-family:roboto-bold;
+	position:absolute;
+	top:5.6vh;
+	color:white;
+	z-index:3;
+	height:15vw;
+	padding-bottom:4vw;
+	background-color:#192C60;
+	//background-color:red;
+	//background-color:rgba(1,0,0,0.5);
+	border-radius:13vw;
+	box-sizing: content-box;
+	border:none;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+}
+#zone{
+	z-index:1;
+	position:fixed;
+	font-size:19vw;
+	font-family:roboto-bold;
+	top:-7.5vw;
+}
+#passtype{
+	z-index:1;
+	position:fixed;
+	font-size:10.5vw;
+	font-family:roboto-bold;
+	top:23.4vw;
+}
+.blue{
+	left:4vw;
+	color:#3673FF;
+}
+.blocker{
+	width:100%;
+	position:fixed;
+	background-color:white;
+	height:54vw;
+	top:8vw;
 }
 </style>
-<link rel='stylesheet' href='style.css'>
 </head>
-<body>
-<video id='background' width='1126' height='2005' autoplay muted playsInline loop> <source src="FullSizeRender.MOV" type='video/mp4'></video>
+<body onload='initDateTime()'>
+<div style="position:absolute; left:0; top:0; width:100vw; height:100vh; overflow:clip;">
+	<video id='background' width='1126' height='2000' autoplay playsInline muted loop> <source src="FullSizeRender.MOV" type='video/mp4'></video>
+	<div class='blocker'></div>
+	<p class='blue' id='zone'>4-1</p>
+	<p class='blue' id='passtype'>Day Pass</p>
+	
+	<div class='resize-container' >
+		<span class='resize-text' aria-hidden='true' ></span>
+		<input class='resize-input' type='input' id='TL' value=""></input>
+	</div>
+	<p id='DATE' class='lastLine'>6/9/2025</p>
+	<p id='TIME' class='lastLine'>7:41:19 AM</p>
+
+</div>
+<script>
+function playVideo(videoElement) {
+            if (videoElement.paused) {
+                videoElement.play()
+                    .then(() => {
+                        console.log("Video started playing.");
+                    })
+                    .catch(error => {
+                        console.error("Error attempting to play video:", error);
+                        // Handle potential errors, e.g., if the user hasn't interacted yet
+                        // (though with onclick, this is less likely)
+                        alert("Could not play video. Please ensure browser permissions are granted.");
+                    });
+            } else {
+                videoElement.pause();
+                console.log("Video paused.");
+            }
+        }
+		
+function initDateTime() {
+      // Set the date initially
+      updateDate();
+      // Start updating the time every second
+      setInterval(updateTime, 1000);
+    }
+
+    function updateDate() {
+      const now = new Date();
+      const month = now.getMonth() + 1; // getMonth() is 0-indexed
+      const day = now.getDate();
+      const year = now.getFullYear();
+
+      document.getElementById('DATE').textContent = `${month}/${day}/${year}`;
+    }
+
+    function updateTime() {
+      const now = new Date();
+      let hours = now.getHours();
+      let minutes = now.getMinutes();
+      let seconds = now.getSeconds();
+      let ampm = 'AM';
+
+      // Convert to 12-hour format and set AM/PM
+      if (hours >= 12) {
+        ampm = 'PM';
+        if (hours > 12) {
+          hours -= 12;
+        }
+      } else if (hours === 0) {
+        hours = 12; // Midnight
+      }
+
+      minutes = minutes < 10 ? '0' + minutes : minutes;
+      seconds = seconds < 10 ? '0' + seconds : seconds;
+
+
+      document.getElementById('TIME').textContent = `${hours}:${minutes}:${seconds} ${ampm}`;
+    }
+	
+	document.addEventListener('input', event => {
+	  const target = event.target;
+	  if (!(target instanceof HTMLElement)) return;
+	  if (!target.matches('.resize-input')) return;
+	  target.previousElementSibling.textContent = target.value || target.placeholder;
+	});
+
+	Array.from(document.querySelectorAll('.resize-input')).forEach(input => {
+	  input.previousElementSibling.textContent = input.value;
+	});
+</script>
 </body>
 </html>
