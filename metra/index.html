@@ -1,8 +1,11 @@
 <!DOCTYPE html>
 <html>
 <head>
+<title>Metra Ticket (Real not Fake)</title>
 
 <style>
+
+
 
 
 
@@ -73,7 +76,7 @@ body{
 	position:fixed;
 	background-color:#001c42;
 	top:0vw;
-	z-index:-1;
+	z-index:1;
 }
 
 .lastLine{
@@ -100,7 +103,7 @@ body{
 
 .resize-container {
     display: inline-block;
-    position: absolute;
+    position: fixed;
 	left:54.5vw;
 	height:auto;
   top:12.1vw;
@@ -129,7 +132,7 @@ body{
     
 .resize-input {
 	font-family:roboto-bold;
-	position:fixed;
+	position:absolute;
 	top:5.6vh;
 	color:white;
 	z-index:3;
@@ -171,14 +174,40 @@ body{
 	background-color:white;
 	height:54vw;
 	top:8vw;
+	z-index:1;
 }
-</style>
+.square{
+	width:33vw;
+	height:45vw;
+	
+	background-color:rgba(81,127,255,0.1);
+	
+	box-sizing: border-box;
+}
+
+.filled{
+	background-color:rgba(81,127,255,0.9);
+}
+#square-container{
+	position:fixed;
+	top:61.2vw;
+	z-index:2;
+}
+#square-table{
+	border-spacing: 2.4vw;
+	width:102vw;
+	margin-left:-1vw;
+	margin-right:-1vw;
+}
+
+</style><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
 </head>
 <body onload='initDateTime()'>
 <div style="position:absolute; left:0; top:0; width:100vw; height:100vh; overflow:clip;">
-	<video id='background' width='1126' height='2000' autoplay playsInline muted loop> <source src="FullSizeRender.MOV" type='video/mp4'></video>
+	<video id='background' autoplay playsInline muted loop> <source src="FullSizeRender.MOV" type='video/mp4'></video>
+	<!--<img touchend='toggleDisplay()' id='background' src='squareref.png' />-->
 	<div class='blocker'></div>
-	<p class='blue' id='zone'>4-1</p>
+	<p touchend='toggleEdit()' class='blue' id='zone'>4-1</p>
 	<p class='blue' id='passtype'>Day Pass</p>
 	
 	<div class='resize-container' >
@@ -187,9 +216,33 @@ body{
 	</div>
 	<p id='DATE' class='lastLine'>6/9/2025</p>
 	<p id='TIME' class='lastLine'>7:41:19 AM</p>
-
+	<div touchend='toggleDisplay()' id='square-container'>
+		<table id='square-table'>
+			<tr>
+				<td class='square'></td><td class='square'></td><td class='square'></td>
+			</tr>
+			<tr>
+				<td class='square'></td><td class='square'></td><td class='square'></td>
+			</tr>
+			<tr>
+				<td class='square'></td><td class='square'></td><td class='square'></td>
+			</tr>
+		</table>
+	</div>
 </div>
 <script>
+document.getElementById('zone').addEventListener('touchend', function(event) {
+    toggleEdit();
+	
+});
+document.getElementById('background').addEventListener('touchend', function(event) {
+    toggleDisplay();
+	
+});
+document.getElementById('square-container').addEventListener('touchend', function(event) {
+    toggleDisplay();
+	
+});
 function playVideo(videoElement) {
             if (videoElement.paused) {
                 videoElement.play()
@@ -258,6 +311,65 @@ function initDateTime() {
 	Array.from(document.querySelectorAll('.resize-input')).forEach(input => {
 	  input.previousElementSibling.textContent = input.value;
 	});
+	function toggleDisplay() {
+		if(!isEditMode){
+			const squareContainer = document.getElementById('square-container');
+			if (squareContainer.style.display === 'none' || squareContainer.style.display === '') {
+				squareContainer.style.display = 'block';
+			} else {
+				squareContainer.style.display = 'none';
+			}
+		}
+	}
+
+	let isEditMode = false;
+	let wasHiddenBeforeEdit = false;
+
+	function toggleEdit() {
+		const squareContainer = document.getElementById('square-container');
+		const toggleDisplayElement = document.querySelector('#square-container'); // You can target the div itself for event listener
+		const tableCells = document.querySelectorAll('#square-table .square');
+		const zoneElement = document.getElementById('zone');
+		console.log('clicked zone');
+		if (!isEditMode) {
+			// Enter edit mode
+			wasHiddenBeforeEdit = (squareContainer.style.display === 'none' || squareContainer.style.display === '');
+			squareContainer.style.display = 'block'; // Show container for editing
+			zoneElement.style.color='red';
+			tableCells.forEach(cell => {
+				cell.addEventListener('touchend', toggleCellFill);
+			});
+
+			isEditMode = true;
+			console.log("Edit mode ON");
+		} else {
+			// Exit edit mode
+			zoneElement.style.color='#3673FF';
+			tableCells.forEach(cell => {
+				cell.removeEventListener('touchend', toggleCellFill);
+			});
+
+			// If toggleDisplay was originally on the square-container or another element, re-add it
+			// For this specific setup, the original toggleDisplay is called from the p tag.
+			// So, we need to re-enable the original toggleDisplay functionality for the p tag.
+			// This line might be a typo in the original prompt, assuming 'zone' should call toggleEdit.
+																 // If 'zone' was calling 'toggleDisplay' before, then it should be:
+																 // document.getElementById('zone').onclick = toggleDisplay;
+																 // Let's assume the original intent was that the 'zone' element (p tag) calls toggleDisplay.
+																 // Re-assigning toggleDisplay to the 'zone' element (p tag).
+			
+			if (wasHiddenBeforeEdit) {
+				squareContainer.style.display = 'none'; // Hide if it was hidden before entering edit mode
+			}
+
+			isEditMode = false;
+			console.log("Edit mode OFF");
+		}
+	}
+
+	function toggleCellFill(event) {
+		event.target.classList.toggle('filled');
+	}
 </script>
 </body>
 </html>
