@@ -11,6 +11,7 @@
 
 
 
+
 @font-face{
 	font-family:'roboto-black';
 	src:
@@ -86,7 +87,6 @@ body{
 	font-family:roboto-bold;
 	font-size:7.5vw;
 	color:#091736;
-	background-color:white;
 	width:50%;
 }
 #DATE{
@@ -154,7 +154,8 @@ body{
 	position:fixed;
 	font-size:19vw;
 	font-family:roboto-bold;
-	top:-7.5vw;
+	top:11vw;
+	color:#3673FF;
 }
 #passtype{
 	z-index:1;
@@ -167,6 +168,7 @@ body{
 	left:4vw;
 	color:#3673FF;
 }
+
 .blocker{
 	width:100%;
 	position:fixed;
@@ -201,6 +203,7 @@ body{
 .disable-dbl-tap-zoom {
   touch-action: manipulation;
 }
+
 </style><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
 </head>
 <body onload='initDateTime()'>
@@ -208,15 +211,15 @@ body{
 	<video class='disable-dbl-tap-zoom disable-dbl-tap-zoom' id='background' autoplay playsInline muted loop> <source src="FullSizeRender.MOV" type='video/mp4'></video>
 	<!--<img touchend='toggleDisplay()' id='background' src='squareref.png' />-->
 	<div class='blocker disable-dbl-tap-zoom'></div>
-	<p touchend='toggleEdit()' class='blue' id='zone'>4-1</p>
+	<input type='text' class='blue' id='zone' value='4-1'></input>
 	<p class='blue disable-dbl-tap-zoom' id='passtype'>Day Pass</p>
 	
 	<div class='resize-container disable-dbl-tap-zoom' >
 		<span class='resize-text disable-dbl-tap-zoom' aria-hidden='true' ></span>
-		<input class='resize-input disable-dbl-tap-zoom' type='input' id='TL' value=""></input>
+		<input class='resize-input disable-dbl-tap-zoom' type='input' id='TL' placeholder="██"></input>
 	</div>
-	<p id='DATE' class='lastLine disable-dbl-tap-zoom'>6/9/2025</p>
-	<p id='TIME' class='lastLine disable-dbl-tap-zoom'>7:41:19 AM</p>
+	<p id='DATE' class='lastLine disable-dbl-tap-zoom' touchend='toggleEdit()'>WAIT WAIT</p>
+	<p id='TIME' class='lastLine disable-dbl-tap-zoom'>WAIT WAIT</p>
 	<div class='disable-dbl-tap-zoom' touchend='toggleDisplay()' id='square-container'>
 		<table class='disable-dbl-tap-zoom' id='square-table'>
 			<tr>
@@ -232,7 +235,7 @@ body{
 	</div>
 </div>
 <script>
-document.getElementById('zone').addEventListener('touchend', function(event) {
+document.getElementById('DATE').addEventListener('touchend', function(event) {
     toggleEdit();
 	
 });
@@ -330,7 +333,7 @@ function initDateTime() {
 		const squareContainer = document.getElementById('square-container');
 		const toggleDisplayElement = document.querySelector('#square-container'); // You can target the div itself for event listener
 		const tableCells = document.querySelectorAll('#square-table .square');
-		const zoneElement = document.getElementById('zone');
+		const zoneElement = document.getElementById('DATE');
 		console.log('clicked zone');
 		if (!isEditMode) {
 			// Enter edit mode
@@ -345,7 +348,7 @@ function initDateTime() {
 			console.log("Edit mode ON");
 		} else {
 			// Exit edit mode
-			zoneElement.style.color='#3673FF';
+			zoneElement.style.color='#091736';
 			tableCells.forEach(cell => {
 				cell.removeEventListener('touchend', toggleCellFill);
 			});
