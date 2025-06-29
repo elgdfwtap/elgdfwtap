@@ -9,6 +9,51 @@
 <div class="multipanelcontainer">
 	<div class=panel><table class='sign-table'><tr><td onmouseup='togglemap()' id="showhide">Hide Map</td></tr></table></div>
 	<div class=panel><table class='sign-table'><tr><td onmouseup='togglegps()' id="gps">Stop GPS</td></tr></table></div>
+	<div class=panel><table class='sign-table'><tr><td onmouseup='toggleoptions()' id="option-toggle">Show Options</td></tr></table></div>
+</div>
+<div id="options-multi-container" class="multipanelcontainer">
+	<div class="options-container">
+        <h2>Options</h2>
+
+        <!-- <section class="font-options"> -->
+            <!-- <h3>Select Font</h3> -->
+            <!-- <div class="font-grid"> -->
+                <!-- <button class="font-btn" data-font="Arial, sans-serif">Arial</button> -->
+                <!-- <button class="font-btn" data-font="'Times New Roman', serif">Times New Roman</button> -->
+                <!-- <button class="font-btn" data-font="Verdana, sans-serif">Verdana</button> -->
+                <!-- <button class="font-btn" data-font="Georgia, serif">Georgia</button> -->
+                <!-- <button class="font-btn" data-font="'Courier New', monospace">Courier New</button> -->
+                <!-- <button class="font-btn" data-font="'Lucida Console', monospace">Lucida Console</button> -->
+                <!-- <button class="font-btn" data-font="'Trebuchet MS', sans-serif">Trebuchet MS</button> -->
+                <!-- <button class="font-btn" data-font="'Palatino Linotype', 'Book Antiqua', Palatino, serif">Palatino</button> -->
+            <!-- </div> -->
+        <!-- </section> -->
+
+        <section class="night-mode-options">
+            <h3>Night Mode</h3>
+            <label class="switch">
+                <input type="checkbox" id="nightModeToggle">
+                <span class="slider round"></span>
+            </label>
+            <span class="toggle-label">Turn On Night Mode</span>
+
+            <div class="night-mode-opacity-control">
+                <label for="nightModeOpacity">Opacity:</label>
+                <input type="range" id="nightModeOpacity" min="0.1" max="0.9" step="0.05" value="0.7">
+                <span id="opacityValue">70%</span>
+            </div>
+        </section>
+		<section class="swiss-mode-options">
+            <h3>Swiss Mode (experimental)</h3>
+            <label class="switch">
+                <input type="checkbox" id="swissModeToggle">
+                <span class="slider round"></span>
+            </label>
+            <span class="toggle-label">Turn On Swiss Mode</span>
+
+            
+        </section>
+    </div>
 </div>
 <div id="map" style="height: 600px; width: 100%;"></div>
 <div id="city-results" style="padding:1em 0;font-family:sans-serif;font-size:1.1em;"></div>
@@ -94,6 +139,16 @@ function togglemap(){
 	}else{
 		map.style.display='block';
 		showhide.innerText='Hide Map';
+	}
+}
+function toggleoptions(){
+	optionMenu=document.getElementById('options-multi-container');
+	if(optionMenu.style.display != 'none'){
+		optionMenu.style.display='none';
+		document.getElementById('option-toggle').innerText='Show Options';
+	}else{
+		optionMenu.style.display='block';
+		document.getElementById('option-toggle').innerText='Hide Options';
 	}
 }
 // --- NEW FUNCTION: Query route relations nearby ---
@@ -453,12 +508,6 @@ function projectPointToSegment(p, a, b) {
     dist: haversine(py, px, projLat, projLon)
   };
 }
-
-
-
-
-
-
 
 async function fetchExpandedRelation(relationId, role = null) {
   const roleClause = (!role || role === "unclassified")
@@ -889,6 +938,7 @@ async function _simulateLocationInputCore(lat, lon, map, state) {
         if (exits.length) {
           console.log("Upcoming exits:", exits);
           const div = document.getElementById('city-results');
+		  /*
           div.innerHTML += `<br><b>Upcoming exits:</b><ul style="padding-left:1.2em;">` +
 			  exits.map(e =>
 				`<li>
@@ -902,7 +952,7 @@ async function _simulateLocationInputCore(lat, lon, map, state) {
 				</li>`
 			  ).join('') +
 			  `</ul>`;
-
+			*/
         } else {
           console.log("No upcoming exits detected on this route.");
         }
@@ -970,11 +1020,11 @@ async function _simulateFollowupLocationInputCore(lat, lon, map, state) {
 
   if (exits.length) {
     const div = document.getElementById('city-results');
-    div.innerHTML += `<br><b>Upcoming exits:</b><ul style="padding-left:1.2em;">` +
+    /*div.innerHTML += `<br><b>Upcoming exits:</b><ul style="padding-left:1.2em;">` +
       exits.map(e => `<li><b>Exit ${e.ref}</b>${e.name ? ": " + e.name : ""} — ${e.dist.toFixed(1)} mi ahead` +
         (e.details.length ? `<br><i>${e.details.map(d => Object.entries(d.tags).map(([k, v]) => `${k}: ${v}`).join(", ")).join("<br>")}</i>` : '') +
         `</li>`).join('') +
-      `</ul>`;
+      `</ul>`;*/
   } else {
     console.log("No exits ahead.");
   }
@@ -1338,7 +1388,7 @@ function buildSignPanel(tags, distance, additionalRows) {
   const refGroups = [
     { refs: tags['destination:ref'], label: null },
     { refs: tags['destination:ref:to'], label: 'TO' },
-    { refs: tags.ref, label: null }
+    //{ refs: tags.ref, label: null }
   ].filter(g => g.refs);
 
   refGroups.forEach(group => {
@@ -1425,63 +1475,130 @@ function buildDistanceRow(distance) {
 }
 
 function renderShieldRow(refText) {
-	console.log(refText, " refText 45634");
-  const match = refText.match(/^([A-Z]{1,2})\s+(\d+)/);
+		const match = refText.match(/^([A-Z]{1,2})\s+(\d+)(?:\s+Bus)?/); // Modified regex
 	if (!match) return null;
 
 	const type = match[1];
 	const num = match[2];
+	const isBusiness = refText.toLowerCase().includes('bus'); // Check if "business" is in the string
 
+	// Mapping of state abbreviations to full names
+	const stateNames = {
+		'AL': 'ALABAMA', 'AK': 'ALASKA', 'AZ': 'ARIZONA', 'AR': 'ARKANSAS', 'CA': 'CALIFORNIA',
+		'CO': 'COLORADO', 'CT': 'CONNECTICUT', 'DE': 'DELAWARE', 'FL': 'FLORIDA', 'GA': 'GEORGIA',
+		'HI': 'HAWAII', 'ID': 'IDAHO', 'IL': 'ILLINOIS', 'IN': 'INDIANA', 'IA': 'IOWA',
+		'KS': 'KANSAS', 'KY': 'KENTUCKY', 'LA': 'LOUISIANA', 'ME': 'MAINE', 'MD': 'MARYLAND',
+		'MA': 'MASSACHUSETTS', 'MI': 'MICHIGAN', 'MN': 'MINNESOTA', 'MS': 'MISSISSIPPI',
+		'MO': 'MISSOURI', 'MT': 'MONTANA', 'NE': 'NEBRASKA', 'NV': 'NEVADA', 'NH': 'NEW HAMPSHIRE',
+		'NJ': 'NEW JERSEY', 'NM': 'NEW MEXICO', 'NY': 'NEW YORK', 'NC': 'NORTH CAROLINA',
+		'ND': 'NORTH DAKOTA', 'OH': 'OHIO', 'OK': 'OKLAHOMA', 'OR': 'OREGON', 'PA': 'PENNSYLVANIA',
+		'RI': 'RHODE ISLAND', 'SC': 'SOUTH CAROLINA', 'SD': 'SOUTH DAKOTA', 'TN': 'TENNESSEE',
+		'TX': 'TEXAS', 'UT': 'UTAH', 'VT': 'VERMONT', 'VA': 'VIRGINIA', 'WA': 'WASHINGTON',
+		'WV': 'WEST VIRGINIA', 'WI': 'WISCONSIN', 'WY': 'WYOMING'
+	};
 
-  let icon = 'interstatemarker.png';
-  let cls = 'interstatemarker';
-  console.log(type, " type 45634");
-  if (type === 'US') {
-    icon = 'usmarker.png';
-    cls = 'usmarker';
-  }else if(type === "I"){
-	  icon='interstatemarker.png';
-	  cls='interstatemarker';
-  }else if(type === 'IL'){
-	  icon='ilmarker.png';
-	  cls='rectmarkertextbove';
-  }else if (type === 'IN'){
-	icon='inmarker.png';
-	cls='rectmarkertextabove';
-  }else if(type==='CA'){
-	  icon='camarker.png';
-	  cls='camarker';
-  }else if(type==="NY"){
-	  icon='nymarker.png';
-	  cls='nymarker';
-  }else if(type==="DE" || type==="IA" || type === "KY" || type === "MS" || type === "NJ" ){
-	  icon='circmarker.png';
-	  cls='circmarker';
-  } else{
-    icon = 'rectmarker.png';
-    cls = 'rectmarker';
-  }
-  cls = cls+" shieldnumber";
-  if (num.length > 2) {
-    icon = icon.replace('.png', 'wide.png');
-    cls = cls+ " wide";
-  }
+	let icon = 'interstatemarker.png';
+	let cls = 'interstatemarker';
+	console.log(type, " type 45634");
 
-  // Return just a <div> to be placed inside a <td>
-  const container = document.createElement('div');
-  container.className = 'markercontainer';
+	if (type === 'US') {
+		if (isBusiness) {
+			icon = 'usbusinessmarker.png';
+			cls = 'usbusinessmarker';
+		} else {
+			icon = 'usmarker.png';
+			cls = 'usmarker';
+		}
+	} else if (type === "I") {
+		if (isBusiness) {
+			icon = 'interstatebusinessmarker.png';
+			cls = 'interstatebusinessmarker';
+		} else {
+			icon = 'interstatemarker.png';
+			cls = 'interstatemarker';
+		}
+	//} else if (type === 'IL') {
+	//	icon = 'ilmarker.png';
+	//	cls = 'rectmarkertextbove'; // Typo 'rectmarkertextbove' kept from original code
+	} else if (type === 'IN') {
+		icon = 'inmarker.png';
+		cls = 'rectmarkertextabove';
+	} else if (type === 'CA') {
+		icon = 'camarker.png';
+		cls = 'camarker';
+	} else if (type === "NY") {
+		icon = 'nymarker.png';
+		cls = 'nymarker';
+	} else if (type === "DE" || type === "IA" || type === "KY" || type === "MS" || type === "NJ") {
+		icon = 'circmarker.png';
+		cls = 'circmarker';
+	} else {
+		icon = 'rectmarker.png';
+		cls = 'rectmarkertextabove';
 
-  const img = document.createElement('img');
-  img.src = icon;
+		// *** NEW FUNCTIONALITY ADDED HERE ***
+		const fullStateName = stateNames[type] ? stateNames[type].toUpperCase() : null; // Get full name, default to null if not found
+		if (fullStateName) {
+			const stateLabel = document.createElement('p');
+			stateLabel.className = 'rectmarkertextabovestate'; // New class for state name
+			stateLabel.textContent = fullStateName;
+			stateLabel.setAttribute('data-type', type); // Add data attribute for potential styling/logic later
+			stateLabel.setAttribute('data-num', num); // Add data attribute for potential styling/logic later
+			// We'll append this after the image but before the number label
+			// This is handled in the final assembly section below
+		}
+	}
 
-  const label = document.createElement('p');
-  label.className = cls;
-  label.textContent = num;
+	cls = cls + " shieldnumber";
+	if (num.length > 2) {
+		if (isBusiness && type === "I") {
+			icon = 'interstatebusinesswidemarker.png';
+		} else {
+			icon = icon.replace('.png', 'wide.png');
+		}
+		cls = cls + " wide";
+	}
 
-  container.appendChild(img);
-  container.appendChild(label);
+	// Return just a <div> to be placed inside a <td>
+	const container = document.createElement('div');
+	container.className = 'markercontainer';
 
-  return container;
+	const img = document.createElement('img');
+	if(nightModeToggle.checked){
+		icon=icon.replace('.png', '-night.png');
+	}	
+	img.src = icon;
+	const label = document.createElement('p');
+	label.className = cls;
+	label.textContent = num;
+
+	container.appendChild(img);
+
+	// *** INSERTING THE STATE NAME P ELEMENT IF IT WAS CREATED ***
+	// We need to re-evaluate if the stateLabel was created because its creation is conditional within the else block.
+	// A simpler approach is to create it outside the else block if needed and then just append.
+	// Let's refactor the stateLabel creation slightly to be more direct.
+	let stateLabel = null; // Initialize to null
+
+	if (type !== 'US' && type !== 'I' && type !== 'IN' && type !== 'CA' && type !== 'NY' &&
+		type !== 'DE' && type !== 'IA' && type !== 'KY' && type !== 'MS' && type !== 'NJ') {
+		// This condition means it fell into the final 'else' logic for icon/cls
+		const fullStateName = stateNames[type] ? stateNames[type].toUpperCase() : null;
+		if (fullStateName) {
+			stateLabel = document.createElement('p');
+			stateLabel.className = 'rectmarkertextabovestate';
+			stateLabel.textContent = fullStateName;
+			stateLabel.setAttribute('data-type', type);
+			stateLabel.setAttribute('data-num', num);
+		}
+	}
+
+	if (stateLabel) {
+		container.appendChild(stateLabel); // Append the state name p first
+	}
+	container.appendChild(label); // Then append the number p
+
+	return container;
 }
 
 
@@ -1499,7 +1616,7 @@ function abbreviateStreet(name) {
 			 .replace(/saint/i, "St")
 			 .replace(/bridge/i, "Br")
 			 .replace(/northwest/i,"NW").replace(/southwest/i,"SW").replace(/northeast/i,"NE").replace(/southeast/i,"SE")
-			 .replace(/north/i, "<p class='dir'><span class='dir-cap'>N</span>ORTH</p>").replace(/east/i, "<p class='dir'><span class='dir-cap'>E</span>AST</p>").replace(/south/i, "<p class='dir'><span class='dir-cap'>S</span>OUTH</p>").replace(/west/i, "<p class='dir'><span class='dir-cap'>W</span>EST</p>")
+			 //.replace(/north/i, "<p class='dir'><span class='dir-cap'>N</span>ORTH</p>").replace(/east/i, "<p class='dir'><span class='dir-cap'>E</span>AST</p>").replace(/south/i, "<p class='dir'><span class='dir-cap'>S</span>OUTH</p>").replace(/west/i, "<p class='dir'><span class='dir-cap'>W</span>EST</p>")
 			 .replace(/first/i, "1st").replace(/second/i, "2nd").replace(/third/i, "3rd").replace(/fourth/i, "4th").replace(/fifth/i, "5th")
 			 .replace(/sixth/i, "6th").replace(/seventh/i, "7th").replace(/eighth/i, "8th").replace(/ninth/i, "9th").replace(/tenth/i, "10th")
 			 .replace(/center/i, "Ctr")
@@ -1636,9 +1753,167 @@ function togglegps() {
     }
   }
 }
+function afterLoading(){
+    const root = document.documentElement; // The <html> element
+    const fontButtons = document.querySelectorAll('.font-btn');
+    const body = document.body;
+    const nightModeToggle = document.getElementById('nightModeToggle');
+    const nightModeOpacitySlider = document.getElementById('nightModeOpacity');
+    const opacityValueSpan = document.getElementById('opacityValue');
+    const swissModeToggle = document.getElementById('swissModeToggle'); // Get the Swiss mode toggle
+    const head = document.head; // Reference to the <head> element
+    let nightModeLink = null; // To store a reference to the night mode stylesheet
+    let swissModeLink = null; // To store a reference to the Swiss mode stylesheet
 
+    // --- Font Selection --- NOT IMPLEMENTED
+    /*fontButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const selectedFont = button.dataset.font;
+            root.style.setProperty('--main-font', selectedFont);
+
+            // Remove 'active' class from all buttons
+            fontButtons.forEach(btn => btn.classList.remove('active'));
+            // Add 'active' class to the clicked button
+            button.classList.add('active');
+
+            // Store preference in localStorage
+            localStorage.setItem('selectedFont', selectedFont);
+        });
+    });*/
+    
+    // Function to apply night mode styles
+    function applyNightMode() {
+        if (!nightModeLink) { // Only create and append if not already present
+            nightModeLink = document.createElement('link');
+            nightModeLink.rel = 'stylesheet';
+            nightModeLink.href = 'signstyles-night.css'; // Path to your night mode stylesheet
+            nightModeLink.id = 'night-mode-stylesheet'; // Give it an ID for easy removal
+            head.appendChild(nightModeLink);
+            console.log("night mode appended");
+        }
+        // Always ensure the opacity is set if the stylesheet is present
+        const currentOpacity = localStorage.getItem('nightModeOpacity') || nightModeOpacitySlider.value;
+        document.documentElement.style.setProperty('--night-mode-control-value', currentOpacity);
+        const markerContainers = document.querySelectorAll('.markercontainer');
+        markerContainers.forEach(container => {
+            const images = container.querySelectorAll('img');
+            images.forEach(img => {
+                const currentSrc = img.src;
+                // Check if the source already indicates night mode (to prevent double appending)
+                if (!currentSrc.includes('-night.')) {
+                    const lastDotIndex = currentSrc.lastIndexOf('.');
+                    if (lastDotIndex !== -1) {
+                        const base = currentSrc.substring(0, lastDotIndex);
+                        const extension = currentSrc.substring(lastDotIndex); // includes the dot
+                        // Store the original source for reversion
+                        img.dataset.originalSrc = currentSrc;
+                        img.src = base + '-night' + extension;
+                    }
+                }
+            });
+        });
+    }
+
+    // Function to remove night mode styles
+    function removeNightMode() {
+        if (nightModeLink) {
+            head.removeChild(nightModeLink);
+            nightModeLink = null; // Clear the reference
+        }
+        const markerContainers = document.querySelectorAll('.markercontainer');
+        markerContainers.forEach(container => {
+            const images = container.querySelectorAll('img');
+            images.forEach(img => {
+                // Revert to original source if stored
+                if (img.dataset.originalSrc) {
+                    img.src = img.dataset.originalSrc;
+                    delete img.dataset.originalSrc; // Clean up the data attribute
+                }
+            });
+        });
+    }
+
+    // Function to apply Swiss mode styles
+    function applySwissMode() {
+        if (!swissModeLink) {
+            swissModeLink = document.createElement('link');
+            swissModeLink.rel = 'stylesheet';
+            swissModeLink.href = 'signstyles-swissmode.css'; // Path to your Swiss mode stylesheet
+            swissModeLink.id = 'swiss-mode-stylesheet'; // Give it an ID
+            head.appendChild(swissModeLink);
+            console.log("Swiss mode appended");
+        }
+    }
+
+    // Function to remove Swiss mode styles
+    function removeSwissMode() {
+        if (swissModeLink) {
+            head.removeChild(swissModeLink);
+            swissModeLink = null; // Clear the reference
+        }
+    }
+
+    nightModeToggle.addEventListener('change', () => {
+        if (nightModeToggle.checked) {
+            applyNightMode();
+            localStorage.setItem('nightModeOn', 'true');
+        } else {
+            removeNightMode();
+            localStorage.removeItem('nightModeOn');
+        }
+    });
+
+    // Event listener for the Swiss Mode toggle
+    swissModeToggle.addEventListener('change', () => {
+        if (swissModeToggle.checked) {
+            applySwissMode();
+            localStorage.setItem('swissModeOn', 'true'); // Store preference
+        } else {
+            removeSwissMode();
+            localStorage.removeItem('swissModeOn'); // Remove preference
+        }
+    });
+
+    nightModeOpacitySlider.addEventListener('input', () => {
+        const opacity = nightModeOpacitySlider.value;
+        // This still uses a CSS variable, but now it's defined in styles-night-mode.css
+        // And the script updates the variable on the root element.
+        document.documentElement.style.setProperty('--night-mode-control-value', opacity);
+        opacityValueSpan.textContent = `${Math.round(opacity * 100)}%`;
+        localStorage.setItem('nightModeOpacity', opacity);
+    });
+
+    function loadPreferences() {
+        // ... (Font loading logic remains the same) ...
+
+        const savedNightMode = localStorage.getItem('nightModeOn');
+        if (savedNightMode === 'true') {
+            nightModeToggle.checked = true;
+            applyNightMode(); // Apply the stylesheet if night mode was saved
+        }
+
+        const savedOpacity = localStorage.getItem('nightModeOpacity');
+        if (savedOpacity) {
+            nightModeOpacitySlider.value = savedOpacity;
+            opacityValueSpan.textContent = `${Math.round(savedOpacity * 100)}%`;
+            // The applyNightMode function already ensures the variable is set.
+        } else {
+            opacityValueSpan.textContent = `${Math.round(nightModeOpacitySlider.value * 100)}%`;
+        }
+
+        // Load Swiss Mode preference
+        const savedSwissMode = localStorage.getItem('swissModeOn');
+        if (savedSwissMode === 'true') {
+            swissModeToggle.checked = true;
+            applySwissMode(); // Apply Swiss mode stylesheet if it was saved
+        }
+    }
+
+    loadPreferences(); // Call this on page load
+}
 
 window.onload = main;
+document.addEventListener('DOMContentLoaded', () => {afterLoading()});
 </script>
 </body>
 </html>
