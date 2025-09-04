@@ -1,0 +1,57 @@
+:root {
+	
+
+	--text-color-day: #333;
+    --bg-color-day: #fff;
+
+    /* Initial/fallback value for night mode text control if night-mode.css isn't loaded */
+    /* This variable will be set by JavaScript based on the slider value */
+    --night-mode-control-value: 1; /* 0 for black text, 1 for white text */
+	--night-text-color: rgb(
+        calc(var(--night-mode-control-value) * 255),
+        calc(var(--night-mode-control-value) * 255),
+        calc(var(--night-mode-control-value) * 255)
+    );
+}
+body{
+  background-color:black;
+}
+
+
+.panel{
+  background-color:black;
+  border-color:var(--night-text-color);
+  color:var(--night-text-color);
+  
+}
+.multipanelcontainer{
+  background-color:black;
+  border-color:var(--night-text-color);
+}
+.shieldnumber{
+  color:var(--night-text-color);
+}
+
+.panel-exit,.panel-exit-left{
+  background-color:black;
+  border-color:var(--night-text-color);
+  color:var(--night-text-color);
+}
+
+.dest{
+  color:var(--night-text-color);
+}
+img{
+	opacity:var(--night-mode-control-value);
+}
+.interstatemarker{
+	color:var(--night-text-color);
+}
+@media (max-width: 699px) {
+  .panel-exit{
+	 background-color:transparent; 
+  }
+}
+.rectmarkertextabovestate{
+  color:var(--night-text-color);
+}

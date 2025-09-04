@@ -1,0 +1,1919 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+	<link rel='stylesheet' href='signstyles.css'>
+</head>
+<body>
+<div class="multipanelcontainer">
+	<div class=panel><table class='sign-table'><tr><td onmouseup='togglemap()' id="showhide">Hide Map</td></tr></table></div>
+	<div class=panel><table class='sign-table'><tr><td onmouseup='togglegps()' id="gps">Stop GPS</td></tr></table></div>
+	<div class=panel><table class='sign-table'><tr><td onmouseup='toggleoptions()' id="option-toggle">Show Options</td></tr></table></div>
+</div>
+<div id="options-multi-container" class="multipanelcontainer">
+	<div class="options-container">
+        <h2>Options</h2>
+
+        <!-- <section class="font-options"> -->
+            <!-- <h3>Select Font</h3> -->
+            <!-- <div class="font-grid"> -->
+                <!-- <button class="font-btn" data-font="Arial, sans-serif">Arial</button> -->
+                <!-- <button class="font-btn" data-font="'Times New Roman', serif">Times New Roman</button> -->
+                <!-- <button class="font-btn" data-font="Verdana, sans-serif">Verdana</button> -->
+                <!-- <button class="font-btn" data-font="Georgia, serif">Georgia</button> -->
+                <!-- <button class="font-btn" data-font="'Courier New', monospace">Courier New</button> -->
+                <!-- <button class="font-btn" data-font="'Lucida Console', monospace">Lucida Console</button> -->
+                <!-- <button class="font-btn" data-font="'Trebuchet MS', sans-serif">Trebuchet MS</button> -->
+                <!-- <button class="font-btn" data-font="'Palatino Linotype', 'Book Antiqua', Palatino, serif">Palatino</button> -->
+            <!-- </div> -->
+        <!-- </section> -->
+
+        <section class="night-mode-options">
+            <h3>Night Mode</h3>
+            <label class="switch">
+                <input type="checkbox" id="nightModeToggle">
+                <span class="slider round"></span>
+            </label>
+            <span class="toggle-label">Turn On Night Mode</span>
+
+            <div class="night-mode-opacity-control">
+                <label for="nightModeOpacity">Opacity:</label>
+                <input type="range" id="nightModeOpacity" min="0.1" max="0.9" step="0.05" value="0.7">
+                <span id="opacityValue">70%</span>
+            </div>
+        </section>
+		<section class="swiss-mode-options">
+            <h3>Swiss Mode (experimental)</h3>
+            <label class="switch">
+                <input type="checkbox" id="swissModeToggle">
+                <span class="slider round"></span>
+            </label>
+            <span class="toggle-label">Turn On Swiss Mode</span>
+
+            
+        </section>
+    </div>
+</div>
+<div id="map" style="height: 600px; width: 100%;"></div>
+<div id="city-results" style="padding:1em 0;font-family:sans-serif;font-size:1.1em;"></div>
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script>
+let cityList = [];
+const CONFIG = {
+  intervals: [
+    {mile: 200, pop: 500000, radius: 100},
+    {mile: 150, pop: 20000,  radius: 50},
+    {mile: 75,  pop: 20000,  radius: 50},
+    {mile: 10,  pop: 5000,   radius: 30},
+    {mile: 5,   pop: 0,      radius: 10}
+  ]
+};
+const intervalMiles = CONFIG.intervals.map(i => i.mile);
+const thresholds = [0, 5000, 20000, 500000];
+
+function loadCityList() {
+  return new Promise(resolve => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('GET', '/cities1000.txt', true);
+    xhr.onreadystatechange = function () {
+      if (xhr.readyState === 4 && xhr.status === 200) {
+        cityList = [];
+        xhr.responseText.split('\n').forEach(line => {
+          if (!line) return;
+          const parts = line.split('\t');
+          if (parts.length < 15) return;
+          const population = parseInt(parts[14], 10) || 0;
+          cityList.push({
+            name: parts[1],
+            lat: parseFloat(parts[4]),
+            lon: parseFloat(parts[5]),
+            population
+          });
+        });
+        resolve(cityList);
+      }
+    };
+    xhr.send();
+  });
+}
+
+function haversine(lat1, lon1, lat2, lon2) {
+  const R = 3959;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat / 2) ** 2 +
+            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+            Math.sin(dLon / 2) ** 2;
+  return 2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+function toRad(deg) { return deg * Math.PI / 180; }
+function toDeg(rad) { return rad * 180 / Math.PI; }
+function calculateBearing(lat1, lon1, lat2, lon2) {
+  if (
+    typeof lat1 !== 'number' || isNaN(lat1) ||
+    typeof lon1 !== 'number' || isNaN(lon1) ||
+    typeof lat2 !== 'number' || isNaN(lat2) ||
+    typeof lon2 !== 'number' || isNaN(lon2)
+  ) {
+    console.warn("Invalid input to calculateBearing:", { lat1, lon1, lat2, lon2 });
+    return NaN;
+  }
+
+  const toRad = deg => deg * Math.PI / 180;
+  const toDeg = rad => rad * 180 / Math.PI;
+  const dLon = toRad(lon2 - lon1);
+  lat1 = toRad(lat1); lat2 = toRad(lat2);
+  const y = Math.sin(dLon) * Math.cos(lat2);
+  const x = Math.cos(lat1) * Math.sin(lat2) -
+            Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLon);
+  const brng = Math.atan2(y, x);
+  return (toDeg(brng) + 360) % 360;
+}
+
+function togglemap(){
+	map=document.getElementById('map');
+	if(map.style.display != 'none'){
+		map.style.display='none';
+		showhide.innerText='Show Map';
+	}else{
+		map.style.display='block';
+		showhide.innerText='Hide Map';
+	}
+}
+function toggleoptions(){
+	optionMenu=document.getElementById('options-multi-container');
+	if(optionMenu.style.display != 'none'){
+		optionMenu.style.display='none';
+		document.getElementById('option-toggle').innerText='Show Options';
+	}else{
+		optionMenu.style.display='block';
+		document.getElementById('option-toggle').innerText='Hide Options';
+	}
+}
+// --- NEW FUNCTION: Query route relations nearby ---
+function displayRoutes(routes) {
+  const div = document.getElementById('city-results');
+  if (!routes.length) {
+    div.innerHTML = "<b>No highway routes found at this location.</b>";
+    return;
+  }
+
+  div.innerHTML = `<b>Routes at clicked location:</b><ul style="padding-left:1.2em;">` +
+    routes.map(r => {
+      let directionDesc = '';
+      if (r.bestRole && r.bestRole !== 'unclassified') {
+        directionDesc = `(${r.bestRole})`;
+      } else if (r.name && /north|south|east|west/i.test(r.name)) {
+        const match = r.name.match(/\b(northbound|southbound|eastbound|westbound|north|south|east|west)\b/i);
+        directionDesc = match ? `(${match[1]})` : '';
+      }
+      return `<li><a href="${r.overpassUrl}" target="_blank">${r.network} ${r.ref} ${directionDesc}</a></li>`;
+    }).join('') +
+    `</ul>`;
+}
+function getRoutePriority(network) {
+
+  if (/^US:I\b/i.test(network)) return 3;         // Interstate
+  if (/^US:US\b/i.test(network)) return 2;        // US Highway
+  if (/^US:.*$/i.test(network)) return 1;         // State or other US routes
+  return 0;                                       // Unknown or non-preferred
+}
+
+async function getApplicableRoutes(lat1, lon1, lat2, lon2) {
+  const query = `
+    [out:json][timeout:25];
+    (
+      relation(around:50,${lat2},${lon2})["type"="route"]["network"~"US:.*"]["ref"];
+    );
+    out body geom;
+  `;
+  const url = `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`;
+  console.log("Query URL:", url);
+
+  try {
+    const res = await fetch(url);
+    const data = await res.json();
+    console.log("Raw route relation data:", data);
+
+    const userBearing = calculateBearing(lat1, lon1, lat2, lon2);
+    const rawRoutes = data.elements;
+
+    const scoredRoutes = rawRoutes.map(rel => {
+      if (!rel.members) return { ...rel, directionScore: -1 };
+
+      const groups = {};
+      for (const member of rel.members) {
+        if (member.type === 'way' && member.geometry?.length >= 2) {
+          const role = member.role || 'unclassified';
+          if (!groups[role]) groups[role] = [];
+          groups[role].push(member);
+        }
+      }
+
+      let bestRole = null;
+      let bestScore = -1;
+
+      for (const [role, ways] of Object.entries(groups)) {
+        let closestWay = null;
+        let closestDist = Infinity;
+
+        for (const w of ways) {
+          const midIdx = Math.floor(w.geometry.length / 2);
+          const midPt = w.geometry[midIdx];
+          const dx = midPt.lat - lat2;
+          const dy = midPt.lon - lon2;
+          const distSq = dx * dx + dy * dy;
+
+          if (distSq < closestDist) {
+            closestDist = distSq;
+            closestWay = w;
+          }
+        }
+
+        if (closestWay) {
+          const g = closestWay.geometry;
+          const bearing = calculateBearing(
+            g[0].lat, g[0].lon,
+            g[g.length - 1].lat, g[g.length - 1].lon
+          );
+          const diff = Math.abs(((userBearing - bearing + 540) % 360) - 180);
+          const score = 180 - diff;
+
+          console.log(`Role: ${role}, Closest Way ID: ${closestWay.ref || closestWay.id}, Bearing: ${bearing}, Score: ${score}`);
+
+          if (score > bestScore) {
+            bestScore = score;
+            bestRole = role;
+          }
+        }
+      }
+
+      const hasRoleStructure = Object.keys(groups).length > 1;
+      let roleFilter = '';
+      if (hasRoleStructure && bestRole && bestRole !== 'unclassified') {
+        roleFilter = `[role="${bestRole}"]`;
+      }
+
+      const overpassUrl = `https://overpass-turbo.eu/?Q=${encodeURIComponent(
+		  `[out:json];rel(${rel.id});way(r:"${bestRole}");(._;>;);out body;`
+		)}`;
+
+
+      return {
+        id: rel.id,
+        network: rel.tags?.network || '(unknown)',
+        ref: rel.tags?.ref || '(no ref)',
+        name: rel.tags?.name || '',
+        route: rel.tags?.route || '',
+        directionScore: bestScore,
+		priority: getRoutePriority(rel.tags?.network),
+        bestRole,
+        overpassUrl
+      };
+    });
+
+    console.log("Scored routes:", scoredRoutes);
+    return scoredRoutes.sort((a, b) => {
+	  const aScore = a.priority * 1000 + a.directionScore;
+	  const bScore = b.priority * 1000 + b.directionScore;
+	  return bScore - aScore;
+	});
+
+  } catch (err) {
+    console.error("Error fetching or processing routes:", err);
+    return [];
+  }
+}
+async function getNearestRoadWay(lat, lon) {
+  const query = `[out:json][timeout:25];
+    way(around:50,${lat},${lon})["highway"];
+    (._;>;);
+    out body;`;
+  const url = `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`;
+  const res = await fetch(url);
+  const data = await res.json();
+  const ways = data.elements.filter(e => e.type === 'way');
+  const nodes = data.elements.filter(e => e.type === 'node');
+  if (!ways.length) return null;
+  let bestWay = null, bestDist = Infinity;
+  for (let way of ways) {
+    let geom = way.nodes.map(nid => nodes.find(n => n.id === nid)).filter(Boolean);
+    for (let i = 0; i < geom.length - 1; i++) {
+      let midLat = (geom[i].lat + geom[i+1].lat) / 2;
+      let midLon = (geom[i].lon + geom[i+1].lon) / 2;
+      let d = haversine(lat, lon, midLat, midLon);
+      if (d < bestDist) {
+        bestDist = d;
+        bestWay = way;
+      }
+    }
+  }
+  bestWay.geometry = bestWay.nodes.map(nid => nodes.find(n => n.id === nid)).filter(Boolean);
+  return bestWay;
+}
+
+function findBestDirection(way, userBearing) {
+  let geom = way.geometry;
+  let segBearings = [];
+  for (let i = 0; i < geom.length - 1; i++) {
+    segBearings.push(calculateBearing(geom[i].lat, geom[i].lon, geom[i+1].lat, geom[i+1].lon));
+  }
+  let avgFwd = segBearings.reduce((a,b) => a+b,0)/segBearings.length;
+  let avgRev = (avgFwd + 180) % 360;
+  let diffFwd = Math.abs(((userBearing - avgFwd + 540) % 360) - 180);
+  let diffRev = Math.abs(((userBearing - avgRev + 540) % 360) - 180);
+  return diffFwd < diffRev ? 'forward' : 'reverse';
+}
+
+function getIntervalPointsAlongWay(geometry, direction, intervals) {
+  let pts = direction === 'reverse' ? [...geometry].reverse() : geometry;
+  let output = [], cumDist = 0, intervalIdx = 0, lastPt = pts[0];
+  for (let i = 1; i < pts.length && intervalIdx < intervals.length; i++) {
+    let pt = pts[i];
+    cumDist += haversine(lastPt.lat, lastPt.lon, pt.lat, pt.lon);
+    if (cumDist >= intervals[intervalIdx]) {
+      output.push({ lat: pt.lat, lon: pt.lon, mile: intervals[intervalIdx] });
+      intervalIdx++;
+    }
+    lastPt = pt;
+  }
+  return output;
+}
+
+function getFilteredCitiesForInterval(lat, lon, radius, thresholds) {
+  let result = [];
+  let usedNames = new Set();
+  thresholds.forEach(thresh => {
+    let found = cityList
+      .filter(c => c.population > thresh && !usedNames.has(c.name) && haversine(lat, lon, c.lat, c.lon) <= radius)
+      .map(c => ({ ...c, dist: haversine(lat, lon, c.lat, c.lon) }))
+      .sort((a, b) => a.dist - b.dist);
+    if (found.length) {
+      result.push(found[0]);
+      usedNames.add(found[0].name);
+    }
+  });
+  return result;
+}
+
+function displayCities(cities, userLat, userLon) {
+  const div = document.getElementById('city-results');
+  if (!cities.length) {
+    div.innerHTML = "No cities found along route.";
+    return;
+  }
+  div.innerHTML = `<b>Closest cities along the route (deduped):</b><br><ul style="padding-left:1.3em;">`
+    + cities
+        .sort((a, b) => a.distFromStart - b.distFromStart)
+        .map(c =>
+          `<li><b>${c.name}</b> (pop ${c.population.toLocaleString()}) — <span style="color:#555">${c.distFromStart.toFixed(1)} mi from start</span></li>`
+        ).join('') + `</ul>`;
+}
+
+function plotConfigCirclesOnMap(intervalPoints, params) {
+  const center = intervalPoints.length ? [intervalPoints[0].lat, intervalPoints[0].lon] : [39, -90];
+  const map = L.map('map').setView(center, 8);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
+  intervalPoints.forEach(pt => {
+    const config = params.find(p => p.mile === pt.mile);
+    if (!config) return;
+    L.circle([pt.lat, pt.lon], {
+      radius: config.radius * 1609.34,
+      color: 'blue', fillOpacity: 0.2
+    }).addTo(map);
+  });
+  return map;
+}
+// Enhanced route filtering logic based on direction and way geometry
+// Refined directional filter using nearest way per role group
+// Uses stitched route to find upcoming exits
+// Given a relation and user location, determine which exits are ahead along the route
+// Given a relation and user location, determine which exits are ahead along the route
+// Given a relation and user location, determine which exits are ahead along the route
+// Given a relation ID and user location, fetch geometry and determine exits ahead
+// Accept full route object and extract numeric ID
+// Revised exit detection using proximity to geometry
+// Rewritten to accept expanded Overpass data directly
+// Uses stitched route to find upcoming exits
+function getExitsAheadAlongRouteFromData(relationData, relation1, userLat, userLon, userBearing, stitchedPoints) {
+  const allWays = relationData.elements.filter(e => e.type === 'way' && Array.isArray(e.geometry));
+  const nodes = relationData.elements.filter(e => e.type === 'node');
+  const relationBase = relation1;
+
+  if (!relationBase || allWays.length === 0) {
+    console.warn("No usable geometry or relation in data.");
+    return [];
+  }
+
+  const role = relationBase.bestRole || null;
+  const roleFilteredWays = allWays;
+  console.log("Requested role:", role);
+  console.log("Filtered ways by role:", roleFilteredWays.map(w => ({ id: w.id, role: w.role, length: w.geometry.length })));
+
+  console.log("Total role-filtered ways:", roleFilteredWays.length);
+  console.log("User point:", { lat: userLat, lon: userLon });
+
+  const userPoint = { lat: userLat, lon: userLon };
+
+  console.log("Stitched geometry length:", stitchedPoints.length);
+
+  if (!stitchedPoints.length) {
+    console.warn("Could not stitch geometry starting from user point.");
+    return [];
+  }
+
+  const userIdx = getInterpolatedIndexOnPath(userPoint, stitchedPoints);
+  if (userIdx === null) {
+    console.warn("User point not on path.");
+    return [];
+  }
+
+  const exits = [];
+
+  const exitMatches = nodes
+    .filter(n => n.tags?.highway === 'motorway_junction')
+    .map(n => {
+      const idx = stitchedPoints.findIndex(pt => (pt.lat - n.lat) ** 2 + (pt.lon - n.lon) ** 2 < 0.0000001);
+      return idx !== -1 ? { node: n, idx } : null;
+    })
+    .filter(Boolean)
+    .sort((a, b) => a.idx - b.idx);
+  console.log('stitchedPoints: ',stitchedPoints);
+  for (const { node, idx } of exitMatches) {
+    const exitDist = getRouteDistanceAlongStitchedPath(stitchedPoints, idx);
+    const userDist = getRouteDistanceAlongStitchedPath(stitchedPoints, userIdx);
+    const distFromUser = exitDist - userDist;
+	console.log(' INDICES AND DISTANCES FOR EXIT ' + node.tags.ref+': '+'exitIndex:'+idx+', userIndex:'+userIdx+', Distances:' +exitDist+' - '+userDist+' = '+distFromUser);
+
+    if (distFromUser <= 0) continue;
+
+    const tags = node.tags || {};
+    exits.push({
+      ref: tags.ref || '',
+      name: tags.name || '',
+      lat: node.lat,
+      lon: node.lon,
+      nodeId: node.id,
+      tags: tags,
+      dist: distFromUser
+    });
+  }
+	
+  console.log("Detected exits ahead:", exits);
+  return exits;
+  
+}
+
+// Returns fractional index on path
+function getInterpolatedIndexOnPath(point, path) {
+  let closestSeg = -1;
+  let minDist = Infinity;
+  let tClosest = 0;
+
+  for (let i = 0; i < path.length - 1; i++) {
+    const a = path[i];
+    const b = path[i + 1];
+    const proj = projectPointToSegment(point, a, b);
+    if (proj.dist < minDist) {
+      minDist = proj.dist;
+      closestSeg = i;
+      tClosest = proj.t;
+    }
+  }
+
+  if (closestSeg === -1) return null;
+  return closestSeg + tClosest;
+}
+
+// Uses haversine distance for projection
+function projectPointToSegment(p, a, b) {
+  const ax = a.lon, ay = a.lat;
+  const bx = b.lon, by = b.lat;
+  const px = p.lon, py = p.lat;
+
+  const dx = bx - ax;
+  const dy = by - ay;
+  const lenSq = dx * dx + dy * dy;
+
+  if (lenSq === 0) return { t: 0, dist: haversine(py, px, ay, ax) };
+
+  let t = ((px - ax) * dx + (py - ay) * dy) / lenSq;
+  t = Math.max(0, Math.min(1, t));
+  const projLat = ay + t * dy;
+  const projLon = ax + t * dx;
+
+  return {
+    t,
+    dist: haversine(py, px, projLat, projLon)
+  };
+}
+
+async function fetchExpandedRelation(relationId, role = null) {
+  const roleClause = (!role || role === "unclassified")
+	  ? "way(r)"
+	  : `way(r:"${role}")`;
+
+  const query = `
+    [out:json][timeout:25];
+    relation(${relationId});
+    ${roleClause};
+    (._; >;);
+    out body geom;
+  `;
+
+  const url = `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`;
+  console.log("Overpass fetch URL:", url);
+
+  try {
+    const res = await fetch(url);
+    const text = await res.text();
+    console.log("Overpass raw response (first 300 chars):", text.slice(0, 300));
+    const data = JSON.parse(text);
+    return data;
+  } catch (err) {
+    console.error("Error fetching expanded relation:", err);
+    return null;
+  }
+}
+
+// Plots first 20 exits as numbered markers on the map
+function plotExitsOnMap(map, exits) {
+  const limitedExits = exits;
+  limitedExits.forEach((exit, index) => {
+    const marker = L.marker([exit.lat, exit.lon], {
+      icon: L.divIcon({
+        className: 'exit-label',
+        html: `<div style="background:#007bff;color:white;border-radius:50%;width:24px;height:24px;text-align:center;line-height:24px;font-size:12px;">${index + 1}</div>`,
+        iconSize: [24, 24],
+        iconAnchor: [12, 12]
+      })
+    });
+    marker.addTo(map);
+  });
+}
+// Stitch route geometry forward from a start point using topology
+// Stitch route geometry forward from a start point using topology
+// Stitch route geometry forward from a start point using shared nodes (forward only)
+// Now returns full way segments in stitch order
+function stitchRouteGeometryFromStart(ways, startPoint, tolerance = 1e-5) {
+  const round = v => Math.round(v * 1e6) / 1e6;
+
+  const nodeToWays = new Map();
+  const waySegments = new Map();
+
+  ways.forEach(way => {
+    if (!Array.isArray(way.geometry) || way.geometry.length < 2 || !Array.isArray(way.nodes)) return;
+
+    const startNode = way.nodes[0];
+    const endNode = way.nodes[way.nodes.length - 1];
+
+    if (!nodeToWays.has(startNode)) nodeToWays.set(startNode, []);
+    if (!nodeToWays.has(endNode)) nodeToWays.set(endNode, []);
+
+    nodeToWays.get(startNode).push({ way, forward: true });
+    waySegments.set(way.id, way.geometry);
+  });
+
+  // Try to find the closest segment along all ways
+  let closest = {
+    way: null,
+    index: -1,
+    dist: Infinity,
+    nodeBefore: null
+  };
+
+  for (const way of ways) {
+    const geom = way.geometry;
+    const nodes = way.nodes;
+
+    for (let i = 0; i < geom.length - 1; i++) {
+      const a = geom[i];
+      const b = geom[i + 1];
+      const proj = projectPointToSegment(startPoint, a, b);
+      if (proj.dist < closest.dist) {
+        closest = {
+          way,
+          index: i,
+          dist: proj.dist,
+          nodeBefore: nodes[i]
+        };
+      }
+    }
+  }
+
+  if (!closest.nodeBefore) {
+    console.warn("No segment close enough to user point.");
+    return { stitchedPoints: [], stitchedWays: [] };
+  }
+
+  const seedNode = closest.nodeBefore;
+  const startWays = nodeToWays.get(seedNode);
+  if (!startWays || startWays.length === 0) {
+    console.warn("Found segment, but seed node is not a valid entry point:", seedNode);
+  }
+
+  const visited = new Set();
+  const stitched = [];
+  const stitchedWays = [];
+
+  const stack = [...(startWays || [])];
+  if (stack.length === 0) {
+    console.warn("No forward ways from seed node; trying fallback using the segment’s parent way.");
+    stack.push({ way: closest.way, forward: true });
+  }
+
+  while (stack.length) {
+    const { way } = stack.pop();
+    if (visited.has(way.id)) continue;
+    visited.add(way.id);
+
+    const seg = waySegments.get(way.id);
+    stitched.push(...(stitched.length ? seg.slice(1) : seg));
+    stitchedWays.push(way);
+
+    const nextNode = way.nodes[way.nodes.length - 1];
+    const neighbors = nodeToWays.get(nextNode) || [];
+    neighbors.forEach(entry => {
+      if (!visited.has(entry.way.id)) stack.push(entry);
+    });
+  }
+
+  console.log("Stitched segment count:", stitchedWays.length);
+  console.log("Total stitched points:", stitched.length);
+
+  return { stitchedPoints: stitched, stitchedWays };
+}
+
+
+// Visualize stitched route with ordered markers
+function plotStitchedRouteOnMap(map, stitchedWays,stitchedPoints, userLat, userLon) {
+  stitchedWays.forEach((way, index) => {
+    const latlngs = way.geometry.map(p => [p.lat, p.lon]);
+    L.polyline(latlngs, {
+      color: 'purple',
+      weight: 4,
+      opacity: 0.7
+    }).addTo(map);
+	/*
+    // Label midpoint with number
+    const mid = latlngs[Math.floor(latlngs.length / 2)];
+    L.marker(mid, {
+      icon: L.divIcon({
+        className: 'way-label',
+        html: `<div style="background:white;border:1px solid #444;border-radius:50%;width:22px;height:22px;line-height:22px;text-align:center;font-size:12px;">${index + 1}</div>`,
+        iconSize: [22, 22],
+        iconAnchor: [11, 11]
+      })
+    }).addTo(map);*/
+  });
+  if (!stitchedPoints || stitchedPoints.length < 2) {
+    console.warn("Stitched points are insufficient to plot location.");
+    return;
+  }
+
+  const userPoint = { lat: userLat, lon: userLon };
+
+  // Project user onto the stitched path
+  let closestSegIdx = -1;
+  let minDist = Infinity;
+  let tClosest = 0;
+
+  for (let i = 0; i < stitchedPoints.length - 1; i++) {
+    const a = stitchedPoints[i];
+    const b = stitchedPoints[i + 1];
+    const proj = projectPointToSegment(userPoint, a, b);
+    if (proj.dist < minDist) {
+      minDist = proj.dist;
+      closestSegIdx = i;
+      tClosest = proj.t;
+    }
+  }
+
+  if (closestSegIdx === -1) {
+    console.warn("User point does not project onto stitched route.");
+    return;
+  }
+
+  // Interpolated position along the segment
+  const a = stitchedPoints[closestSegIdx];
+  const b = stitchedPoints[closestSegIdx + 1];
+  const lat = a.lat + tClosest * (b.lat - a.lat);
+  const lon = a.lon + tClosest * (b.lon - a.lon);
+
+  // Plot the user location marker
+  const marker = L.marker([lat, lon], {
+    radius: 6,
+    color: 'blue',
+    fillColor: 'blue',
+    fillOpacity: 0.8
+  }).addTo(map);
+
+  console.log("Plotted user location at interpolated route point:", { lat, lon });
+}
+
+
+
+async function getExitDetails(nodeIds, relationData) {
+  if (!Array.isArray(nodeIds) || nodeIds.length === 0) {
+    console.warn("getExitDetails called with empty nodeIds array");
+    return {};
+  }
+
+  const ids = nodeIds.join(',');
+  const query = `
+    [out:json][timeout:25];
+    node(id:${ids});
+    way(bn)[highway~"motorway|trunk|primary|secondary|tertiary|motorway_link|trunk_link"];
+    out body center;
+  `;
+
+  const url = `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`;
+  console.log("Fetching exit road details from URL:", url);
+
+  try {
+    const res = await fetch(url);
+    const text = await res.text();
+    const data = JSON.parse(text);
+    console.log("Parsed exit road way elements:", data.elements);
+
+    const mainlineWayIds = new Set(
+      relationData.elements.filter(e => e.type === 'way').map(e => e.id)
+    );
+
+    const grouped = {};
+    const nodes = data.elements.filter(e => e.type === 'node');
+    const ways = data.elements.filter(e => e.type === 'way');
+
+    for (const w of ways) {
+      if (!Array.isArray(w.nodes) || w.nodes.length < 2) {
+        console.warn("Skipping way without nodes:", w);
+        continue;
+      }
+
+      const isInbound = nodeIds.includes(w.nodes[w.nodes.length - 1]);
+      const isMainline = mainlineWayIds.has(w.id);
+      const dir = isInbound ? "inbound" : "outbound";
+
+      for (const nid of w.nodes) {
+        if (!nodeIds.includes(nid)) continue;
+        if (!grouped[nid]) grouped[nid] = [];
+
+        grouped[nid].push({
+		  id: w.id,
+		  tags: w.tags || {},
+		  direction: dir,
+		  isMainline,
+		  lat: w.center?.lat,
+		  lon: w.center?.lon,
+		  nodes: w.nodes
+		});
+
+      }
+    }
+	
+    // Compute exit side and lane counts
+    for (const nid of Object.keys(grouped)) {
+      const items = grouped[nid];
+      const inbound = items.find(w => w.direction === 'inbound');
+      const outMain = items.find(w => w.direction === 'outbound' && w.isMainline);
+      const outExit = items.find(w => w.direction === 'outbound' && !w.isMainline);
+
+      let isRExit = null;
+      let laneCounts = [null, null, null];
+
+
+      if (inbound && outMain && outExit && (Array.isArray(inbound.nodes) && Array.isArray(outMain.nodes) && Array.isArray(outExit.nodes))) {
+        const nodeId = parseInt(nid); // current junction node ID
+        let inboundSeg = null, outMainSeg = null, outExitSeg = null;
+      
+        // Inbound: use the node *before* the junction
+        const inboundIdx = inbound.nodes.indexOf(nodeId);
+        if (inboundIdx > 0) {
+          const n1 = inbound.nodes[inboundIdx - 1];
+          const n2 = nodeId;
+          const p1 = nodes.find(n => n.id === n1);
+          const p2 = nodes.find(n => n.id === n2);
+          if (p1 && p2) inboundSeg = [p1, p2];
+        }
+      
+        // Outbound mainline: use the node *after* the junction
+        const outMainIdx = outMain.nodes.indexOf(nodeId);
+        if (outMainIdx >= 0 && outMainIdx + 1 < outMain.nodes.length) {
+          const n1 = nodeId;
+          const n2 = outMain.nodes[outMainIdx + 1];
+          const p1 = nodes.find(n => n.id === n1);
+          const p2 = nodes.find(n => n.id === n2);
+          if (p1 && p2) outMainSeg = [p1, p2];
+        }
+      
+        // Outbound exit: use the node *after* the junction
+        const outExitIdx = outExit.nodes.indexOf(nodeId);
+        if (outExitIdx >= 0 && outExitIdx + 1 < outExit.nodes.length) {
+          const n1 = nodeId;
+          const n2 = outExit.nodes[outExitIdx + 1];
+          const p1 = nodes.find(n => n.id === n1);
+          const p2 = nodes.find(n => n.id === n2);
+          if (p1 && p2) outExitSeg = [p1, p2];
+        }
+      
+        if (inboundSeg && outMainSeg && outExitSeg) {
+          const bearingMainline = calculateBearing(
+            outMainSeg[0].lat, outMainSeg[0].lon,
+            outMainSeg[1].lat, outMainSeg[1].lon
+          );
+      
+          const bearingExit = calculateBearing(
+            outExitSeg[0].lat, outExitSeg[0].lon,
+            outExitSeg[1].lat, outExitSeg[1].lon
+          );
+      
+          // Compute relative angle
+          const angleDiff = ((bearingExit - bearingMainline + 540) % 360) - 180;
+      
+          isRExit = angleDiff > 0;
+        }
+      }
+
+
+
+		if (inbound) {
+		  laneCounts[0] = parseInt(inbound.tags.lanes, 10) || null;
+		}
+		if (outMain) {
+			
+		  laneCounts[1] = parseInt(outMain.tags.lanes, 10) || null;
+		  console.log(nid + 'outmain' + parseInt(outMain.tags.lanes, 10) || null);
+		}
+		if (outExit) {
+		  laneCounts[2] = parseInt(outExit.tags.lanes, 10) || null;
+		}
+
+
+      grouped[nid].isRExit = isRExit;
+      grouped[nid].laneCounts = laneCounts;
+	  console.log(grouped[nid].laneCounts+ ' '+ grouped[nid].lat);
+    }
+
+    console.log("Grouped exit details with direction and lanes:", grouped);
+    return grouped;
+  } catch (err) {
+    console.error("Failed to fetch bulk exit road details", err);
+    return {};
+  }
+}
+
+
+
+
+// Main
+async function _simulateLocationInputCore(lat, lon, map, state) {
+  state.clicks.push([lat, lon]);
+  state.markers.push(L.marker([lat, lon]).addTo(map));
+
+  if (state.clicks.length === 2) {
+    const [[lat1, lon1], [lat2, lon2]] = state.clicks;
+
+    if (
+      typeof lat1 === 'number' && typeof lon1 === 'number' &&
+      typeof lat2 === 'number' && typeof lon2 === 'number'
+    ) {
+      const routes = await getApplicableRoutes(lat1, lon1, lat2, lon2);
+      console.log("Nearby routes:", routes);
+      displayRoutes(routes);
+
+      if (routes.length > 0) {
+        const topRoute = routes[0];
+        const bearing = calculateBearing(lat1, lon1, lat2, lon2);
+
+        const relationData = await fetchExpandedRelation(topRoute.id, topRoute.bestRole);
+		
+        if (!relationData) {
+          console.warn("Could not fetch expanded relation for top route.");
+          return;
+        }
+		window._activeTopRoute = topRoute; // Store route info for reuse
+
+        const ways = relationData.elements.filter(e => e.type === 'way' && Array.isArray(e.geometry));
+        const userPoint = { lat: lat2, lon: lon2 };
+        const { stitchedPoints, stitchedWays } = stitchRouteGeometryFromStart(ways, userPoint);
+
+        window._activeRelationData = relationData;
+
+        const exits = getExitsAheadAlongRouteFromData(relationData, topRoute, lat2, lon2, bearing, stitchedPoints);
+        const allNodeIds = exits.map(e => e.nodeId).filter(id => typeof id === 'number');
+
+        console.log("Passed nodeIds:", allNodeIds);
+        console.log("Passed relationData is valid:", !!relationData && Array.isArray(relationData.elements));
+
+		const allDetails = await getExitDetails(allNodeIds, relationData);
+		for (const exit of exits) {
+		  const detail = allDetails[exit.nodeId] || [];
+		  exit.details = detail;
+
+		  // Attach computed metadata from detail array (where it was injected in getExitDetails)
+		  if ('isRExit' in detail) {
+			exit.isRExit = detail.isRExit;
+		  }
+		  if ('laneCounts' in detail) {
+			exit.laneCounts = detail.laneCounts;
+		  }
+		}
+
+        const container = document.getElementById('city-results');
+		let index=0;
+        exits.forEach(exit => {
+          const panel = renderExitPanel(exit, index);
+          if (panel) {
+			container.appendChild(panel);
+			index++;
+		  }
+        });
+
+        
+        plotStitchedRouteOnMap(map, stitchedWays, stitchedPoints,lat2,lon2);
+		
+		
+		
+        if (exits.length) {
+          console.log("Upcoming exits:", exits);
+          const div = document.getElementById('city-results');
+		  /*
+          div.innerHTML += `<br><b>Upcoming exits:</b><ul style="padding-left:1.2em;">` +
+			  exits.map(e =>
+				`<li>
+				  <b>Exit ${e.ref}</b>${e.name ? ": " + e.name : ""} — ${e.dist.toFixed(1)} mi ahead
+				  <br><i>${
+					e.details.length
+					  ? e.details.map(d => Object.entries(d.tags).map(([k, v]) => `${k}: ${v}`).join(", ")).join("<br>")
+					  : ''
+				  }</i>
+				  <p class="exit-raw">${JSON.stringify(e)}</p>
+				</li>`
+			  ).join('') +
+			  `</ul>`;
+			*/
+        } else {
+          console.log("No upcoming exits detected on this route.");
+        }
+      }
+    } else {
+      console.warn("Invalid coordinates for route detection:", { lat1, lon1, lat2, lon2 });
+    }
+
+    state.clicks = [];
+    state.markers.forEach(m => map.removeLayer(m));
+    state.markers = [];
+  }
+}
+async function _simulateFollowupLocationInputCore(lat, lon, map, state) {
+  const activeRelation = window._activeRelationData;
+  if (!activeRelation || !Array.isArray(activeRelation.elements)) {
+    console.warn("No active route. Recomputing from scratch.");
+    return _simulateLocationInputCore(lat, lon, map, state);
+  }
+
+  const userPoint = { lat, lon };
+  const ways = activeRelation.elements.filter(e => e.type === 'way' && Array.isArray(e.geometry));
+  const { stitchedPoints , stitchedWays } = stitchRouteGeometryFromStart(ways, userPoint);
+
+  // Distance check: if too far from route, re-run main logic
+  const maxAllowedDistanceMeters = 1000; // adjust as needed
+  const minDist = stitchedPoints.reduce((min, pt) => {
+    const d = L.latLng(pt.lat, pt.lon).distanceTo(L.latLng(lat, lon));
+    return Math.min(min, d);
+  }, Infinity);
+
+  if (minDist > maxAllowedDistanceMeters) {
+    console.log(`Off-route detected (${minDist.toFixed(1)}m). Recomputing full route.`);
+    return _simulateLocationInputCore(lat, lon, map, state);
+  }
+
+  const topRoute = window._activeTopRoute;
+  const bearing = 0; // optional: compute bearing between previous and current point if needed
+  const exits = getExitsAheadAlongRouteFromData(activeRelation, topRoute, lat, lon, bearing, stitchedPoints);
+  const allNodeIds = exits.map(e => e.nodeId).filter(id => typeof id === 'number');
+  const allDetails = await getExitDetails(allNodeIds, activeRelation);
+  for (const exit of exits) {
+    const detail = allDetails[exit.nodeId] || [];
+    exit.details = detail;
+     
+    // Attach computed metadata from detail array (where it was injected in getExitDetails)
+    if ('isRExit' in detail) {
+  	exit.isRExit = detail.isRExit;
+    }
+    if ('laneCounts' in detail) {
+  	exit.laneCounts = detail.laneCounts;
+    }
+  }
+	
+  const container = document.getElementById('city-results');
+  container.innerHTML = ''; // Clear previous content
+  let index=0;
+  exits.forEach(exit => {
+	if (typeof exit !== 'undefined' && typeof index !== 'undefined'){
+		console.log(exit.laneCounts);
+		const panel = renderExitPanel(exit, index);
+		if (panel) {container.appendChild(panel); index++;}
+	}
+  });
+
+  if (exits.length) {
+    const div = document.getElementById('city-results');
+    /*div.innerHTML += `<br><b>Upcoming exits:</b><ul style="padding-left:1.2em;">` +
+      exits.map(e => `<li><b>Exit ${e.ref}</b>${e.name ? ": " + e.name : ""} — ${e.dist.toFixed(1)} mi ahead` +
+        (e.details.length ? `<br><i>${e.details.map(d => Object.entries(d.tags).map(([k, v]) => `${k}: ${v}`).join(", ")).join("<br>")}</i>` : '') +
+        `</li>`).join('') +
+      `</ul>`;*/
+  } else {
+    console.log("No exits ahead.");
+  }
+  plotStitchedRouteOnMap(map, stitchedWays,stitchedPoints, lat, lon);
+  plotExitsOnMap(map, exits); // Optional update to map visuals
+}
+
+async function main() {
+  const map = L.map('map').setView([41.67967981033211, -88.07787125051011], 15);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
+
+  const state = {
+    clicks: [],
+    markers: []
+  };
+
+  map.on('click', function (e) {
+    _simulateLocationInputCore(e.latlng.lat, e.latlng.lng, map, state);
+  });
+    map.on('contextmenu', function (e) {
+    _simulateFollowupLocationInputCore(e.latlng.lat, e.latlng.lng, map, state);
+  });
+
+  window.simulateFollowupLocationInput = (lat, lon) =>
+    _simulateFollowupLocationInputCore(lat, lon, map, state);
+
+
+  // Safe name that avoids recursion
+  window.simulateLocationInput = (lat, lon) => _simulateLocationInputCore(lat, lon, map, state);
+  startGeolocationLoop(map, state);
+}
+
+// Calculate distance along a route relation between two coordinates (fallback from nodeId)
+function getRouteDistanceAlongStitchedPath(stitchedPoints, toIdx) {
+  let dist = 0;
+  for (let i = 1; i <= toIdx; i++) {
+    dist += haversine(
+      stitchedPoints[i - 1].lat,
+      stitchedPoints[i - 1].lon,
+      stitchedPoints[i].lat,
+      stitchedPoints[i].lon
+    );
+  }
+  return dist;
+}
+
+let firstExitType = 0; // 0 = APL, 1 = diagramatic, 2 = pull through
+
+function renderFirstExit(exit, index=0){
+	if (exit.dist >1){
+		return renderPullThrough(exit);
+	}else{
+		switch (firstExitType){
+			case 0:
+				return renderAPL(exit);
+			case 1:
+				return renderDiagrammatic(exit);
+			case 2:
+				if(exit.laneCounts[2] != null){
+						return renderPullThroughClose(exit);
+				}else{
+						return renderPullThrough(exit);
+				}
+				
+		}
+	}
+}
+
+function renderPullThroughClose(exit, index=0){
+  const road = (exit.details || []).find(w => w.direction === 'outbound' && !w.isMainline && w.tags);
+  if (!road) return '';
+
+  const container = document.createElement('div');
+  container.className = 'multipanelcontainer';
+  if(exit.ref==''){
+  
+  }else{
+	const exitBlock = buildExitBlock(exit);
+	container.appendChild(exitBlock);
+	
+  }
+  let additionalRows = [];
+  const distRow = document.createElement('tr');
+  if(typeof exit.laneCounts[2] != null){
+	if(exit.isRExit===false){
+		if(exit.laneCounts[2] == 1){
+			distRow.innerHTML = '<td><p class="dist">LEFT LANE</p></td>';	
+		}else{
+			distRow.innerHTML = '<td><p class="dist">LEFT <span class="dist-num">'+exit.laneCounts[2] + ' </span> LANES</p></td>';	
+		}
+	}else{
+		if(exit.laneCounts[2] == 1){
+			distRow.innerHTML = '<td><p class="dist">RIGHT LANE</p></td>';	
+		}else{
+			distRow.innerHTML = '<td><p class="dist">RIGHT <span class="dist-num">'+exit.laneCounts[2] + ' </span> LANES</p></td>';	
+		}
+	}
+  }
+  if(typeof road.tags['maxspeed:advisory'] !== 'undefined'){
+	  if (road.tags['maxspeed:advisory'].match(/^\d+/) <= 35){
+		advSpeedRow = buildAdvSpeedRow(road.tags['maxspeed:advisory'].match(/^\d+/));
+		additionalRows.push(advSpeedRow);
+	  }
+  }
+  additionalRows.push(distRow);
+
+  const signPanel = buildSignPanel(road.tags, exit.dist, additionalRows);
+  
+  container.appendChild(document.createElement('br'));
+  container.appendChild(signPanel);
+  container.appendChild(document.createElement('br'));
+
+  return container;
+}
+
+function renderPullThrough(exit, index=0){
+	const road = (exit.details || []).find(w => w.direction === 'outbound' && !w.isMainline && w.tags);
+  if (!road) return '';
+
+  const container = document.createElement('div');
+  container.className = 'multipanelcontainer';
+  if(exit.ref==''){
+  
+  }else{
+	const exitBlock = buildExitBlock(exit);
+	container.appendChild(exitBlock);
+	
+  }
+  
+  const distRow = document.createElement('tr');
+  
+  const insttd = document.createElement('td');
+  const instpara=document.createElement('p');
+  instpara.className = ('inst');
+  
+  if(exit.isRExit === false){
+	
+	instpara.innerText= 'NEXT <p class="warning warning-text">LEFT</p>';
+  }else if(exit.isRExit){
+	instpara.innerText= 'NEXT RIGHT';
+  }else{
+	instpara.innerText= 'NEXT EXIT';
+  }
+  insttd.appendChild(instpara);
+  distRow.appendChild(insttd);
+  
+  const additionalRows = [];
+  if(typeof road.tags['maxspeed:advisory'] !== 'undefined'){
+	  if (road.tags['maxspeed:advisory'].match(/^\d+/) <= 35){
+		advSpeedRow = buildAdvSpeedRow(road.tags['maxspeed:advisory'].match(/^\d+/));
+		additionalRows.push(advSpeedRow);
+	  }
+  }
+  additionalRows.push(distRow);
+  const signPanel = buildSignPanel(road.tags, exit.dist, additionalRows);
+  
+  container.appendChild(document.createElement('br'));
+  container.appendChild(signPanel);
+  container.appendChild(document.createElement('br'));
+
+  return container;
+
+}
+function renderAPL(exit){
+  const road = (exit.details || []).find(w => w.direction === 'outbound' && !w.isMainline && w.tags);
+  if (!road) return '';
+
+  const container = document.createElement('div');
+  container.className = 'multipanelcontainer';
+  if(exit.ref==''){
+  
+  }else{
+	const exitBlock = buildExitBlock(exit);
+	container.appendChild(exitBlock);
+	
+  }
+  let additionalRows = [];
+  const distRow = document.createElement('tr');
+  distRow.className='apl-row';
+  if(exit.laneCounts[0] != null && exit.laneCounts[1] != null && exit.laneCounts[2] != null){
+	if(exit.isRExit===false){
+		if(exit.laneCounts[2] == 1){
+			distRow.innerHTML = '<td><p class="dist">LEFT LANE</p></td>';	
+		}else{
+			distRow.innerHTML = '<td><p class="dist">LEFT <span class="dist-num">'+exit.laneCounts[2] + ' </span> LANES</p></td>';	
+		}
+	}else{
+		optionCount = (exit.laneCounts[2] + exit.laneCounts[1]) - exit.laneCounts[0] ;
+		if(optionCount == 0){
+			for( var i = 0; i< exit.laneCounts[1]; i++){
+				const td = document.createElement('td');
+				td.className='arrowContainer';
+				td.innerHTML='<img src="apl_thru_arrow.png">';
+				distRow.appendChild(td);
+			}
+			for( var i = 0; i< exit.laneCounts[2]; i++){
+				const td = document.createElement('td');
+				td.className='arrowContainer';
+				//td.innerHTML='<span class="warning EO EOEXIT">EXIT</span><img class="apl-arrow" src="apl_right_arrow.png"><span class="warning EO EOONLY">ONLY</span>';
+				td.innerHTML='<img class="apl-arrow" src="apl_right_arrow.png">';
+				distRow.appendChild(td);
+			}
+		}else if(optionCount == 1){
+			for( var i = 0; i< exit.laneCounts[1]-1; i++){
+				const td = document.createElement('td');
+				td.className='arrowContainer';
+				td.innerHTML='<img src="apl_thru_arrow.png">';
+				distRow.appendChild(td);
+			}
+			const td = document.createElement('td');
+			td.className='arrowContainer';
+			td.innerHTML='<img src="apl_thru_right_arrow.png">';
+			distRow.appendChild(td);
+			for( var i = 0; i< exit.laneCounts[2]-1; i++){
+				const td = document.createElement('td');
+				td.className='arrowContainer';
+				//td.innerHTML='<span class="warning EO EOEXIT">EXIT</span><img class="apl-arrow" src="apl_right_arrow.png"><span class="warning EO EOONLY">ONLY</span>';
+				td.innerHTML='<img class="apl-arrow" src="apl_right_arrow.png">';
+				distRow.appendChild(td);
+			}
+		}else{
+			console.log('EXIT '+exit.ref+' failed option count test' + exit.laneCounts);
+			if(exit.laneCounts[2] == 1){
+				distRow.innerHTML = '<td><p class="dist">RIGHT LANE</p></td>';	
+			}else{
+				distRow.innerHTML = '<td><p class="dist">RIGHT <span class="dist-num">'+exit.laneCounts[2] + ' </span> LANES</p></td>';	
+			}
+		}
+	}
+  }else{
+	console.log('EXIT '+exit.ref+' failed all lane counts not null' + exit.laneCounts);
+	if(exit.laneCounts[2] != null){
+		console.log('lane 2 exists');
+		if(exit.isRExit===false){
+			if(exit.laneCounts[2] == 1){
+				distRow.innerHTML = '<td><p class="dist">LEFT LANE</p></td>';	
+			}else{
+				distRow.innerHTML = '<td><p class="dist">LEFT <span class="dist-num">'+exit.laneCounts[2] + ' </span> LANES</p></td>';	
+			}
+		}else{
+			if(exit.laneCounts[2] == 1){
+				distRow.innerHTML = '<td><p class="dist">RIGHT LANE</p></td>';	
+			}else{
+				distRow.innerHTML = '<td><p class="dist">RIGHT <span class="dist-num">'+exit.laneCounts[2] + ' </span> LANES</p></td>';	
+			}
+		}
+	}else{
+		console.log('failed lane 2 test');
+		if(exit.isRExit===false){
+				distRow.innerHTML = '<td><p class="dist">NEXT LEFT</p></td>';	
+		}else{
+				distRow.innerHTML = '<td><p class="dist">NEXT RIGHT</p></td>';	
+		}
+	}
+  }
+  if(typeof road.tags['maxspeed:advisory'] !== 'undefined'){
+	  if (road.tags['maxspeed:advisory'].match(/^\d+/) <= 35){
+		advSpeedRow = buildAdvSpeedRow(road.tags['maxspeed:advisory'].match(/^\d+/));
+		additionalRows.push(advSpeedRow);
+	  }
+  }
+  additionalRows.push(distRow);
+
+  const signPanel = buildSignPanel(road.tags, exit.dist, additionalRows);
+  
+  container.appendChild(document.createElement('br'));
+  container.appendChild(signPanel);
+  container.appendChild(document.createElement('br'));
+
+  return container;
+}
+function renderDiagrammatic(exit){
+
+
+}
+
+function renderExitPanel(exit, index) {
+  if (index === 0 && exit.dist < 2) {
+    if (typeof renderFirstExit === 'function') {
+      return renderFirstExit(exit) || '';
+    } else {
+      console.warn("renderFirstExit is not defined.");
+      return '';
+    }
+  }else{
+	return renderDistanceSign(exit);
+  }
+  
+}
+function renderDistanceSign (exit){
+  const road = (exit.details || []).find(w => w.direction === 'outbound' && !w.isMainline && w.tags);
+  if (!road) return '';
+
+  const container = document.createElement('div');
+  container.className = 'multipanelcontainer';
+  if(exit.ref==''){
+  
+  }else{
+	const exitBlock = buildExitBlock(exit);
+	container.appendChild(exitBlock);
+	
+  }
+  const additionalRows = [buildDistanceRow(exit.dist)];
+  
+  const signPanel = buildSignPanel(road.tags, exit.dist, additionalRows);
+  
+  container.appendChild(document.createElement('br'));
+  container.appendChild(signPanel);
+  container.appendChild(document.createElement('br'));
+
+  return container;
+}
+function buildAdvSpeedRow(advSpeed){
+	const row = document.createElement('tr');
+	const cell = document.createElement('td');
+	const para=document.createElement('p');
+	para.className='warning warning-text-speed';
+	para.innerHTML = ('EXIT <span class="warning-text warning-text-big">'+advSpeed+'</span> MPH</p>');
+	cell.appendChild(para);
+	row.appendChild(cell);
+	return row;
+}
+function buildExitBlock(exit) {
+  const block = document.createElement('div');
+  block.className = exit.isRExit === false ? 'panel-exit-left' : 'panel-exit';
+
+  const table = document.createElement('table');
+  table.className = 'sign-table';
+
+  if (exit.isRExit === false) {
+    const warnRow = document.createElement('tr');
+    const warnCell = document.createElement('td');
+    const warnPara = document.createElement('p');
+    warnPara.className = 'warning warning-text';
+    warnPara.innerHTML = 'LEFT';
+    warnCell.className = 'warning';
+    warnCell.appendChild(warnPara);
+    warnRow.appendChild(warnCell);
+    table.appendChild(warnRow);
+  }
+
+  const row = document.createElement('tr');
+  const cell = document.createElement('td');
+  const para = document.createElement('p');
+  para.className = 'exit';
+  para.innerHTML = `EXIT <span class='exit-num'>${exit.ref || ''}</span>`;
+  cell.appendChild(para);
+  row.appendChild(cell);
+  table.appendChild(row);
+
+  block.appendChild(table);
+  return block;
+}
+function buildSignPanel(tags, distance, additionalRows) {
+  const panel = document.createElement('div');
+  panel.className = 'panel';
+
+  const mainTable = document.createElement('table');
+  mainTable.className = 'main-sign-table';
+
+  const refGroups = [
+    { refs: tags['destination:ref'], label: null },
+    { refs: tags['destination:ref:to'], label: 'TO' },
+    //{ refs: tags.ref, label: null }
+  ].filter(g => g.refs);
+
+  refGroups.forEach(group => {
+    const row = document.createElement('tr');
+    if (group.label) {
+      const labelCell = document.createElement('td');
+      labelCell.innerHTML = `<p class="to">${group.label}</p>`;
+      row.appendChild(labelCell);
+    } else {
+      row.appendChild(document.createElement('td')); // empty cell
+    }
+
+    const refsCell = document.createElement('td');
+    group.refs.split(';').map(r => r.trim()).forEach(refText => {
+      const signTable = buildShieldTable(refText);
+      if (signTable) refsCell.appendChild(signTable);
+    });
+
+    row.appendChild(refsCell);
+    mainTable.appendChild(row);
+  });
+
+  panel.appendChild(mainTable);
+
+  const destTable = document.createElement('table');
+  destTable.className = 'sign-table';
+
+  buildDestinationRows(tags).forEach(row => destTable.appendChild(row));
+  additionalRows.forEach(row => destTable.appendChild(row));
+  panel.appendChild(destTable);
+  return panel;
+}
+function buildShieldTable(refText) {
+  const table = document.createElement('table');
+  table.className = 'sign-table shield-group';
+
+  const row = document.createElement('tr');
+
+  const shield = renderShieldRow(refText);
+  if (shield) {
+    const shieldCell = document.createElement('td');
+    shieldCell.appendChild(shield);
+    row.appendChild(shieldCell);
+  }
+
+  const dirMatch = refText.match(/\b(North|South|East|West)\b/i);
+  if (dirMatch) {
+    const dirText = dirMatch[1];
+    const dirCell = document.createElement('td');
+    dirCell.innerHTML = `<p class='dir'><span class='dir-cap'>${dirText[0]}</span>${dirText.slice(1).toUpperCase()}</p>`;
+    row.appendChild(dirCell);
+  }
+
+  table.appendChild(row);
+  return table;
+}
+function buildDestinationRows(tags) {
+  let dests = [];
+  if (tags.destination) {
+    dests = tags.destination.split(';').map(s => abbreviateStreet(s.trim()));
+  } else if (tags['destination:street']) {
+    dests = tags['destination:street'].split(';').map(s => abbreviateStreet(s.trim()));
+  }
+
+  return dests.map(name => {
+    const row = document.createElement('tr');
+    const cell = document.createElement('td');
+    cell.innerHTML = `<p class='dest'>${name}</p>`;
+    row.appendChild(cell);
+    return row;
+  });
+}
+function buildDistanceRow(distance) {
+  if (distance > 5) {
+    distance = Math.round(distance);
+  } else {
+    distance = parseFloat(distance.toFixed(1));
+  }
+  const display = Number.isInteger(distance) ? `${distance}` : distance.toFixed(1);
+
+  const row = document.createElement('tr');
+  row.innerHTML = `<td><p class="dist"><span class="dist-num">${display}</span> MILES</p></td>`;
+  return row;
+}
+
+function renderShieldRow(refText) {
+		const match = refText.match(/^([A-Z]{1,2})\s+(\d+)(?:\s+Bus)?/); // Modified regex
+	if (!match) return null;
+
+	const type = match[1];
+	const num = match[2];
+	const isBusiness = refText.toLowerCase().includes('bus'); // Check if "business" is in the string
+
+	// Mapping of state abbreviations to full names
+	const stateNames = {
+		'AL': 'ALABAMA', 'AK': 'ALASKA', 'AZ': 'ARIZONA', 'AR': 'ARKANSAS', 'CA': 'CALIFORNIA',
+		'CO': 'COLORADO', 'CT': 'CONNECTICUT', 'DE': 'DELAWARE', 'FL': 'FLORIDA', 'GA': 'GEORGIA',
+		'HI': 'HAWAII', 'ID': 'IDAHO', 'IL': 'ILLINOIS', 'IN': 'INDIANA', 'IA': 'IOWA',
+		'KS': 'KANSAS', 'KY': 'KENTUCKY', 'LA': 'LOUISIANA', 'ME': 'MAINE', 'MD': 'MARYLAND',
+		'MA': 'MASSACHUSETTS', 'MI': 'MICHIGAN', 'MN': 'MINNESOTA', 'MS': 'MISSISSIPPI',
+		'MO': 'MISSOURI', 'MT': 'MONTANA', 'NE': 'NEBRASKA', 'NV': 'NEVADA', 'NH': 'NEW HAMPSHIRE',
+		'NJ': 'NEW JERSEY', 'NM': 'NEW MEXICO', 'NY': 'NEW YORK', 'NC': 'NORTH CAROLINA',
+		'ND': 'NORTH DAKOTA', 'OH': 'OHIO', 'OK': 'OKLAHOMA', 'OR': 'OREGON', 'PA': 'PENNSYLVANIA',
+		'RI': 'RHODE ISLAND', 'SC': 'SOUTH CAROLINA', 'SD': 'SOUTH DAKOTA', 'TN': 'TENNESSEE',
+		'TX': 'TEXAS', 'UT': 'UTAH', 'VT': 'VERMONT', 'VA': 'VIRGINIA', 'WA': 'WASHINGTON',
+		'WV': 'WEST VIRGINIA', 'WI': 'WISCONSIN', 'WY': 'WYOMING'
+	};
+
+	let icon = 'interstatemarker.png';
+	let cls = 'interstatemarker';
+	console.log(type, " type 45634");
+
+	if (type === 'US') {
+		if (isBusiness) {
+			icon = 'usbusinessmarker.png';
+			cls = 'usbusinessmarker';
+		} else {
+			icon = 'usmarker.png';
+			cls = 'usmarker';
+		}
+	} else if (type === "I") {
+		if (isBusiness) {
+			icon = 'interstatebusinessmarker.png';
+			cls = 'interstatebusinessmarker';
+		} else {
+			icon = 'interstatemarker.png';
+			cls = 'interstatemarker';
+		}
+	//} else if (type === 'IL') {
+	//	icon = 'ilmarker.png';
+	//	cls = 'rectmarkertextbove'; // Typo 'rectmarkertextbove' kept from original code
+	} else if (type === 'IN') {
+		icon = 'inmarker.png';
+		cls = 'rectmarkertextabove';
+	} else if (type === 'CA') {
+		icon = 'camarker.png';
+		cls = 'camarker';
+	} else if (type === "NY") {
+		icon = 'nymarker.png';
+		cls = 'nymarker';
+	} else if (type === "DE" || type === "IA" || type === "KY" || type === "MS" || type === "NJ") {
+		icon = 'circmarker.png';
+		cls = 'circmarker';
+	} else {
+		icon = 'rectmarker.png';
+		cls = 'rectmarkertextabove';
+
+		// *** NEW FUNCTIONALITY ADDED HERE ***
+		const fullStateName = stateNames[type] ? stateNames[type].toUpperCase() : null; // Get full name, default to null if not found
+		if (fullStateName) {
+			const stateLabel = document.createElement('p');
+			stateLabel.className = 'rectmarkertextabovestate'; // New class for state name
+			stateLabel.textContent = fullStateName;
+			stateLabel.setAttribute('data-type', type); // Add data attribute for potential styling/logic later
+			stateLabel.setAttribute('data-num', num); // Add data attribute for potential styling/logic later
+			// We'll append this after the image but before the number label
+			// This is handled in the final assembly section below
+		}
+	}
+
+	cls = cls + " shieldnumber";
+	if (num.length > 2) {
+		if (isBusiness && type === "I") {
+			icon = 'interstatebusinesswidemarker.png';
+		} else {
+			icon = icon.replace('.png', 'wide.png');
+		}
+		cls = cls + " wide";
+	}
+
+	// Return just a <div> to be placed inside a <td>
+	const container = document.createElement('div');
+	container.className = 'markercontainer';
+
+	const img = document.createElement('img');
+	if(nightModeToggle.checked){
+		icon=icon.replace('.png', '-night.png');
+	}	
+	img.src = icon;
+	const label = document.createElement('p');
+	label.className = cls;
+	label.textContent = num;
+
+	container.appendChild(img);
+
+	// *** INSERTING THE STATE NAME P ELEMENT IF IT WAS CREATED ***
+	// We need to re-evaluate if the stateLabel was created because its creation is conditional within the else block.
+	// A simpler approach is to create it outside the else block if needed and then just append.
+	// Let's refactor the stateLabel creation slightly to be more direct.
+	let stateLabel = null; // Initialize to null
+
+	if (type !== 'US' && type !== 'I' && type !== 'IN' && type !== 'CA' && type !== 'NY' &&
+		type !== 'DE' && type !== 'IA' && type !== 'KY' && type !== 'MS' && type !== 'NJ') {
+		// This condition means it fell into the final 'else' logic for icon/cls
+		const fullStateName = stateNames[type] ? stateNames[type].toUpperCase() : null;
+		if (fullStateName) {
+			stateLabel = document.createElement('p');
+			stateLabel.className = 'rectmarkertextabovestate';
+			stateLabel.textContent = fullStateName;
+			stateLabel.setAttribute('data-type', type);
+			stateLabel.setAttribute('data-num', num);
+		}
+	}
+
+	if (stateLabel) {
+		container.appendChild(stateLabel); // Append the state name p first
+	}
+	container.appendChild(label); // Then append the number p
+
+	return container;
+}
+
+
+function abbreviateStreet(name) {
+  return name.replace(/avenue/i, 'Ave')
+             .replace(/street/i, 'St')
+             .replace(/boulevard/i, 'Blvd')
+             .replace(/drive/i, 'Dr')
+             .replace(/ road/i, ' Rd')
+			 .replace(/parkway/i, 'Pkwy')
+			 .replace(/highway/i, 'Hwy')
+			 .replace(/expressway/i, 'Expwy')
+			 .replace(/ way/i, ' Wy')
+			 .replace(/international/i, "Intl'")
+			 .replace(/saint/i, "St")
+			 .replace(/bridge/i, "Br")
+			 .replace(/northwest/i,"NW").replace(/southwest/i,"SW").replace(/northeast/i,"NE").replace(/southeast/i,"SE")
+			 //.replace(/north/i, "<p class='dir'><span class='dir-cap'>N</span>ORTH</p>").replace(/east/i, "<p class='dir'><span class='dir-cap'>E</span>AST</p>").replace(/south/i, "<p class='dir'><span class='dir-cap'>S</span>OUTH</p>").replace(/west/i, "<p class='dir'><span class='dir-cap'>W</span>EST</p>")
+			 .replace(/first/i, "1st").replace(/second/i, "2nd").replace(/third/i, "3rd").replace(/fourth/i, "4th").replace(/fifth/i, "5th")
+			 .replace(/sixth/i, "6th").replace(/seventh/i, "7th").replace(/eighth/i, "8th").replace(/ninth/i, "9th").replace(/tenth/i, "10th")
+			 .replace(/center/i, "Ctr")
+			 .replace(/court/i, "Ct")
+			 .replace(/circle/i, "Cir")
+			 .replace(/freeway/i, "Fwy")
+			 .replace(/hospital/i, "Hosp")
+			 .replace(/mountain/i, "Mtn")
+			 .replace(/thruway/i, "Thwy")
+			 .replace(/trail/i, "Tr")
+}
+let gpsCheckCounter = 0;
+let gpsIntervalId = null;
+let gpsActive = true;
+function isUserNearStitchedGeometry(lat, lon, toleranceMeters = 300) {
+  const stitchedPoints = window._activeRelationData && window._activeRelationData.elements
+    ? stitchRouteGeometryFromStart(
+        window._activeRelationData.elements.filter(e => e.type === 'way' && Array.isArray(e.geometry)),
+        { lat, lon }
+      ).stitchedPoints
+    : [];
+
+  if (!stitchedPoints.length) return false;
+
+  const userLatLng = L.latLng(lat, lon);
+  return stitchedPoints.some(pt => userLatLng.distanceTo(L.latLng(pt.lat, pt.lon)) <= toleranceMeters);
+}
+function startGeolocationLoop(map, state) {
+  window._gpsMapRef = map;
+  window._gpsStateRef = state;
+
+  let gpsCheckCounter = 0;
+  let gpsMarkers = [];
+  let primaryMarkers = [];
+  let secondaryMarker = null;
+
+  return setInterval(() => {
+    if (!gpsActive) return;
+
+    navigator.geolocation.getCurrentPosition(async pos => {
+      const lat = pos.coords.latitude;
+      const lon = pos.coords.longitude;
+      gpsCheckCounter++;
+
+      map.setView([lat, lon]); // 👈 Auto-center to user location
+
+      // Black pin for GPS location
+      const gpsMarker = L.circleMarker([lat, lon], {
+        radius: 6,
+        color: 'black',
+        fillColor: 'black',
+        fillOpacity: 1
+      }).addTo(map);
+      gpsMarkers.push(gpsMarker);
+      if (gpsMarkers.length > 3) {
+        const old = gpsMarkers.shift();
+        map.removeLayer(old);
+      }
+
+      const stitchedExists = !!window._activeRelationData && Array.isArray(window._activeRelationData.elements);
+      const nearRoute = stitchedExists && isUserNearStitchedGeometry(lat, lon);
+
+      if (stitchedExists && nearRoute) {
+        console.log("User is near route. Making followup call.");
+        if (secondaryMarker) map.removeLayer(secondaryMarker);
+        secondaryMarker = L.circleMarker([lat, lon], {
+          radius: 6,
+          color: 'blue',
+          fillColor: 'blue',
+          fillOpacity: 1
+        }).addTo(map);
+
+        await _simulateFollowupLocationInputCore(lat, lon, map, state);
+      } else {
+        if (gpsCheckCounter % 6 === 0) {
+          console.log("User not near route. Making primary call (rate-limited).");
+
+          const primaryMarker = L.circleMarker([lat, lon], {
+            radius: 6,
+            color: 'red',
+            fillColor: 'red',
+            fillOpacity: 1
+          }).addTo(map);
+          primaryMarkers.push(primaryMarker);
+          if (primaryMarkers.length > 2) {
+            const old = primaryMarkers.shift();
+            map.removeLayer(old);
+          }
+
+          const before = window._activeRelationData;
+          await _simulateLocationInputCore(lat, lon, map, state);
+          const after = window._activeRelationData;
+
+          if (after && after !== before) {
+            console.log("Route updated, making a second primary call.");
+            const primaryMarker2 = L.circleMarker([lat, lon], {
+              radius: 6,
+              color: 'red',
+              fillColor: 'red',
+              fillOpacity: 1
+            }).addTo(map);
+            primaryMarkers.push(primaryMarker2);
+            if (primaryMarkers.length > 2) {
+              const old = primaryMarkers.shift();
+              map.removeLayer(old);
+            }
+
+            await _simulateLocationInputCore(lat, lon, map, state);
+          }
+        } else {
+          console.log(`Skipping primary call this cycle (${gpsCheckCounter % 12}/12)`);
+        }
+      }
+    }, err => {
+      console.warn("Geolocation error:", err);
+    });
+  }, 5000);
+}
+
+function togglegps() {
+  gpsActive = !gpsActive;
+  const btn = document.getElementById('gps');
+
+  if (gpsActive) {
+    btn.textContent = "Stop GPS";
+    if (!gpsIntervalId) {
+      gpsIntervalId = startGeolocationLoop(window._gpsMapRef, window._gpsStateRef);
+    }
+  } else {
+    btn.textContent = "Start GPS";
+    if (gpsIntervalId) {
+      clearInterval(gpsIntervalId);
+      gpsIntervalId = null;
+    }
+  }
+}
+function afterLoading(){
+    const root = document.documentElement; // The <html> element
+    const fontButtons = document.querySelectorAll('.font-btn');
+    const body = document.body;
+    const nightModeToggle = document.getElementById('nightModeToggle');
+    const nightModeOpacitySlider = document.getElementById('nightModeOpacity');
+    const opacityValueSpan = document.getElementById('opacityValue');
+    const swissModeToggle = document.getElementById('swissModeToggle'); // Get the Swiss mode toggle
+    const head = document.head; // Reference to the <head> element
+    let nightModeLink = null; // To store a reference to the night mode stylesheet
+    let swissModeLink = null; // To store a reference to the Swiss mode stylesheet
+
+    // --- Font Selection --- NOT IMPLEMENTED
+    /*fontButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const selectedFont = button.dataset.font;
+            root.style.setProperty('--main-font', selectedFont);
+
+            // Remove 'active' class from all buttons
+            fontButtons.forEach(btn => btn.classList.remove('active'));
+            // Add 'active' class to the clicked button
+            button.classList.add('active');
+
+            // Store preference in localStorage
+            localStorage.setItem('selectedFont', selectedFont);
+        });
+    });*/
+    
+    // Function to apply night mode styles
+    function applyNightMode() {
+        if (!nightModeLink) { // Only create and append if not already present
+            nightModeLink = document.createElement('link');
+            nightModeLink.rel = 'stylesheet';
+            nightModeLink.href = 'signstyles-night.css'; // Path to your night mode stylesheet
+            nightModeLink.id = 'night-mode-stylesheet'; // Give it an ID for easy removal
+            head.appendChild(nightModeLink);
+            console.log("night mode appended");
+        }
+        // Always ensure the opacity is set if the stylesheet is present
+        const currentOpacity = localStorage.getItem('nightModeOpacity') || nightModeOpacitySlider.value;
+        document.documentElement.style.setProperty('--night-mode-control-value', currentOpacity);
+        const markerContainers = document.querySelectorAll('.markercontainer');
+        markerContainers.forEach(container => {
+            const images = container.querySelectorAll('img');
+            images.forEach(img => {
+                const currentSrc = img.src;
+                // Check if the source already indicates night mode (to prevent double appending)
+                if (!currentSrc.includes('-night.')) {
+                    const lastDotIndex = currentSrc.lastIndexOf('.');
+                    if (lastDotIndex !== -1) {
+                        const base = currentSrc.substring(0, lastDotIndex);
+                        const extension = currentSrc.substring(lastDotIndex); // includes the dot
+                        // Store the original source for reversion
+                        img.dataset.originalSrc = currentSrc;
+                        img.src = base + '-night' + extension;
+                    }
+                }
+            });
+        });
+    }
+
+    // Function to remove night mode styles
+    function removeNightMode() {
+        if (nightModeLink) {
+            head.removeChild(nightModeLink);
+            nightModeLink = null; // Clear the reference
+        }
+        const markerContainers = document.querySelectorAll('.markercontainer');
+        markerContainers.forEach(container => {
+            const images = container.querySelectorAll('img');
+            images.forEach(img => {
+                // Revert to original source if stored
+                if (img.dataset.originalSrc) {
+                    img.src = img.dataset.originalSrc;
+                    delete img.dataset.originalSrc; // Clean up the data attribute
+                }
+            });
+        });
+    }
+
+    // Function to apply Swiss mode styles
+    function applySwissMode() {
+        if (!swissModeLink) {
+            swissModeLink = document.createElement('link');
+            swissModeLink.rel = 'stylesheet';
+            swissModeLink.href = 'signstyles-swissmode.css'; // Path to your Swiss mode stylesheet
+            swissModeLink.id = 'swiss-mode-stylesheet'; // Give it an ID
+            head.appendChild(swissModeLink);
+            console.log("Swiss mode appended");
+        }
+    }
+
+    // Function to remove Swiss mode styles
+    function removeSwissMode() {
+        if (swissModeLink) {
+            head.removeChild(swissModeLink);
+            swissModeLink = null; // Clear the reference
+        }
+    }
+
+    nightModeToggle.addEventListener('change', () => {
+        if (nightModeToggle.checked) {
+            applyNightMode();
+            localStorage.setItem('nightModeOn', 'true');
+        } else {
+            removeNightMode();
+            localStorage.removeItem('nightModeOn');
+        }
+    });
+
+    // Event listener for the Swiss Mode toggle
+    swissModeToggle.addEventListener('change', () => {
+        if (swissModeToggle.checked) {
+            applySwissMode();
+            localStorage.setItem('swissModeOn', 'true'); // Store preference
+        } else {
+            removeSwissMode();
+            localStorage.removeItem('swissModeOn'); // Remove preference
+        }
+    });
+
+    nightModeOpacitySlider.addEventListener('input', () => {
+        const opacity = nightModeOpacitySlider.value;
+        // This still uses a CSS variable, but now it's defined in styles-night-mode.css
+        // And the script updates the variable on the root element.
+        document.documentElement.style.setProperty('--night-mode-control-value', opacity);
+        opacityValueSpan.textContent = `${Math.round(opacity * 100)}%`;
+        localStorage.setItem('nightModeOpacity', opacity);
+    });
+
+    function loadPreferences() {
+        // ... (Font loading logic remains the same) ...
+
+        const savedNightMode = localStorage.getItem('nightModeOn');
+        if (savedNightMode === 'true') {
+            nightModeToggle.checked = true;
+            applyNightMode(); // Apply the stylesheet if night mode was saved
+        }
+
+        const savedOpacity = localStorage.getItem('nightModeOpacity');
+        if (savedOpacity) {
+            nightModeOpacitySlider.value = savedOpacity;
+            opacityValueSpan.textContent = `${Math.round(savedOpacity * 100)}%`;
+            // The applyNightMode function already ensures the variable is set.
+        } else {
+            opacityValueSpan.textContent = `${Math.round(nightModeOpacitySlider.value * 100)}%`;
+        }
+
+        // Load Swiss Mode preference
+        const savedSwissMode = localStorage.getItem('swissModeOn');
+        if (savedSwissMode === 'true') {
+            swissModeToggle.checked = true;
+            applySwissMode(); // Apply Swiss mode stylesheet if it was saved
+        }
+    }
+
+    loadPreferences(); // Call this on page load
+}
+
+window.onload = main;
+document.addEventListener('DOMContentLoaded', () => {afterLoading()});
+</script>
+</body>
+</html>

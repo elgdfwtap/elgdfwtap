@@ -1,0 +1,344 @@
+:root{
+	--text-color-day: #333;
+    --bg-color-day: #fff;
+    /* Initial/fallback value for night mode text control if night-mode.css isn't loaded */
+    /* This variable will be set by JavaScript based on the slider value */
+    --night-mode-control-value: 0; /* 0 for black text, 1 for white text */
+	
+}
+body{
+  background-color:green;
+  text-align:center;
+  width:100vw;
+  margin:0pt;
+}
+@font-face{
+	font-family:"hnv";
+	src:url("./hnv.woff2") format("woff2");
+	font-display: swap;
+	font-variation-settings: "wdth" 80;
+	font-variation-settings: "wght" 700;
+}
+@font-face{
+  font-family: "hwyD";
+  src:url("./HighwayD2K.woff2") format("woff2"),url("HighwayD2K.ttf") format("truetype");
+  font-display: swap;
+  
+}
+@font-face{
+  font-family: "hwyE";
+  src:url("./HighwayE2K.woff2") format("woff2"),url("HighwayE2K.ttf") format("truetype");
+  font-display: swap;
+}
+@font-face{
+  font-family: "hwyEm";
+  src:url("./HighwayEMod2K.woff2") format("woff2"),url("HighwayEMod2K.ttf") format("truetype");
+  font-display: swap;
+}
+ul{
+	width:100vw;
+}
+
+.panel{
+  background-color:green;
+  height:auto;
+  width:auto;
+  display:inline-block;
+  border:2pt solid white;
+  border-radius:12pt;
+  text-align:center;
+  padding:0pt;
+  vertical-align: middle;
+  color:white;
+}
+
+.multipanelcontainer{
+  height:auto;
+  width:auto;
+  display:inline-block;
+  background-color:green;
+}
+
+.main-sign-table{
+  margin:0pt;
+  padding:0pt;  
+  display: block;
+  text-align:center;
+  width:auto;
+  height:auto;
+  place-items: center; /* centers both vertically and horizontally */
+}
+.panel-exit,.panel-exit-left{
+  float:right;
+  background-color:green;
+  height:auto;
+  width:auto;
+  display:inline-block;
+  border:2pt solid white;
+  border-radius:5pt;
+  text-align:center;
+  padding:0pt;
+  color:white;
+}
+.panel-exit-left{
+  float:left;
+}
+.exit{
+  font-size:14.07pt;
+  letter-spacing: 1.7pt;
+  position:relative;
+  bottom:2pt;
+}
+.exit-num{
+  font-size:21.094pt;
+  position:relative;
+  top:2pt;
+}
+.sign-table{
+  margin:0pt;
+  padding:0pt;  
+  display: inline-block;
+  text-align:center;
+  width:100%;
+  height:auto;
+  place-items: center; /* centers both vertically and horizontally */
+
+}
+.shield-group{
+  width:auto;
+}
+tbody{
+	display:block;
+}
+tr{
+  margin:0px;
+  padding:0px;
+  display:block;
+}
+td{
+  margin:0px;
+  padding:0px;
+  font-family:'hwyE';
+  letter-spacing:4pt;
+  font-size:22.5pt;
+  display:inline-block;
+}
+p{
+  margin-top:0pt;
+  margin-bottom:0pt;
+  margin-left:15pt;
+  margin-right:15pt;
+}
+img{
+  height:36pt;
+  display:block;
+  margin-top:3pt;
+}
+.dest{
+  font-family:'hwyEm';
+  font-size:22.5pt;
+  letter-spacing:5pt;
+  padding:0pt;
+}
+.dist{
+  font-family:'hwyE';
+  font-size:16.875pt;
+  letter-spacing:3.125pt;
+}
+.dist-num{
+  font-family:'hwyE';
+  font-size:25.312pt;
+  position:relative;
+  top:2pt;
+}
+.markercontainer{
+  position:relative;
+  display:inline-block;
+  font-size:25.3125pt;
+  margin-left:9pt;
+  margin-right:9pt;
+  letter-spacing: 1pt;
+  font-family: "hwyD";
+}
+ 
+.shieldnumber{
+  color:black;
+  position: absolute;
+  letter-spacing: 2pt;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  margin: 0;	
+}
+.rectmarkertextabove{
+  font-size:20pt;
+    
+  top: 70%;
+}
+.rectmarkertextabovestate{
+  font-size:6pt;
+  top:9pt;
+  color:black;
+  position:absolute;
+  top: 30%;
+  left: 51%;
+  transform: translate(-50%, -50%);
+  margin: 0;	
+}
+  .circmarker{
+    font-size:21pt;
+    top:55%;
+  }
+  .camarker{
+    color:white;
+    font-size:18pt;
+    top:70%;
+  }
+.usmarker{
+  font-size:21pt;
+}
+.usbusinessmarker{
+  font-size:19pt;
+  top:60%;
+  color:green;
+}
+.wide{
+  
+}
+.interstatemarker{
+  font-size:21.0937pt;
+  color:white;
+  top:56%
+}
+.interstatebusinessmarker{
+  font-size:21.0937pt;
+  color:white;
+  top:56%
+}
+.dir{
+  font-size:16.875pt;
+  letter-spacing:3pt;
+  margin-left:0pt;
+  margin-right:5pt;
+  position:relative;
+  bottom:2pt;
+}
+.dir-cap{
+  font-size:21.094pt;
+}
+.sign-table:shield{
+  display:inline;
+}
+@media (max-width: 699px) {
+  .multipanelcontainer {
+    width: 50%; /* Viewport width */
+    box-sizing: border-box; /* Include padding and border in the width */
+  }
+  .panel-exit, .panel-exit-left{
+	  width:100%;
+	  text-align:right;
+	  border:none;
+	  background-color:transparent;
+	  border-bottom:2pt solid white;
+	  border-radius:0pt;
+  }
+  .panel-exit-left{
+	text-align:left;
+  }
+  .panel{
+	  border:none;
+  }
+  .multipanelcontainer{
+	border-radius:12pt;
+	border:2pt solid white;
+  }
+}
+@media (max-width: 499px) {
+  .multipanelcontainer , .panel{
+    width: 100%; /* Viewport width */
+    box-sizing: border-box; /* Include padding and border in the width */
+  }
+  .multipanelcontainer{
+	margin-top:5pt;  
+  }
+}
+.warning{
+	border-radius:3pt;
+	background-color:gold;
+	color:black;
+  text-align:center;
+  float:left;
+  margin-top:6pt;
+  margin-left:12pt;
+  margin-right:12pt;
+  
+}
+p.warning{
+	color:black;
+	margin-left:4pt;
+  margin-right:0pt;
+  margin-top:1pt;
+  font-size:16.875pt;
+  
+}
+.warning-text-big{
+  position:relative;
+	font-size:22.5pt;
+  bottom:0pt;
+}
+p.warning-text-speed{
+	position:relative;
+	bottom:4pt;
+  letter-spacing:3pt;
+  padding-left:7pt;
+  padding-right:3pt;
+  margin-top:9pt;
+  margin-bottom:2pt;
+}
+.inst{
+  font-family:'hwyE';
+  font-size:16.875pt;
+  letter-spacing:3.125pt;
+}
+.apl-row{
+  display: flex;
+  justify-content: space-between; 
+}
+.EO{
+	display:inline;
+	position:relative;
+	font-size: 14pt;
+	letter-spacing: 1pt;
+	float: none;
+  margin-left:0pt;
+  margin-right:0pt;
+  
+}
+.EOEXIT{
+	top: 15pt;
+	right: 2pt;
+}
+.EOONLY{
+  white-space: nowrap;
+  left: 18pt;
+  top: 15pt;
+}
+.arrowContainer{
+  white-space: nowrap;
+  width:50pt;
+  position: relative;
+}
+.apl-arrow{
+  display:inline-block;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+#options-multi-container{
+	display:none;
+}
+.options-container{
+	color:white;
+	font-family:hnv;
+}
