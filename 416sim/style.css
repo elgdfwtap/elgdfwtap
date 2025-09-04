@@ -1,0 +1,28 @@
+body{
+    
+}
+#analysis-filters {
+    display:none;
+}
+input[type="range"] {
+    position: absolute;
+    width: 100%;
+    pointer-events: none;
+}
+input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    pointer-events: auto;
+}
+input[type="range"]::-moz-range-thumb {
+    pointer-events: auto;
+}
+input[type="range"]::-ms-thumb {
+    pointer-events: auto;
+}
+.chart-container{
+    display:inline-block;
+    max-width:600px;
+}
+.uplot{
+    display:inline;
+}
