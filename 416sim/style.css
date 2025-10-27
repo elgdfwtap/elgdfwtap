@@ -26,3 +26,23 @@ input[type="range"]::-ms-thumb {
 .uplot{
     display:inline;
 }
+.series-container {
+    margin: 0.5em 0;
+    padding: 0.5em;
+    border: 1px solid #aaa;
+    border-radius: 4px;
+    color: white;
+}
+.series-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+    flex-wrap: wrap;
+}
+.series-controls input[type="number"] {
+    width: 80px;
+}
+.series-label {
+    font-weight: bold;
+    margin-right: 0.5em;
+}

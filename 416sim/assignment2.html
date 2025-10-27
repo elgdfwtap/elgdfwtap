@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Cell Transmission Model</title>
+    <meta name="description" content="" />
+    <!-- <link rel="stylesheet" href="styles.css" /> -->
+  </head>
+  <body>
+    <header></header>
+    <main>
+        <canvas id="sim" style="width: 800px; height: 600px"></canvas>
+        <script src="appscript.js"></script>
+        <script src="segmentdrawing.js"></script>
+        <script>
+        const canvas = document.getElementById("sim");
+        const { store, renderer, mountDemo } = TrafficSim.initFramework(canvas);
+        mountDemo();
+        </script>
+    </main>
+    <footer><button onclick="TrafficSim.ToolState.current='select'">Select Tool</button>
+<button onclick="TrafficSim.ToolState.current='pan'">Pan Tool</button>
+<button onclick="TrafficSim.ToolState.current='draw'">Draw Tool</button>
+<button onclick="TrafficSim.ToolState.current = 'extend'">Point</button>
+<button onclick="TrafficSim.ToolState.current='roadDraw'">Road Tool</button><br>
+<button onclick="TrafficSim.ToolState.snapMode='none'">No snap</button>
+<button onclick="TrafficSim.ToolState.snapMode='line'">Line snap</button>
+<button onclick="TrafficSim.ToolState.snapMode='point'">Point snap</button>
+
+</footer>
+
+    <!-- <script src="app.js" defer></script> -->
+  </body>
+</html>

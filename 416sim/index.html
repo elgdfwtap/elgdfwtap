@@ -51,15 +51,24 @@
           </div>
 
         </div>
-        <div class='chart-container' id="speed-hist"></div>
-        <div class='chart-container' id="spacing-hist"></div>
-        <div class='chart-container' id="space-mean-speed"></div>
-        <div class='chart-container' id="flow-rate"></div>
-        <button id="speed-mode-toggle">Toggle Mode Speed</button>
+        <div id="tab1">
+            <div class='chart-container' id="speed-hist"></div>
+            <div class='chart-container' id="spacing-hist"></div>
+            <div class='chart-container' id="space-mean-speed"></div>
+            <div class='chart-container' id="flow-rate"></div>
+            <div class='chart-container' id="density-along-road"></div>
+            <button id="speed-mode-toggle">Toggle Mode Speed</button>
+        </div>
+        <div id="tab2">
+            <button id="add-series">+ Add Series</button>
+            <div id="series-list"></div>
+            <div class='chart-container' id="flow-density"></div>
+            <div class='chart-container' id="speed-density"></div>
+            <div class='chart-container' id="speed-flow"></div>
+        </div>
     </div>
     <div id="static-charts-container">
       <div class='chart-container' id="average-headway-hist"></div>
-      <div class='chart-container' id="density-along-road"></div>
         <button id="density-mode-toggle">Toggle Density</button>
     </div>
 
