@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>CTM Lane-Drop (Native JS + uPlot)</title>
+    <link rel="stylesheet" href="https://unpkg.com/uplot@1.6.30/dist/uPlot.min.css" />
+    <style>
+      
+    </style>
+  </head>
+  <body>
+    <header>
+    </header>
+
+    <section class="grid">
+      <div class="col-12 panel">
+        <div class="row" style="margin-bottom:8px;">
+          <div class="inline">
+            <label for="upstream-lane-count">Upstream Lanes</label>
+            <input id="upstream-lane-count" type="number" value="2" min="1" step="1" />
+          </div>
+          <div class="inline">
+            <label for="downstream-lane-count">Downstream Lanes</label>
+            <input id="downstream-lane-count" type="number" value="1" min="1" step="1" />
+          </div>
+          <div class="inline">
+            <label for="cell-length">Cell Length Δx</label>
+            <input id="cell-length" type="number" value="528" min="50" step="1" /> ft
+          </div>
+          <div class="inline">
+            <label for="time-step">Time Step Δt</label>
+            <input id="time-step" type="number" value="1" min="0.2" step="0.2" /> s
+          </div>
+          <div class="inline">
+            <label for="horizon-min">Horizon</label>
+            <input id="horizon-min" class="small" type="number" value="90" min="1" step="1" /> min
+          </div>
+          <div class="inline">
+            <label for="bottleneck-mile">Lane-Drop @ mile</label>
+            <input id="bottleneck-mile" class="small" type="number" value="3.0" step="0.1" min="0.1" max="4.9" />
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="inline">
+            <label for="freeflow-Speed">v<sub>f</sub></label>
+            <input id="freeflow-Speed" type="number" value="70" step="1" /> mph
+          </div>
+          <div class="inline">
+            <label for="congestion-wave-speed">w</label>
+            <input id="congestion-wave-speed" type="number" value="20" step="1" /> mph
+          </div>
+          <div class="inline">
+            <label for="jam-density">k<sub>j</sub></label>
+            <input id="jam-density" type="number" value="200" step="5" /> veh/mi/lane
+          </div>
+          <div class="inline">
+            <label for="max-flow">q<sub>max</sub></label>
+            <input id="max-flow" type="number" value="2200" step="50" /> veh/h/lane
+          </div>
+          <div class="inline">
+            <span class="muted">Critical density per lane: <span id="kcLabel">—</span> veh/mi/lane</span>
+          </div>
+        </div>
+
+        <div class="sep"></div>
+
+        <div class="row">
+          <div>
+            <div><label for="demand">Upstream demand profile (CSV or piecewise):</label></div>
+            <textarea id="demand" spellcheck="false"># minutes, vph (total across lanes)
+0, 1200
+10, 1800
+20, 2400
+30, 3600
+60, 2200
+80, 1400
+            </textarea>
+            <div class="muted">Format: each line "<code class="inline">minute, vehicles_per_hour</code>" (applies from that minute until the next breakpoint).</div>
+          </div>
+          <div>
+            <div><label for="init-density">Initial density options:</label></div>
+            <select id="init-density">
+              <option value="free">Uniform free-flow (0.1·k<sub>c</sub>)</option>
+              <option value="maxflow">At max-flow (k<sub>c</sub>)</option>
+              <option value="nearjam">Near jam (0.9·k<sub>j</sub>)</option>
+            </select>
+            <div style="margin-top:8px;">
+              <label for="probe-mile">Probe location (mile 0 → 5):</label>
+              <input id="probe-mile" type="number" value="2.5" min="0" max="5" step="0.1" />
+            </div>
+            <div class="kpis" style="margin-top:10px;">
+              <div class="kpi">Cells: <span id="cellCount">—</span></div>
+              <div class="kpi">Δx (mi): <span id="dxMi">—</span></div>
+              <div class="kpi">CFL (v<sub>f</sub>): <span id="cflVf">—</span></div>
+              <div class="kpi">CFL (w): <span id="cflW">—</span></div>
+              <div class="kpi">Stability: <span id="stab" class="ok">—</span></div>
+            </div>
+            <div style="margin-top:10px;">
+              <button id="runBtn">Run Simulation</button>
+              <button id="downloadBtn" disabled>Download CSV (probe series)</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-12 panel">
+        <div class="charts">
+          <div>
+            <div id="chart-speed" class="uplot"></div>
+          </div>
+          <div>
+            <div id="chart-density" class="uplot"></div>
+          </div>
+          <div>
+            <div id="chart-flow" class="uplot"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Fundamental diagram helper (from your starter) -->
+    <script>
+      const vfInput = document.getElementById('freeflow-Speed');
+      const wInput = document.getElementById('congestion-wave-speed');
+      const kjInput = document.getElementById('jam-density');
+      const qInput  = document.getElementById('max-flow');
+      const kcLabel = document.getElementById('kcLabel');
+
+      let isUpdating = false;
+
+      function computeQ(vf, w, kj) { return (vf * w * kj) / (vf + w); }
+      function computeKj(q, vf, w) { return q * (vf + w) / (vf * w); }
+      function computeVf(q, w, kj) { return (q * w) / (kj * w - q); }
+      function computeW(q, vf, kj) { return (q * vf) / (kj * vf - q); }
+
+      function updateFromVfWkj() {
+        if (isUpdating) return;
+        isUpdating = true;
+        const vf = Number(vfInput.value);
+        const w  = Number(wInput.value);
+        const kj = Number(kjInput.value);
+        qInput.value = computeQ(vf, w, kj).toFixed(2);
+        kcLabel.textContent = (Number(qInput.value) / vf).toFixed(2);
+        isUpdating = false;
+      }
+
+      function updateFromQ() {
+        if (isUpdating) return;
+        isUpdating = true;
+        const q  = Number(qInput.value);
+        const vf = Number(vfInput.value);
+        const w  = Number(wInput.value);
+        const kj = Number(kjInput.value);
+        if (vf && w) {
+          kjInput.value = computeKj(q, vf, w).toFixed(2);
+        } else if (kj && w) {
+          vfInput.value = computeVf(q, w, kj).toFixed(2);
+        } else if (kj && vf) {
+          wInput.value  = computeW(q, vf, kj).toFixed(2);
+        }
+        kcLabel.textContent = (Number(qInput.value) / Number(vfInput.value)).toFixed(2);
+        isUpdating = false;
+      }
+
+      vfInput.addEventListener('input', updateFromVfWkj);
+      wInput.addEventListener('input', updateFromVfWkj);
+      kjInput.addEventListener('input', updateFromVfWkj);
+      qInput.addEventListener('input', updateFromQ);
+      updateFromVfWkj();
+    </script>
+
+    <!-- uPlot -->
+    <script src="https://unpkg.com/uplot@1.6.30/dist/uPlot.iife.min.js"></script>
+
+    <!-- CTM Simulation -->
+    <script>
+      const milesTotal = 5.0;
+
+      const $ = (id) => document.getElementById(id);
+
+      const ui = {
+        up: $('upstream-lane-count'),
+        down: $('downstream-lane-count'),
+        dxft: $('cell-length'),
+        dts: $('time-step'),
+        horizonMin: $('horizon-min'),
+        dropMile: $('bottleneck-mile'),
+        demand: $('demand'),
+        initType: $('init-density'),
+        probeMile: $('probe-mile'),
+        cellCount: $('cellCount'),
+        dxMi: $('dxMi'),
+        cflVf: $('cflVf'),
+        cflW: $('cflW'),
+        stab: $('stab'),
+        run: $('runBtn'),
+        dl: $('downloadBtn'),
+      };
+
+      function parseDemand(text) {
+        const lines = text.split(/\r?\n/).map(s => s.trim()).filter(s => s.length > 0 && !s.startsWith('#'));
+        const pieces = [];
+        for (const ln of lines) {
+          const [tStr, qStr] = ln.split(',').map(s => s.trim());
+          const minute = Number(tStr);
+          const vph = Number(qStr);
+          if (Number.isFinite(minute) && Number.isFinite(vph)) pieces.push([minute, vph]);
+        }
+        pieces.sort((a,b)=>a[0]-b[0]);
+        return pieces;
+      }
+
+      function demandAt(minute, pieces) {
+        let current = 0;
+        for (let i = 0; i < pieces.length; i++) {
+          const [m, v] = pieces[i];
+          if (minute >= m) current = v; else break;
+        }
+        return current; // vehicles/hour (total, all lanes upstream)
+      }
+
+      function computeGeom() {
+        const dx_mi = Number(ui.dxft.value) / 5280;
+        const N = Math.max(1, Math.floor(milesTotal / dx_mi));
+        const dx_used = milesTotal / N; // snap to cover exactly 5 miles
+        ui.cellCount.textContent = String(N);
+        ui.dxMi.textContent = dx_used.toFixed(5);
+
+        const dt_hr = Number(ui.dts.value) / 3600;
+        const vf = Number(vfInput.value); // mph
+        const w  = Number(wInput.value);  // mph
+
+        const cflV = vf * dt_hr / dx_used;
+        const cflWn = w * dt_hr / dx_used;
+
+        ui.cflVf.textContent = cflV.toFixed(3);
+        ui.cflW.textContent  = cflWn.toFixed(3);
+
+        const ok = cflV <= 1.0 && cflWn <= 1.0;
+        ui.stab.textContent = ok ? 'OK' : 'Reduce Δt or increase Δx';
+        ui.stab.className = ok ? 'ok' : 'warn';
+
+        return { N, dx: dx_used, dt_hr, dx_mi: dx_used };
+      }
+
+      function buildLanes(N, dx) {
+        const up = Math.max(1, Number(ui.up.value)|0);
+        const dn = Math.max(1, Number(ui.down.value)|0);
+        const dropMile = Math.min(Math.max(0, Number(ui.dropMile.value)), milesTotal);
+        const dropCell = Math.min(N-1, Math.max(0, Math.floor(dropMile / dx))); // drop happens at boundary dropCell -> dropCell+1
+
+        const lanes = new Array(N).fill(up);
+        for (let i = dropCell+1; i < N; i++) lanes[i] = dn;
+
+        return { lanes, dropCell };
+      }
+
+      function buildFDPerCell(N, lanes, dropCell) {
+        const vf = Number(vfInput.value); // mph, same everywhere
+        const w  = Number(wInput.value);  // mph
+        const kjLane = Number(kjInput.value); // veh/mi/lane
+        const qLane  = Number(qInput.value);  // vph/lane (from triangular FD)
+        const kjCell = new Array(N);
+        const qMaxCell = new Array(N);
+
+        for (let i = 0; i < N; i++) {
+          const L = lanes[i];
+          kjCell[i] = kjLane * L;           // jam density per cell (veh/mi across all lanes)
+          qMaxCell[i] = qLane * L;          // capacity per cell (veh/h across all lanes)
+        }
+
+        // Geometric lane drop capacity: downstream capacity = 0.5 × (2-lane capacity)
+        // This equals qLane * 1 when upstream is 2 lanes; generalize proportionally:
+        // Set cap of all cells strictly downstream of the drop to: (down/up)* (2 * qLane) * 0.5 when up=2?
+        // Simpler: enforce downstream cell capacity = qLane * (downstream lanes)
+        // plus explicit 0.5*(upstream 2-lane cap) if user left up=2, dn=1:
+        if (Number(ui.up.value) === 2 && Number(ui.down.value) === 1) {
+          for (let i = dropCell+1; i < N; i++) qMaxCell[i] = 0.5 * (2 * qLane); // = qLane
+        }
+        // If user enters other lane counts, qMaxCell already reflects lanes[i] * qLane.
+
+        return { vf, w, kjCell, qMaxCell, kjLane, qLane };
+      }
+
+      function initialDensity(N, lanes, kjLane, qLane, vf) {
+        const type = ui.initType.value;
+        const k = new Array(N);
+        const kcLane = qLane / vf; // veh/mi/lane
+        const mult = (type === 'free') ? 0.1 * kcLane
+                   : (type === 'maxflow') ? kcLane
+                   : 0.9 * Number(kjInput.value); // per lane
+        for (let i = 0; i < N; i++) {
+          k[i] = mult * lanes[i]; // veh/mi across all lanes
+        }
+        return k;
+      }
+
+      function runCTM() {
+        ui.run.disabled = true;
+        ui.dl.disabled = true;
+
+        const { N, dx, dt_hr } = computeGeom();
+        const { lanes, dropCell } = buildLanes(N, dx);
+        const { vf, w, kjCell, qMaxCell, kjLane, qLane } = buildFDPerCell(N, lanes, dropCell);
+
+        // Safety/stability
+        const cflOK = (vf * dt_hr / dx <= 1.0) && (w * dt_hr / dx <= 1.0);
+        if (!cflOK) {
+          ui.run.disabled = false;
+          return;
+        }
+
+        // Time axis
+        const T_min = Number(ui.horizonMin.value);
+        const steps = Math.floor((T_min * 60) / (dt_hr * 3600));
+        const tSec = new Array(steps);
+        for (let t = 0; t < steps; t++) tSec[t] = t * dt_hr * 3600;
+
+        // Demand
+        const demandPieces = parseDemand(ui.demand.value);
+
+        // State arrays
+        let k = initialDensity(N, lanes, kjLane, qLane, vf); // veh/mi across all lanes
+        const kHist = new Array(steps);
+        const qHist = new Array(steps); // boundary flows between cells (we'll store per-cell outflow)
+        for (let t = 0; t < steps; t++) {
+          kHist[t] = new Float64Array(k);
+          qHist[t] = new Float64Array(N).fill(0);
+        }
+
+        // Helper: sending/receiving (veh/h)
+        function S(i, k_i) {
+          // free-flow branch limited by capacity
+          return Math.min(vf * k_i, qMaxCell[i]);
+        }
+        function R(i, k_i) {
+          // congestion branch limited by capacity
+          return Math.min(w * (kjCell[i] - k_i), qMaxCell[i]);
+        }
+
+        // Probe
+        const probeMile = Math.max(0, Math.min(milesTotal, Number(ui.probeMile.value)));
+        const probeCell = Math.max(0, Math.min(N - 1, Math.floor(probeMile / dx)));
+
+        // Simulation
+        for (let t = 0; t < steps - 1; t++) {
+          const flows = new Array(N + 1).fill(0); // interfaces 0..N (0 is upstream boundary, N is downstream outlet)
+
+          // Upstream boundary demand (veh/h total)
+          const dem_vph = demandAt(t * dt_hr * 60, demandPieces);
+          // Ghost cell sending from upstream = demand (veh/h), but respect first cell receiving:
+          const R0 = R(0, k[0]);
+          flows[0] = Math.min(dem_vph, R0);
+
+          // Internal cell interfaces
+          for (let i = 0; i < N - 1; i++) {
+            const send = S(i, k[i]);
+            const recv = R(i + 1, k[i + 1]);
+            flows[i + 1] = Math.min(send, recv);
+          }
+
+          // Downstream boundary (uncongested receiver)
+          // Let last sending be bounded only by last cell capacity:
+          flows[N] = S(N - 1, k[N - 1]);
+
+          // Update densities
+          const lambda = dt_hr / dx; // hr/mi
+          const kNext = new Array(N);
+          for (let i = 0; i < N; i++) {
+            const inflow = flows[i];     // veh/h into cell i
+            const outflow = flows[i + 1];// veh/h out of cell i
+            kNext[i] = k[i] + lambda * (inflow - outflow); // veh/mi
+            // Guards
+            kNext[i] = Math.max(0, Math.min(kNext[i], kjCell[i]));
+          }
+          k = kNext;
+
+          // Store
+          kHist[t + 1] = new Float64Array(k);
+          const qOut = new Float64Array(N);
+          for (let i = 0; i < N; i++) qOut[i] = flows[i + 1]; // outflow per cell boundary (veh/h)
+          qHist[t] = qOut;
+        }
+
+        // Build probe series
+        const time = tSec;
+        const kProbe = new Array(steps);
+        const qProbe = new Array(steps);
+        const vProbe = new Array(steps);
+        for (let t = 0; t < steps; t++) {
+          const k_i = kHist[t][probeCell];                 // veh/mi (all lanes)
+          const q_i = (t < steps-1 ? qHist[t][probeCell] : Math.min(vf*kHist[t][probeCell], qMaxCell[probeCell])); // veh/h
+          const v_i = k_i > 1e-6 ? Math.min(vf, q_i / k_i) : vf; // mph, consistent with triangular FD
+          kProbe[t] = k_i / Math.max(1, lanes[probeCell]); // per-lane density for readability
+          qProbe[t] = q_i / Math.max(1, lanes[probeCell]); // per-lane flow
+          vProbe[t] = v_i;
+        }
+  console.log("Time array (sec):", time.slice(0, 20), "... total:", time.length);
+  console.log("Speed probe (mph):", vProbe.slice(0, 20));
+  console.log("Density probe (veh/mi/lane):", kProbe.slice(0, 20));
+  console.log("Flow probe (veh/h/lane):", qProbe.slice(0, 20));
+        drawCharts(time, vProbe, kProbe, qProbe);
+        lastExport = { time, vProbe, kProbe, qProbe };
+        ui.dl.disabled = false;
+        ui.run.disabled = false;
+      }
+
+      // Charts
+      let upSpeed = null, upDensity = null, upFlow = null;
+      function drawCharts(timeSec, v, k, q) {
+  const tMin = timeSec.map(s => s / 60);
+
+  if (upSpeed) upSpeed.destroy();
+  if (upDensity) upDensity.destroy();
+  if (upFlow) upFlow.destroy();
+
+  upSpeed = new uPlot({
+    title: "Speed vs Time",
+    width: 640,
+    height: 240,
+    scales: { x: { time: false } },
+    series: [
+      {}, // x
+      { label: "Speed (mph)", stroke: "steelblue" }
+    ],
+    axes: [
+      { label: "Time (min)" },
+      { label: "Speed (mph)" }
+    ],
+  }, [tMin, v], document.getElementById("chart-speed"));
+
+  upDensity = new uPlot({
+    title: "Density vs Time",
+    width: 640,
+    height: 240,
+    scales: { x: { time: false } },
+    series: [
+      {}, // x
+      { label: "Density (veh/mi/lane)", stroke: "firebrick" }
+    ],
+    axes: [
+      { label: "Time (min)" },
+      { label: "Density (veh/mi/lane)" }
+    ],
+  }, [tMin, k], document.getElementById("chart-density"));
+
+  upFlow = new uPlot({
+    title: "Flow vs Time",
+    width: 640,
+    height: 240,
+    scales: { x: { time: false } },
+    series: [
+      {}, // x
+      { label: "Flow (veh/h/lane)", stroke: "green" }
+    ],
+    axes: [
+      { label: "Time (min)" },
+      { label: "Flow (veh/h/lane)" }
+    ],
+  }, [tMin, q], document.getElementById("chart-flow"));
+}
+
+
+
+      // Export CSV
+      let lastExport = null;
+      function toCSV({ time, vProbe, kProbe, qProbe }) {
+        const header = "time_s,time_min,speed_mph,density_veh_per_mi_per_lane,flow_veh_per_h_per_lane";
+        const rows = [header];
+        for (let i = 0; i < time.length; i++) {
+          rows.push([
+            time[i].toFixed(2),
+            (time[i]/60).toFixed(2),
+            vProbe[i].toFixed(4),
+            kProbe[i].toFixed(4),
+            qProbe[i].toFixed(4)
+          ].join(","));
+        }
+        return rows.join("\n");
+      }
+      function download(filename, text) {
+        const blob = new Blob([text], {type: "text/csv;charset=utf-8;"});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+
+      ui.run.addEventListener('click', runCTM);
+      ui.dl.addEventListener('click', () => {
+        if (!lastExport) return;
+        download("probe_series.csv", toCSV(lastExport));
+      });
+
+      // Initial compute
+      computeGeom();
+      ui.dxft.addEventListener('input', computeGeom);
+      ui.dts.addEventListener('input', computeGeom);
+      ui.horizonMin.addEventListener('input', computeGeom);
+      ui.dropMile.addEventListener('input', computeGeom);
+    </script>
+  </body>
+</html>

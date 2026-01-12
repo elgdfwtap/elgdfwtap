@@ -1,0 +1,1038 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Two-Lane Ring Traffic Simulator (IDM / Gipps / GM + MOBIL)</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<style>
+  :root { --bg:#0f1116; --panel:#151926; --text:#d7dae0; --muted:#8b90a1; --accent:#6aa9ff; --ok:#4cd964; --warn:#ffcc00; --bad:#ff3b30; }
+  html,body { height:100%; margin:0; background:var(--bg); color:var(--text); font:14px/1.45 system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif; }
+  #app { display:grid; grid-template-columns: 320px 1fr; grid-template-rows: auto 1fr; height:100%; }
+  header { grid-column:1 / -1; padding:10px 14px; border-bottom:1px solid #22293a; display:flex; gap:14px; align-items:center; }
+  header h1 { margin:0; font-size:16px; font-weight:600; letter-spacing:.2px; }
+  header .pill { padding:4px 8px; border-radius:999px; background:#1c2336; color:var(--muted); }
+  #panel { background:var(--panel); padding:12px; overflow:auto; }
+  fieldset { border:1px solid #22293a; border-radius:8px; padding:10px; margin:0 0 12px 0; }
+  legend { padding:0 6px; color:var(--muted); }
+  label { display:flex; align-items:center; justify-content:space-between; gap:10px; margin:6px 0; }
+  input[type=range] { width:160px; }
+  input[type=number], select { width:100px; background:#0f1320; color:var(--text); border:1px solid #2a324a; border-radius:6px; padding:4px 6px; }
+  .row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+  button { background:#1e2740; color:var(--text); border:1px solid #2a324a; border-radius:8px; padding:8px 10px; cursor:pointer; }
+  button.primary { background:var(--accent); color:#08101e; border-color:#7bb4ff; font-weight:600; }
+  small { color:var(--muted); }
+  #glwrap { position:relative; background:#0a0d14; }
+  #gl { width:100%; height:100%; display:block; }
+  #hud { position:absolute; left:8px; bottom:8px; background:#0b1020cc; padding:8px 10px; border:1px solid #1c2440; border-radius:8px; }
+  #hud .k { color:var(--muted); margin-right:6px; }
+  .grid2 { display:grid; grid-template-columns: 1fr 1fr; gap:8px; }
+  .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; }
+</style>
+</head>
+<body>
+<div id="app">
+  <aside id="panel">
+    <fieldset>
+      <legend>Simulation</legend>
+      <div class="row">
+        <button id="btnPlay" class="primary">Play</button>
+        <button id="btnStep">Step</button>
+        <button id="btnReset">Reset</button>
+      </div>
+      <label>Δt [s]
+        <input id="dt" type="number" step="0.005" min="0.005" value="0.05">
+      </label>
+      <fieldset>
+        <legend>Display</legend>
+        <label>Color by
+            <select id="colorMode">
+            <option value="lane" selected>Lane</option>
+            <option value="speed">Speed</option>
+            <option value="accel">Acceleration</option>
+            </select>
+        </label>
+      </fieldset>
+      <label>Model
+        <select id="model">
+          <option value="IDM">IDM</option>
+          <option value="GIPPS">Gipps</option>
+          <option value="GM">GM</option>
+        </select>
+      </label>
+        <label>Number of lanes
+        <input id="numLanes" type="number" min="1" max="8" step="1" value="2">
+        </label>
+
+        <div id="nplContainer"></div>
+
+      <label>Ring radius R [m]
+        <input id="radius" type="number" min="50" max="10000" value="250">
+      </label>
+      <label>Lane width [m]
+        <input id="laneW" type="number" min="2.5" max="5" step="0.1" value="3.6">
+      </label>
+    </fieldset>
+
+    <fieldset>
+      <legend>Car-Following Parameters</legend>
+      <div id="params"></div>
+      <small>Switch model to see its parameters.</small>
+    </fieldset>
+
+    <fieldset>
+      <legend>MOBIL Lane-Changing</legend>
+      <label>Enabled
+        <select id="lcEnabled">
+          <option value="on" selected>On</option>
+          <option value="off">Off</option>
+        </select>
+      </label>
+      <label>Politeness p
+        <input id="mobil_p" type="number" step="0.05" value="0.2">
+      </label>
+      <label>Δa_th [m/s²]
+        <input id="mobil_th" type="number" step="0.1" value="0.1">
+      </label>
+      <label>Safe decel (target follower) b_safe [m/s²]
+        <input id="mobil_bsafe" type="number" step="0.1" value="3.0">
+      </label>
+      <label>Cooldown mean [s]
+        <input id="lcCooldownMean" type="number" step="0.1" value="5.0">
+    </label>
+    <label>Cooldown std [s]
+        <input id="lcCooldownStd" type="number" step="0.1" value="2.0">
+    </label>
+    <label>Keep-right bias Δa_bias [m/s²]
+        f<input id="mobil_bias" type="number" step="0.1" value="0.2">
+    </label>
+
+
+      <small>Classic MOBIL: incentive Δa_me + p(Δa_newFol + Δa_oldFol) &gt; Δa_th, safety a_newFol ≥ −b_safe.</small>
+    </fieldset>
+
+    <fieldset>
+      <legend>Initialization</legend>
+      <label>Uniform spacing
+        <select id="initSpacing">
+          <option value="uniform" selected>Uniform</option>
+        </select>
+      </label>
+      <div class="row">
+        <button id="btnReinit">Re-place vehicles</button>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Diagnostics</legend>
+      <div class="grid2 mono">
+        <div><span class="k">L</span><span id="len"></span></div>
+        <div><span class="k">N</span><span id="num"></span></div>
+        <div><span class="k">Mean v</span><span id="vmean"></span></div>
+        <div><span class="k">Density</span><span id="dens"></span></div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+    </fieldset>
+  </aside>
+
+  <div id="glwrap">
+    <canvas id="gl"></canvas>
+    <div id="hud" class="mono">
+      <div><span class="k">t</span><span id="time">0.00</span> s</div>
+      <div><span class="k">model</span><span id="hudModel">IDM</span></div>
+      <div><span class="k">FPS</span><span id="fps">—</span></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ---------- Math helpers ----------
+const TAU = Math.PI * 2;
+const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
+const mod = (a, n) => ((a % n) + n) % n;
+
+// ---------- Core network classes ----------
+class Segment {
+  // For ring: a circular centerline parameterized by s ∈ [0, L)
+  constructor({id, radius, lanes=2, laneWidth=3.6, speedLimit=33.33}) {
+    this.id = id;
+    this.radius = radius;
+    this.lanes = lanes;
+    this.laneWidth = laneWidth;
+    this.speedLimit = speedLimit;
+    this.length = TAU * radius;
+  }
+  laneOffset(lane) { // lane 0 inner, 1 outer (right-hand traffic)
+    const centerShift = (lane + 0.5) * this.laneWidth; // measure outward
+    return this.radius + centerShift - (this.lanes * this.laneWidth)/2;
+  }
+  // world 2D from longitudinal s and lane index
+  pos(s, lane) {
+    const r = this.laneOffset(lane);
+    const theta = (s / this.length) * TAU;
+    return [ r * Math.cos(theta), r * Math.sin(theta) ];
+  }
+  // tangent unit vector
+  tan(s) {
+    const theta = (s / this.length) * TAU;
+    return [ -Math.sin(theta), Math.cos(theta) ];
+  }
+}
+
+class Link {
+  // For periodic ring: from end back to start; effectively implicit by modulo.
+  constructor({id, fromSeg, toSeg}) {
+    this.id = id; this.fromSeg = fromSeg; this.toSeg = toSeg;
+  }
+}
+
+// ---------- Vehicle + Models ----------
+class Vehicle {
+  constructor(id, lane, s, v, modelRef) {
+    this.id = id;
+    this.lane = lane; // 0..lanes-1
+    this.laneOffset = 0;     // current offset [0..1] toward new lane
+    this.laneChanging = false;
+    this.laneFrom = lane;
+    this.laneTo = lane;
+
+    this.s = s;       // longitudinal position [0, L)
+    this.v = v;       // speed >= 0
+    this.a = 0;       // last acceleration
+    this.modelRef = modelRef; // function handles/params
+        // lane-change cooldown
+    this.lcCooldown = 0;     // time remaining before next possible change
+    this.lcCooldownBase = 0; // the individual draw, for re-use
+  }
+}
+
+class IDM {
+  constructor({v0=30, T=1.2, a=1.4, b=2.0, s0=2.0, delta=4}) {
+    Object.assign(this, {v0,T,a,b,s0,delta});
+  }
+  accel(v, sGap, dv) {
+    // sGap: net distance to leader (no length); dv = v - v_lead
+    const {v0,T,a,b,s0,delta} = this;
+    const sStar = s0 + Math.max(0, v*T + (v*dv)/(2*Math.sqrt(a*b)));
+    const term1 = 1 - Math.pow(v / Math.max(1e-6, v0), delta);
+    const term2 = Math.pow(sStar / Math.max(1e-6, sGap), 2);
+    return a * (term1 - term2);
+  }
+}
+
+class Gipps {
+  // Simple discrete Gipps update: v_next = min(v_acc, v_safe)
+  constructor({v0=30, a=2.0, b=3.0, tau=1.0, s0=2.0}) {
+    Object.assign(this, {v0,a,b,tau,s0});
+  }
+  nextSpeed(v, sGap, vL, dt) {
+    const {v0,a,b,tau,s0} = this;
+    // free acceleration
+    const v_acc = Math.min(v0, v + 2.5*a*tau*(1 - v/v0) * Math.sqrt(0.025 + v/v0));
+    // safe speed (assuming leader keeps at most -b over tau)
+    const s = Math.max(1e-6, sGap - s0);
+    const v_safe = b*tau + Math.sqrt(Math.max(0, (b*b*tau*tau) + vL*vL + 2*b*s));
+    // semi-implicit Euler cap to avoid overshoot
+    const v_next = clamp(Math.min(v_acc, v_safe), 0, v0);
+    // return dv/dt approx
+    return (v_next - v) / dt;
+  }
+}
+
+class GM {
+  // Simplified General Motors model (Gazis–Herman–Rothery type)
+  // dv/dt = alpha * (Δv) / s^m  + beta * (v0 - v) free-flow pull
+  constructor({alpha=15, m=1, v0=30, beta=0.2}) {
+    Object.assign(this, {alpha,m,v0,beta});
+  }
+  accel(v, sGap, dv) {
+    const {alpha,m,v0,beta} = this;
+    const termCF = alpha * ( -dv ) / Math.max(1e-6, Math.pow(sGap, m)); // -dv = v_lead - v
+    const termFF = beta * (v0 - v);
+    return termCF + termFF;
+  }
+}
+
+// ---------- MOBIL lane-changing ----------
+class MOBIL {
+  constructor({politeness=0.2, thresh=0.1, bSafe=3.0, keepRightBias=0.2}) {
+    Object.assign(this, {politeness, thresh, bSafe, keepRightBias});
+  }
+
+  // Decide if vehicle v should move from lane ℓ -> ℓ′
+  decide(v, curr, targ, neigh) {
+    const {politeness, thresh, bSafe, keepRightBias} = this;
+
+    // current accelerations
+    const a_me_now = neigh.accMeCur;
+    const a_me_new = neigh.accMeTgt;
+    const a_oldFol_now = neigh.accOldFolNow;
+    const a_oldFol_new = neigh.accOldFolNew;
+    const a_newFol_now = neigh.accNewFolNow;
+    const a_newFol_new = neigh.accNewFolNew;
+
+    // Standard MOBIL incentive
+    const deltaMe  = a_me_new - a_me_now;
+    const deltaFol = (a_newFol_new - a_newFol_now) + (a_oldFol_new - a_oldFol_now);
+    let incentive = deltaMe + politeness * deltaFol;
+
+    // "Keep-right" bias:
+    // If target lane is rightward (higher index for right-hand traffic)
+    // add small positive bias. If moving left, subtract same.
+    const laneDir = targ - curr;
+    if (laneDir > 0) {
+      // moving right (encourage)
+      incentive += keepRightBias;
+    } else if (laneDir < 0) {
+      // moving left (discourage)
+      incentive -= keepRightBias;
+    }
+
+    // Safety: target follower must not brake harder than -bSafe
+    const safetyOK = a_newFol_new >= -bSafe;
+
+    // Final decision
+    return (incentive > thresh) && safetyOK;
+  }
+}
+
+// ---------- World / Simulation ----------
+class World {
+  constructor() {
+    this.segment = new Segment({id:"ring", radius:250, lanes:2, laneWidth:3.6, speedLimit:33.33});
+    this.link = new Link({id:"periodic", fromSeg:this.segment, toSeg:this.segment});
+    this.vehicles = []; // by lane array? store flat, but we will derive per-lane order
+    this.models = {
+      IDM: new IDM({}),
+      GIPPS: new Gipps({}),
+      GM: new GM({})
+    };
+    this.mobil = new MOBIL({});
+    this.dt = 0.05;
+    this.time = 0;
+    this.modelName = "IDM";
+    this.lcEnabled = true;
+  }
+
+  setParamsFromUI() {
+    const R = parseFloat(dom.radius.value);
+    const laneW = parseFloat(dom.laneW.value);
+    this.segment.radius = R;
+    this.segment.lanes = parseInt(dom.numLanes.value, 10);
+    this.segment.laneWidth = laneW;
+    this.segment.length = TAU * R;
+
+    // update model parameters from dynamic form
+    const M = this.models[this.modelName];
+    for (const [k,v] of Object.entries(UI.modelParams())) {
+      if (k in M) M[k] = v;
+    }
+    this.mobil.politeness = parseFloat(dom.mobil_p.value);
+    this.mobil.thresh = parseFloat(dom.mobil_th.value);
+    this.mobil.bSafe = parseFloat(dom.mobil_bsafe.value);
+    this.mobil.keepRightBias = parseFloat(dom.mobil_bias.value);
+    this.lcEnabled = dom.lcEnabled.value === 'on';
+    this.dt = parseFloat(dom.dt.value);
+  }
+  initializeUniform() {
+    const nLanes = parseInt(dom.numLanes.value, 10);
+    this.segment.lanes = nLanes;
+
+    // Per-lane vehicle counts (extend to match nLanes if fewer inputs)
+    const nPerLaneArr = [];
+    for (let i = 0; i < nLanes; i++) {
+        const input = document.getElementById(`npl${i}`);
+        if (input) {
+        nPerLaneArr.push(parseInt(input.value, 10));
+        } else {
+        // default to first or 20 if not defined
+        nPerLaneArr.push(nPerLaneArr[0] ?? 20);
+        }
+    }
+
+    this.vehicles.length = 0;
+    const L = this.segment.length;
+
+    // Cooldown parameters
+    const mean = parseFloat(dom.lcCooldownMean.value);
+    const std  = parseFloat(dom.lcCooldownStd.value);
+    const randn = () => {
+        let u = 0, v = 0;
+        while (u === 0) u = Math.random();
+        while (v === 0) v = Math.random();
+        return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+    };
+
+    // Place vehicles
+    for (let lane = 0; lane < nLanes; lane++) {
+        const n = nPerLaneArr[lane];
+        for (let i = 0; i < n; i++) {
+        const s = (i + 0.5) * (L / n);
+        const v0 = Math.min(this.segment.speedLimit, this.models[this.modelName].v0 ?? 30);
+        const veh = new Vehicle(`v${lane}_${i}`, lane, s, 0.8 * v0, this.models[this.modelName]);
+
+        // random cooldown
+        veh.lcCooldownBase = Math.max(0, mean + std * randn());
+        veh.lcCooldown = 0;
+
+        this.vehicles.push(veh);
+        }
+    }
+
+    this.time = 0;
+}
+
+
+
+  sortByS(lane) {
+    const arr = this.vehicles.filter(v=>v.lane===lane).sort((a,b)=>a.s-b.s);
+    return arr;
+  }
+
+  leaderAndFollower(v, lane) {
+    // On a ring: wrap around in that lane
+    const list = this.sortByS(lane);
+    if (list.length === 0) return {ahead:null, behind:null};
+    const idx = list.indexOf(v);
+    if (idx === -1) {
+      // virtual position if considering other lane
+      const withV = list.concat([v]).sort((a,b)=>a.s-b.s);
+      const i2 = withV.indexOf(v);
+      const ahead = withV[(i2+1) % withV.length];
+      const behind = withV[(i2-1+withV.length) % withV.length];
+      return {ahead: ahead===v ? null : ahead, behind: behind===v ? null : behind};
+    }
+    const ahead = list[(idx+1)%list.length];
+    const behind = list[(idx-1+list.length)%list.length];
+    return {ahead: ahead===v?null:ahead, behind: behind===v?null:behind};
+  }
+
+  gap(from, to, laneLength) {
+    if (!from || !to) return Infinity;
+    return mod(to.s - from.s, laneLength);
+  }
+
+  // Oracle: compute acceleration for a vehicle v if it were in 'lane' with specified neighbors
+  accelIf(v, lane, ahead, behind, dt) {
+    const L = this.segment.length;
+    const sGap = ahead ? this.gap(v, ahead, L) : Infinity;
+    const vL = ahead ? ahead.v : v.v; // if no leader, assume same speed to avoid free run spike
+    const dv = v - v; // placeholder; correct below
+    const model = v.modelRef;
+
+    if (model instanceof IDM) {
+      const a = model.accel(v.v, sGap, v.v - vL);
+      // safety for follower behind is handled separately
+      return a;
+    } else if (model instanceof Gipps) {
+      return model.nextSpeed(v.v, sGap, vL, dt);
+    } else if (model instanceof GM) {
+      return model.accel(v.v, sGap, v.v - vL);
+    } else {
+      return 0;
+    }
+  }
+
+  step() {
+  this.setParamsFromUI();
+  const dt = this.dt;
+  const L  = this.segment.length;
+
+  // ----- 1. Lane-change decisions (MOBIL) -----
+  if (this.lcEnabled) {
+    // Decrease cooldown timers
+    for (const v of this.vehicles) {
+      if (v.lcCooldown > 0) v.lcCooldown = Math.max(0, v.lcCooldown - dt);
+    }
+
+    const desiredMoves = new Map();
+
+    for (const v of this.vehicles) {
+      if (v.lcCooldown > 0 || v.laneChanging) continue; // skip if cooling or mid-change
+
+      const candidates = [];
+      if (v.lane + 1 < this.segment.lanes) candidates.push(v.lane + 1);
+      if (v.lane - 1 >= 0) candidates.push(v.lane - 1);
+
+      let will = v.lane;
+      for (const targ of candidates) {
+        const cur = v.lane;
+
+        // neighbors
+        const curN = this.leaderAndFollower(v, cur);
+        const tgtN = this.leaderAndFollower(v, targ);
+
+        const a_me_now = this.accelIf(v, cur, curN.ahead, curN.behind, dt);
+        const a_me_new = this.accelIf(v, targ, tgtN.ahead, tgtN.behind, dt);
+
+        const a_oldFol_now = curN.behind
+          ? this.accelIf(
+              curN.behind,
+              cur,
+              curN.ahead,
+              this.leaderAndFollower(curN.behind, cur).behind,
+              dt
+            )
+          : 0;
+        const a_oldFol_new = curN.behind
+          ? this.accelIf(
+              curN.behind,
+              cur,
+              curN.ahead,
+              this.leaderAndFollower(curN.behind, cur).behind,
+              dt
+            )
+          : 0;
+
+        const a_newFol_now = tgtN.behind
+          ? this.accelIf(
+              tgtN.behind,
+              targ,
+              this.leaderAndFollower(tgtN.behind, targ).ahead,
+              this.leaderAndFollower(tgtN.behind, targ).behind,
+              dt
+            )
+          : 0;
+        const a_newFol_new = tgtN.behind
+          ? this.accelIf(
+              tgtN.behind,
+              targ,
+              v,
+              this.leaderAndFollower(tgtN.behind, targ).behind,
+              dt
+            )
+          : 0;
+
+        const ok = this.mobil.decide(v, cur, targ, {
+          accMeCur: a_me_now,
+          accMeTgt: a_me_new,
+          accOldFolNow: a_oldFol_now,
+          accOldFolNew: a_oldFol_new,
+          accNewFolNow: a_newFol_now,
+          accNewFolNew: a_newFol_new,
+        });
+
+        if (ok) { will = targ; break; }
+      }
+
+      desiredMoves.set(v, will);
+    }
+
+    // Apply lane-change initiations
+    for (const v of this.vehicles) {
+      const newLane = desiredMoves.get(v);
+      if (newLane !== undefined && newLane !== v.lane) {
+        v.laneFrom = v.lane;
+        v.laneTo = newLane;
+        v.laneOffset = 0;
+        v.laneChanging = true;
+        v.lcCooldown = v.lcCooldownBase;
+      }
+    }
+  }
+
+  // ----- 2. Car-following accelerations -----
+  for (const v of this.vehicles) {
+    const { ahead } = this.leaderAndFollower(v, v.lane);
+    const sGap = ahead ? this.gap(v, ahead, L) : Infinity;
+    const vL = ahead ? ahead.v : v.v;
+    const model = v.modelRef;
+
+    if (model instanceof IDM) {
+      v.a = model.accel(v.v, sGap, v.v - vL);
+    } else if (model instanceof Gipps) {
+      v.a = model.nextSpeed(v.v, sGap, vL, dt);
+    } else if (model instanceof GM) {
+      v.a = model.accel(v.v, sGap, v.v - vL);
+    } else {
+      v.a = 0;
+    }
+  }
+
+  // ----- 3. Integrate longitudinal motion -----
+  for (const v of this.vehicles) {
+    v.v = Math.max(0, v.v + v.a * dt);
+    const vmax = this.segment.speedLimit;
+    if (v.v > vmax) v.v = vmax;
+    v.s = mod(v.s + v.v * dt, L);
+  }
+
+  // ----- 4. Animate lane-change transitions -----
+  const lateralSpeed = 1.5; // m/s sideways
+  for (const v of this.vehicles) {
+    if (v.laneChanging) {
+      v.laneOffset += (dt * lateralSpeed) / this.segment.laneWidth;
+      if (v.laneOffset >= 1) {
+        v.laneChanging = false;
+        v.lane = v.laneTo;
+        v.laneFrom = v.laneTo;
+        v.laneOffset = 0;
+      }
+    }
+  }
+
+  // ----- 5. Advance simulation clock -----
+  this.time += dt;
+}
+
+
+  // Aggregates
+  meanSpeed() { return this.vehicles.reduce((a,v)=>a+v.v,0) / Math.max(1,this.vehicles.length); }
+  densityPerLane() { // veh/m per lane
+    const perLane = this.vehicles.length / this.segment.lanes;
+    return perLane / this.segment.length;
+  }
+  flowPerLane() {
+    return this.meanSpeed() * this.densityPerLane();
+  }
+}
+function hsv2rgb(h, s, v) {
+  const i = Math.floor(h * 6);
+  const f = h * 6 - i;
+  const p = v * (1 - s);
+  const q = v * (1 - f * s);
+  const t = v * (1 - (1 - f) * s);
+  switch (i % 6) {
+    case 0: return [v, t, p];
+    case 1: return [q, v, p];
+    case 2: return [p, v, t];
+    case 3: return [p, q, v];
+    case 4: return [t, p, v];
+    case 5: return [v, p, q];
+  }
+}
+
+// ---------- WebGL2 Renderer ----------
+class Renderer {
+  constructor(canvas, world) {
+    this.gl = canvas.getContext('webgl2', { antialias:true, preserveDrawingBuffer:false });
+    if (!this.gl) { alert('WebGL2 not supported'); return; }
+    this.world = world;
+    this.resize();
+    window.addEventListener('resize', ()=>this.resize());
+    this.initProgram();
+    this.initBuffers();
+    this.lastFPS = {t: performance.now(), frames:0, fps:0};
+  }
+
+  resize() {
+    const wrap = document.getElementById('glwrap');
+    // fill remaining space
+    const panel = document.getElementById('panel');
+    const h = window.innerHeight;
+    wrap.style.height = h + 'px';
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    this.gl.canvas.width = (wrap.clientWidth) * dpr;
+    this.gl.canvas.height = (wrap.clientHeight) * dpr;
+    this.gl.viewport(0,0,this.gl.canvas.width,this.gl.canvas.height);
+  }
+
+  initProgram() {
+  const gl = this.gl;
+
+  const vs = `#version 300 es
+  precision highp float;
+  layout(location=0) in vec2 a_pos;      // vehicle quad vertex (-0.5..0.5)
+  layout(location=1) in vec2 i_pos;      // instance world position
+  layout(location=2) in float i_angle;   // vehicle heading
+  layout(location=3) in float i_lane;    // lane index
+  layout(location=4) in vec3 i_color;    // per-instance color (RGB)
+  uniform vec2 u_scale;                  // world->NDC scale
+  uniform vec2 u_offset;
+  out vec3 v_color;
+  void main() {
+    // Vehicle rectangle (4m x 2m)
+    float cs = cos(i_angle), sn = sin(i_angle);
+    vec2 local = vec2(a_pos.x * 4.0, a_pos.y * 2.0);
+    vec2 rot = vec2(cs * local.x - sn * local.y, sn * local.x + cs * local.y);
+    vec2 wp = i_pos + rot;
+    vec2 ndc = wp * u_scale + u_offset;
+    gl_Position = vec4(ndc, 0.0, 1.0);
+    v_color = i_color;
+  }`;
+
+  const fs = `#version 300 es
+  precision highp float;
+  in vec3 v_color;
+  out vec4 outColor;
+  void main() {
+    outColor = vec4(v_color, 1.0);
+  }`;
+
+  const compile = (type, src) => {
+    const s = gl.createShader(type);
+    gl.shaderSource(s, src);
+    gl.compileShader(s);
+    if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) {
+      console.error(gl.getShaderInfoLog(s));
+    }
+    return s;
+  };
+
+  const prog = gl.createProgram();
+  gl.attachShader(prog, compile(gl.VERTEX_SHADER, vs));
+  gl.attachShader(prog, compile(gl.FRAGMENT_SHADER, fs));
+  gl.linkProgram(prog);
+
+  if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
+    console.error(gl.getProgramInfoLog(prog));
+  }
+
+  this.prog = prog;
+  this.u_scale = gl.getUniformLocation(prog, "u_scale");
+  this.u_offset = gl.getUniformLocation(prog, "u_offset");
+}
+
+
+  initBuffers() {
+    const gl = this.gl;
+    // a tiny quad centered at origin for instancing
+    const quad = new Float32Array([
+      -0.5,-0.5,  0.5,-0.5,  -0.5,0.5,
+       0.5,-0.5,   0.5,0.5,  -0.5,0.5
+    ]);
+    this.vbo = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
+    gl.bufferData(gl.ARRAY_BUFFER, quad, gl.STATIC_DRAW);
+
+    // instance buffers
+    this.i_pos = gl.createBuffer();
+    this.i_angle = gl.createBuffer();
+    this.i_lane = gl.createBuffer();
+    this.i_color = gl.createBuffer();
+  }
+
+  worldToViewport() {
+    // Fit the entire ring + lanes
+    const R = this.world.segment.radius + this.world.segment.lanes*this.world.segment.laneWidth;
+    const pad = 10;
+    const maxR = R + pad;
+    const w = this.gl.canvas.width, h = this.gl.canvas.height;
+    const scale = 0.9 * (Math.min(w,h) / (2*maxR));
+    // map world (meters) to NDC: x*scale / (w/2) etc, but we can precompute:
+    const s = 2*scale/Math.min(w,h); // meters to NDC per pixel normalization
+    // Actually, simpler: use pixel mapping to NDC
+    const sx = 2*scale/h; // uniform based on h
+    const sy = 2*scale/h;
+    return {sx, sy, offx:0.0, offy:0.0};
+  }
+
+  draw() {
+  const gl = this.gl;
+  gl.clearColor(0.04, 0.06, 0.10, 1);
+  gl.clear(gl.COLOR_BUFFER_BIT);
+
+  const { sx, sy, offx, offy } = this.worldToViewport();
+
+  const n = this.world.vehicles.length;
+  const pos = new Float32Array(n * 2);
+  const ang = new Float32Array(n);
+  const lane = new Float32Array(n);
+  const color = new Float32Array(n * 3);
+
+  const seg = this.world.segment;
+  const colorMode = dom.colorMode.value;
+  const vMax = seg.speedLimit;
+
+  // Random hues per lane (cached)
+  if (!this.laneHues || this.laneHues.length !== seg.lanes) {
+    this.laneHues = Array.from({ length: seg.lanes }, () => Math.random());
+  }
+
+  for (let i = 0; i < n; i++) {
+    const v = this.world.vehicles[i];
+    // base position
+    let laneVisual = v.lane;
+    if (v.laneChanging) {
+      const t = 0.5 - 0.5 * Math.cos(Math.PI * v.laneOffset); // smooth ease
+      laneVisual = v.laneFrom + t * (v.laneTo - v.laneFrom);
+    }
+    const p = seg.pos(v.s, laneVisual);
+    const t = seg.tan(v.s);
+    pos[i * 2 + 0] = p[0];
+    pos[i * 2 + 1] = p[1];
+    ang[i] = Math.atan2(t[1], t[0]);
+    lane[i] = v.lane;
+
+    // compute color
+    let r = 0, g = 0, b = 0;
+    if (colorMode === 'lane') {
+      // random hue per lane
+      const hue = this.laneHues[v.lane % this.laneHues.length];
+      const rgb = hsv2rgb(hue, 0.7, 1.0);
+      [r, g, b] = rgb;
+    } else if (colorMode === 'speed') {
+      const ratio = Math.min(1, v.v / vMax);
+      // blue→green→red
+      if (ratio < 0.5) {
+        r = 0;
+        g = ratio * 2;
+        b = 1 - ratio * 2;
+      } else {
+        r = (ratio - 0.5) * 2;
+        g = 1 - (ratio - 0.5) * 2;
+        b = 0;
+      }
+    } else if (colorMode === 'accel') {
+      const a = Math.max(-3, Math.min(3, v.a)); // clamp for visualization
+      const ratio = (a + 3) / 6; // 0=decel(blue), 0.5=neutral(gray), 1=accel(red)
+      r = ratio;
+      g = ratio;
+      b = 1 - ratio;
+    }
+
+    color[i * 3 + 0] = r;
+    color[i * 3 + 1] = g;
+    color[i * 3 + 2] = b;
+  }
+
+  gl.useProgram(this.prog);
+  gl.uniform2f(this.u_scale, sx, sy);
+  gl.uniform2f(this.u_offset, offx, offy);
+
+  // quad
+  gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
+  gl.enableVertexAttribArray(0);
+  gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+
+  // instance: positions
+  gl.bindBuffer(gl.ARRAY_BUFFER, this.i_pos);
+  gl.bufferData(gl.ARRAY_BUFFER, pos, gl.DYNAMIC_DRAW);
+  gl.enableVertexAttribArray(1);
+  gl.vertexAttribPointer(1, 2, gl.FLOAT, false, 0, 0);
+  gl.vertexAttribDivisor(1, 1);
+
+  // instance: angle
+  gl.bindBuffer(gl.ARRAY_BUFFER, this.i_angle);
+  gl.bufferData(gl.ARRAY_BUFFER, ang, gl.DYNAMIC_DRAW);
+  gl.enableVertexAttribArray(2);
+  gl.vertexAttribPointer(2, 1, gl.FLOAT, false, 0, 0);
+  gl.vertexAttribDivisor(2, 1);
+
+  // instance: lane (keep but unused)
+  gl.bindBuffer(gl.ARRAY_BUFFER, this.i_lane);
+  gl.bufferData(gl.ARRAY_BUFFER, lane, gl.DYNAMIC_DRAW);
+  gl.enableVertexAttribArray(3);
+  gl.vertexAttribPointer(3, 1, gl.FLOAT, false, 0, 0);
+  gl.vertexAttribDivisor(3, 1);
+
+  // instance: color
+  gl.bindBuffer(gl.ARRAY_BUFFER, this.i_color);
+  
+  gl.bufferData(gl.ARRAY_BUFFER, color, gl.DYNAMIC_DRAW);
+  gl.enableVertexAttribArray(4);
+  gl.vertexAttribPointer(4, 3, gl.FLOAT, false, 0, 0);
+  gl.vertexAttribDivisor(4, 1);
+
+  gl.drawArraysInstanced(gl.TRIANGLES, 0, 6, n);
+
+  this.updateHUD();
+}
+
+
+  updateHUD() {
+    // FPS
+    const now = performance.now();
+    this.lastFPS.frames++;
+    if (now - this.lastFPS.t > 500) {
+      this.lastFPS.fps = (1000 * this.lastFPS.frames) / (now - this.lastFPS.t);
+      this.lastFPS.frames = 0; this.lastFPS.t = now;
+      dom.fps.textContent = this.lastFPS.fps.toFixed(0);
+    }
+    dom.time.textContent = sim.world.time.toFixed(2);
+    dom.hudModel.textContent = sim.world.modelName;
+    dom.len.textContent = sim.world.segment.length.toFixed(1) + ' m';
+    dom.num.textContent = sim.world.vehicles.length.toString();
+    dom.vmean.textContent = (sim.world.meanSpeed()).toFixed(2) + ' m/s';
+    const dens = sim.world.densityPerLane();
+    dom.dens.textContent = (dens).toFixed(4) + ' veh/m/lane';
+  }
+}
+
+// ---------- Simulation Controller ----------
+class Simulator {
+  constructor(world, renderer) {
+    this.world = world;
+    this.renderer = renderer;
+    this.running = false;
+    this._raf = null;
+  }
+  start() {
+    if (this.running) return;
+    this.running = true;
+    const loop = () => {
+      if (!this.running) return;
+      for (let i=0;i<1;i++) this.world.step();
+      this.renderer.draw();
+      this._raf = requestAnimationFrame(loop);
+    };
+    this._raf = requestAnimationFrame(loop);
+  }
+  stop() {
+    this.running = false;
+    if (this._raf) cancelAnimationFrame(this._raf);
+    this._raf = null;
+  }
+  stepOnce() {
+    this.world.step();
+    this.renderer.draw();
+  }
+  resetAndDraw() {
+    this.world.setParamsFromUI();
+    this.world.initializeUniform();
+    this.renderer.draw();
+  }
+}
+
+// ---------- UI wiring ----------
+const dom = {
+  gl: document.getElementById('gl'),
+  btnPlay: document.getElementById('btnPlay'),
+  btnStep: document.getElementById('btnStep'),
+  btnReset: document.getElementById('btnReset'),
+  btnReinit: document.getElementById('btnReinit'),
+  model: document.getElementById('model'),
+  params: document.getElementById('params'),
+  dt: document.getElementById('dt'),
+  numLanes: document.getElementById('numLanes'),
+  nplContainer: document.getElementById('nplContainer'),
+  colorMode: document.getElementById('colorMode'),
+
+  radius: document.getElementById('radius'),
+  laneW: document.getElementById('laneW'),
+  mobil_p: document.getElementById('mobil_p'),
+  mobil_th: document.getElementById('mobil_th'),
+  mobil_bsafe: document.getElementById('mobil_bsafe'),
+  mobil_bias: document.getElementById('mobil_bias'),
+  lcEnabled: document.getElementById('lcEnabled'),
+  lcCooldownMean: document.getElementById('lcCooldownMean'),
+  lcCooldownStd: document.getElementById('lcCooldownStd'),
+
+  time: document.getElementById('time'),
+  fps: document.getElementById('fps'),
+  hudModel: document.getElementById('hud'),
+  len: document.getElementById('len'),
+  num: document.getElementById('num'),
+  vmean: document.getElementById('vmean'),
+  dens: document.getElementById('dens'),
+};
+
+const UI = {
+  modelParamsSpec: {
+    IDM: [
+      ['v0','Free speed v0 [m/s]', 10, 60, 30, 0.1],
+      ['T','Headway T [s]', 0.5, 3.0, 1.2, 0.1],
+      ['a','Max accel a [m/s²]', 0.1, 4.0, 1.4, 0.1],
+      ['b','Comfort decel b [m/s²]', 0.5, 5.0, 2.0, 0.1],
+      ['s0','Jam gap s0 [m]', 0.0, 5.0, 2.0, 0.1],
+      ['delta','δ', 2, 10, 4, 1]
+    ],
+    GIPPS: [
+      ['v0','Desired v0 [m/s]', 10, 60, 30, 0.1],
+      ['a','Accel a [m/s²]', 0.1, 4.0, 2.0, 0.1],
+      ['b','Decel b [m/s²]', 0.5, 6.0, 3.0, 0.1],
+      ['tau','Reaction τ [s]', 0.2, 2.0, 1.0, 0.1],
+      ['s0','Min gap s0 [m]', 0.0, 5.0, 2.0, 0.1]
+    ],
+    GM: [
+      ['v0','Free speed v0 [m/s]', 10, 60, 30, 0.1],
+      ['alpha','α (sensitivity)', 1, 50, 15, 1],
+      ['m','m (spacing exponent)', 0, 3, 1, 0.1],
+      ['beta','β (FF pull)', 0.0, 1.0, 0.2, 0.01],
+    ]
+  },
+  renderParams(model) {
+    const spec = this.modelParamsSpec[model];
+    dom.params.innerHTML = '';
+    for (const [key,label,min,max,def,step] of spec) {
+      const div = document.createElement('div');
+      div.innerHTML = `
+        <label>${label}
+          <input id="mp_${key}" type="number" step="${step}" min="${min}" max="${max}" value="${def}">
+        </label>`;
+      dom.params.appendChild(div);
+    }
+  },
+  modelParams() {
+    const model = dom.model.value;
+    const spec = this.modelParamsSpec[model];
+    const out = {};
+    for (const [key] of spec) {
+      out[key] = parseFloat(document.getElementById('mp_'+key).value);
+    }
+    return out;
+  }
+};
+UI.renderNplInputs = function() {
+  const nLanes = parseInt(dom.numLanes.value, 10);
+  dom.nplContainer.innerHTML = '';
+
+  for (let i = 0; i < nLanes; i++) {
+    const wrapper = document.createElement('label');
+    wrapper.textContent = `Vehicles (lane ${i}) `;
+
+    const input = document.createElement('input');
+    input.type = 'number';
+    input.id = `npl${i}`;
+    input.min = '1';
+    input.max = '200';
+    input.value = '20';
+    input.step = '1';
+
+    wrapper.appendChild(input);
+    dom.nplContainer.appendChild(wrapper);
+  }
+};
+
+// ---------- Boot ----------
+UI.renderParams('IDM');
+const world = new World();
+world.modelName = 'IDM';
+world.models.IDM = new IDM(UI.modelParams());
+world.mobil = new MOBIL({politeness: parseFloat(dom.mobil_p.value), thresh: parseFloat(dom.mobil_th.value), bSafe: parseFloat(dom.mobil_bsafe.value)});
+const renderer = new Renderer(dom.gl, world);
+const sim = new Simulator(world, renderer);
+window.sim = sim; // for console
+
+function rebindModel() {
+  const name = dom.model.value;
+  world.modelName = name;
+  // assign each vehicle's modelRef anew
+  const params = UI.modelParams();
+  if (name==='IDM') world.models.IDM = new IDM(params);
+  if (name==='GIPPS') world.models.GIPPS = new Gipps(params);
+  if (name==='GM') world.models.GM = new GM(params);
+  for (const v of world.vehicles) v.modelRef = world.models[name];
+}
+
+dom.btnPlay.addEventListener('click', ()=>{
+  if (sim.running) { sim.stop(); dom.btnPlay.textContent='Play'; dom.btnPlay.classList.add('primary'); }
+  else { sim.start(); dom.btnPlay.textContent='Pause'; dom.btnPlay.classList.remove('primary'); }
+});
+dom.btnStep.addEventListener('click', ()=> sim.stepOnce());
+dom.btnReset.addEventListener('click', ()=> { sim.stop(); dom.btnPlay.textContent='Play'; dom.btnPlay.classList.add('primary'); sim.resetAndDraw(); });
+dom.numLanes.addEventListener('input', () => {
+  UI.renderNplInputs();
+  world.setParamsFromUI();
+  sim.resetAndDraw();
+});
+
+dom.btnReinit.addEventListener('click', ()=> { sim.stop(); sim.resetAndDraw(); });
+
+dom.model.addEventListener('change', ()=> { UI.renderParams(dom.model.value); rebindModel(); sim.resetAndDraw(); });
+dom.params.addEventListener('input', ()=> { rebindModel(); });
+for (let id of ['radius','laneW','dt','mobil_p','mobil_th','mobil_bsafe','lcEnabled','lcCooldownMean','lcCooldownStd']) {
+  document.getElementById(id).addEventListener('input', ()=> { world.setParamsFromUI(); sim.resetAndDraw(); });
+}
+
+// initial place & draw
+UI.renderNplInputs();
+
+world.setParamsFromUI();
+world.initializeUniform();
+renderer.draw();
+
+</script>
+</body>
+</html>

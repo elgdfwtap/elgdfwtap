@@ -1,0 +1,48 @@
+body{
+    
+}
+#analysis-filters {
+    display:none;
+}
+input[type="range"] {
+    position: absolute;
+    width: 100%;
+    pointer-events: none;
+}
+input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    pointer-events: auto;
+}
+input[type="range"]::-moz-range-thumb {
+    pointer-events: auto;
+}
+input[type="range"]::-ms-thumb {
+    pointer-events: auto;
+}
+.chart-container{
+    display:inline-block;
+    max-width:600px;
+}
+.uplot{
+    display:inline;
+}
+.series-container {
+    margin: 0.5em 0;
+    padding: 0.5em;
+    border: 1px solid #aaa;
+    border-radius: 4px;
+    color: white;
+}
+.series-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+    flex-wrap: wrap;
+}
+.series-controls input[type="number"] {
+    width: 80px;
+}
+.series-label {
+    font-weight: bold;
+    margin-right: 0.5em;
+}

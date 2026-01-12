@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CEE 416 Simulation</title>
+    <link rel="stylesheet" href="style.css"/>
+    <link rel="stylesheet" href="uPlot.min.css">
+</head>
+<body>
+    <!--File Selector-->
+    <label id="superlabel">Select Analysis File</label>
+    <input type="file" id="fileInput" accept=".csv" />
+    
+    <div id="analysis-filters">
+        <div id="lane-filter">
+            <p>Filter by lane:</p>
+        </div>
+        <div id="vehicle-class-filter">
+            <p>Filter by vehicle class:</p>
+        </div>
+        <div id="run-filter">
+            <p>Select run:</p>
+
+        </div>
+        <!--NOT IMPLEMENTED YET<div id="time-range-filter" class="wrapper">
+            <p>Filter by time range:</p>
+            <div class="values">
+                <span id="range1"></span>
+                <span> &dash; </span>
+                <span id="range2"></span>
+            </div>
+            <div class="container">
+                <div class="slider-track"></div>
+                <input type="range" min="0" max="100" value="30" id="slider-1" oninput="slideOne()">
+                <input type="range" min="0" max="100" value="70" id="slider-2" oninput="slideTwo()">
+            </div>
+        </div>-->
+    </div>
+    <div id="charts-container">
+        <div id="trajectories-tab">
+          <canvas id="gl" style="width:100%;height:70vh;display:block;"></canvas>
+
+          <button id="color-by-id">Color by ID</button>
+          <button id="color-by-class">Color by Vehicle Type</button>
+          <button id="color-by-lane">Color by Lane</button>
+          <button id="color-by-speed">Color by Speed</button>
+          <button id="color-by-braking">Highlight Braking</button>
+          <div id="point-size-control">
+            <label for="point-size-slider">Point Size: </label>
+            <input type="range" id="point-size-slider" min="1" max="10" value="2">
+            <span id="point-size-value">2</span>
+          </div>
+
+        </div>
+        <div id="tab1">
+            <div class='chart-container' id="speed-hist"></div>
+            <div class='chart-container' id="spacing-hist"></div>
+            <div class='chart-container' id="space-mean-speed"></div>
+            <div class='chart-container' id="flow-rate"></div>
+            <div class='chart-container' id="density-along-road"></div>
+            <button id="speed-mode-toggle">Toggle Mode Speed</button>
+        </div>
+        <div id="tab2">
+            <button id="add-series">+ Add Series</button>
+            <div id="series-list"></div>
+            <div class='chart-container' id="flow-density"></div>
+            <div class='chart-container' id="speed-density"></div>
+            <div class='chart-container' id="speed-flow"></div>
+        </div>
+    </div>
+    <div id="static-charts-container">
+      <div class='chart-container' id="average-headway-hist"></div>
+        <button id="density-mode-toggle">Toggle Density</button>
+    </div>
+
+<script src="script.js"></script> 
+<script src="uPlot.iife.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+</body>
+</html>
